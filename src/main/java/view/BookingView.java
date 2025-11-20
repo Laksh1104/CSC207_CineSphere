@@ -42,8 +42,8 @@ public class BookingView extends JPanel implements PropertyChangeListener {
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(COLOR);
-
-        setupHeader();
+        add(Box.createVerticalStrut(10));
+        add(new HeaderPanel(), BorderLayout.NORTH);
         setupSelectionPanel();
 
         setupSeatPanel();
