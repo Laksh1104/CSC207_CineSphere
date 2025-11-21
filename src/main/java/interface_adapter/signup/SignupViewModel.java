@@ -12,12 +12,10 @@ public class SignupViewModel {
         return state;
     }
 
-    public void setState(SignupState state) {
-        this.state = state;
-    }
-
-    public void firePropertyChanged() {
-        support.firePropertyChange("state", null, state);
+    public void setState(SignupState newState) {
+        SignupState oldState = this.state;
+        this.state = newState;
+        support.firePropertyChange("state", oldState, newState);
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {

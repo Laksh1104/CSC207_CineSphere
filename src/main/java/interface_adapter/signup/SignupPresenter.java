@@ -3,8 +3,6 @@ package interface_adapter.signup;
 import use_case.signup.SignupOutputBoundary;
 import use_case.signup.SignupOutputData;
 
-import javax.swing.*;
-
 public class SignupPresenter implements SignupOutputBoundary {
 
     private final SignupViewModel signupViewModel;
@@ -14,35 +12,25 @@ public class SignupPresenter implements SignupOutputBoundary {
     }
 
     @Override
-    public void prepareSuccessView(SignupOutputData outputData) {
-        SignupState state = signupViewModel.getState();
-        state.setUsername(outputData.getUsername());
-        state.setErrorMessage(null);
+    public void prepareSuccessView(SignupOutputData data) {
+        SignupState oldState = new SignupState(signupViewModel.getState());
+        SignupState newState = new SignupState(oldState);
 
-        signupViewModel.setState(state);
-        signupViewModel.firePropertyChanged();
+        newState.setErrorMessage(null);
+        newState.setSignupSuccess(true);
+        newState.setUsername(data.getUsername());
 
-        JOptionPane.showMessageDialog(
-                null,
-                "Account created for " + outputData.getUsername() + "!",
-                "Sign up successful",
-                JOptionPane.INFORMATION_MESSAGE
-        );
+        signupViewModel.setState(newState);
     }
 
     @Override
     public void prepareFailView(String errorMessage) {
-        SignupState state = signupViewModel.getState();
-        state.setErrorMessage(errorMessage);
+        SignupState oldState = new SignupState(signupViewModel.getState());
+        SignupState newState = new SignupState(oldState);
 
-        signupViewModel.setState(state);
-        signupViewModel.firePropertyChanged();
+        newState.setErrorMessage(errorMessage);
+        newState.setSignupSuccess(false);
 
-        JOptionPane.showMessageDialog(
-                null,
-                errorMessage,
-                "Sign up failed",
-                JOptionPane.ERROR_MESSAGE
-        );
+        signupViewModel.setState(newState);
     }
 }
