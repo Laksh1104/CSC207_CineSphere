@@ -22,26 +22,52 @@ public class SignupInteractor implements SignupInputBoundary {
         String username = inputData.getUsername();
         String password = inputData.getPassword();
 
-        if (username == null || username.trim().isEmpty()) {
-            signupPresenter.prepareFailView("Username must not be empty.");
+        // ===== REQUIRED FIELDS =====
+        if (username == null || username.isEmpty()) {
+            signupPresenter.prepareFailView("Username is required.");
             return;
         }
 
-        if (password == null || password.trim().isEmpty()) {
-            signupPresenter.prepareFailView("Password must not be empty.");
+        if (password == null || password.isEmpty()) {
+            signupPresenter.prepareFailView("Password is required.");
             return;
         }
 
+        // ===== CHARACTER RESTRICTIONS =====
+        if (containsDisallowedCharacters(username) || containsDisallowedCharacters(password)) {
+            signupPresenter.prepareFailView(
+                    "Username and password cannot contain spaces, periods '.', commas ',' or semicolons ';'."
+            );
+            return;
+        }
+
+        // ===== EXISTING USER CHECK =====
         if (userDataAccessObject.existsByName(username)) {
             signupPresenter.prepareFailView("User already exists.");
             return;
         }
 
+        // ===== CREATE + SAVE USER =====
         User user = userFactory.create(username, password);
         userDataAccessObject.save(user);
         userDataAccessObject.setCurrentUsername(username);
 
-        SignupOutputData outputData = new SignupOutputData(username);
+        // Adjust constructor if your SignupOutputData is different
+        SignupOutputData outputData = new SignupOutputData(username, false);
         signupPresenter.prepareSuccessView(outputData);
+    }
+
+    /**
+     * Returns true if the string contains any disallowed characters:
+     * space, '.', ',' or ';'.
+     */
+    private boolean containsDisallowedCharacters(String s) {
+        if (s == null) return false;
+        for (char c : s.toCharArray()) {
+            if (c == ' ' || c == '.' || c == ',' || c == ';') {
+                return true;
+            }
+        }
+        return false;
     }
 }
