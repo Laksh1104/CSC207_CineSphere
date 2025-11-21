@@ -6,6 +6,7 @@ import interface_adapter.login.LoginState;
 
 import interface_adapter.signup.SignupController;
 import interface_adapter.signup.SignupViewModel;
+import interface_adapter.signup.SignupState;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,6 +26,7 @@ public class LoginView extends JFrame {
     private JButton cancelButton;
 
     private JLabel errorLabel;
+    private JLabel statusLabel; // shows logged-in info
 
     public LoginView(LoginController loginController,
                      LoginViewModel loginViewModel,
@@ -38,7 +40,7 @@ public class LoginView extends JFrame {
 
         setTitle("log in");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(340, 180);
+        setSize(340, 200);
         setLocationRelativeTo(null);
         setResizable(false);
 
@@ -50,7 +52,6 @@ public class LoginView extends JFrame {
         JPanel root = new JPanel(new BorderLayout());
         root.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // --- form panel (Username / Password) ---
         JPanel formPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(4, 4, 4, 4);
@@ -84,21 +85,26 @@ public class LoginView extends JFrame {
         buttonPanel.add(signupButton);
         buttonPanel.add(cancelButton);
 
-        // --- error label under buttons ---
         errorLabel = new JLabel(" ");
         errorLabel.setForeground(Color.RED);
         errorLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
+        statusLabel = new JLabel(" ");
+        statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
         JPanel southPanel = new JPanel(new BorderLayout());
         southPanel.add(buttonPanel, BorderLayout.CENTER);
-        southPanel.add(errorLabel, BorderLayout.SOUTH);
+
+        JPanel messagePanel = new JPanel(new GridLayout(2, 1));
+        messagePanel.add(errorLabel);
+        messagePanel.add(statusLabel);
+
+        southPanel.add(messagePanel, BorderLayout.SOUTH);
 
         root.add(formPanel, BorderLayout.CENTER);
         root.add(southPanel, BorderLayout.SOUTH);
 
-        // enter triggers "log in"
         getRootPane().setDefaultButton(loginButton);
-
         setContentPane(root);
     }
 
@@ -106,21 +112,49 @@ public class LoginView extends JFrame {
         // login button
         loginButton.addActionListener(e -> handleLogin());
 
-        // sign up button (reuses same username/password fields)
+        // sign up button (reuse fields)
         signupButton.addActionListener(e -> handleSignup());
 
         // cancel button: close app
         cancelButton.addActionListener(e -> dispose());
 
-        // listen for login errors and show them in the red label
+        // Listen for login state changes
         loginViewModel.addPropertyChangeListener(evt -> {
             if ("state".equals(evt.getPropertyName())) {
                 LoginState state = (LoginState) evt.getNewValue();
+
                 String message = state.getErrorMessage();
                 if (message != null && !message.isEmpty()) {
                     errorLabel.setText(message);
                 } else {
                     errorLabel.setText(" ");
+                }
+
+                if (state.isLoggedIn()) {
+                    statusLabel.setText("Logged in as: " + state.getUsername());
+                }
+            }
+        });
+
+        // Listen for signup state changes (show dialogs here, not in presenter)
+        signupViewModel.addPropertyChangeListener(evt -> {
+            if ("state".equals(evt.getPropertyName())) {
+                SignupState state = (SignupState) evt.getNewValue();
+
+                if (state.getErrorMessage() != null && !state.getErrorMessage().isEmpty()) {
+                    JOptionPane.showMessageDialog(
+                            this,
+                            state.getErrorMessage(),
+                            "Sign up failed",
+                            JOptionPane.ERROR_MESSAGE
+                    );
+                } else if (state.isSignupSuccess()) {
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "Account created for " + state.getUsername(),
+                            "Sign up successful",
+                            JOptionPane.INFORMATION_MESSAGE
+                    );
                 }
             }
         });
