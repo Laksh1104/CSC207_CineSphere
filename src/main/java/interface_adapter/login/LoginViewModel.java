@@ -13,10 +13,9 @@ public class LoginViewModel {
     }
 
     public void setState(LoginState newState) {
-        LoginState old = this.state;
+        LoginState oldState = this.state;
         this.state = newState;
-        // tjis triggers LoginViews listener
-        support.firePropertyChange("state", old, this.state);
+        support.firePropertyChange("state", oldState, newState); // ✅
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
