@@ -2,18 +2,15 @@ package use_case.login;
 
 import entity.User;
 
-/**
- * Application business rules for logging a user in.
- */
 public class LoginInteractor implements LoginInputBoundary {
 
-    private final LoginUserDataAccessInterface userDataAccess;
-    private final LoginOutputBoundary presenter;
+    private final LoginUserDataAccessInterface userDataAccessObject;
+    private final LoginOutputBoundary loginPresenter;
 
-    public LoginInteractor(LoginUserDataAccessInterface userDataAccess,
-                           LoginOutputBoundary presenter) {
-        this.userDataAccess = userDataAccess;
-        this.presenter = presenter;
+    public LoginInteractor(LoginUserDataAccessInterface userDataAccessObject,
+                           LoginOutputBoundary loginPresenter) {
+        this.userDataAccessObject = userDataAccessObject;
+        this.loginPresenter = loginPresenter;
     }
 
     @Override
@@ -21,31 +18,47 @@ public class LoginInteractor implements LoginInputBoundary {
         String username = inputData.getUsername();
         String password = inputData.getPassword();
 
-        // 1. Missing fields
-        if (username == null || username.isEmpty() ||
-                password == null || password.isEmpty()) {
-            presenter.prepareFailView("Username and password are required.");
+        // ===== REQUIRED FIELDS =====
+        if (username == null || username.isEmpty()
+                || password == null || password.isEmpty()) {
+            loginPresenter.prepareFailView("Username and password are required.");
             return;
         }
 
-        // 2. User exists?
-        if (!userDataAccess.existsByName(username)) {
-            presenter.prepareFailView("User '" + username + "' does not exist.");
+        // ===== CHARACTER RESTRICTIONS =====
+        if (containsDisallowedCharacters(username) || containsDisallowedCharacters(password)) {
+            loginPresenter.prepareFailView(
+                    "Username and password cannot contain spaces, periods '.', commas ',' or semicolons ';'."
+            );
             return;
         }
 
-        // 3. Password correct?
-        User user = userDataAccess.get(username);
+        // ===== USER EXISTS? =====
+        if (!userDataAccessObject.existsByName(username)) {
+            loginPresenter.prepareFailView("User does not exist.");
+            return;
+        }
+
+        User user = userDataAccessObject.get(username);
         if (user == null || !user.getPassword().equals(password)) {
-            presenter.prepareFailView("Incorrect password.");
+            loginPresenter.prepareFailView("Incorrect password.");
             return;
         }
 
-        // 4. Success -> mark current user + tell presenter
-        userDataAccess.setCurrentUsername(username);
+        userDataAccessObject.setCurrentUsername(username);
 
-        // 🔴 FIX: presenter expects LoginOutputData, not a String
-        LoginOutputData outputData = new LoginOutputData(username);
-        presenter.prepareSuccessView(outputData);
+        // Adjust constructor if your LoginOutputData is different
+        LoginOutputData outputData = new LoginOutputData(username, false);
+        loginPresenter.prepareSuccessView(outputData);
+    }
+
+    private boolean containsDisallowedCharacters(String s) {
+        if (s == null) return false;
+        for (char c : s.toCharArray()) {
+            if (c == ' ' || c == '.' || c == ',' || c == ';') {
+                return true;
+            }
+        }
+        return false;
     }
 }
