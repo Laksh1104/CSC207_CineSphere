@@ -21,4 +21,11 @@ public class SignupViewModel {
     public void addPropertyChangeListener(PropertyChangeListener listener) {
         support.addPropertyChangeListener(listener);
     }
+
+    public void firePropertyChanged() {
+        SignupState oldState = this.state;
+        SignupState newState = new SignupState(oldState);
+        support.firePropertyChange("state", oldState, newState);
+    }
+
 }
