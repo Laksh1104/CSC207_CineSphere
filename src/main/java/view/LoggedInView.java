@@ -3,10 +3,15 @@ package view;
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
+import use_case.search_film.*;
 
 public class LoggedInView extends JPanel {
 
+    private SearchFilmController searchFilmController;
+    private SearchFilmViewModel searchFilmViewModel;
+
     public LoggedInView() {
+
 
         setBackground(new Color(255, 255, 224));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -31,6 +36,32 @@ public class LoggedInView extends JPanel {
         add(Box.createRigidArea(new Dimension(0, 30)));
         add(popularFilmPanel);
         add(scrollPane);
+    }
+
+    public void setSearchDependencies(SearchFilmController controller, SearchFilmViewModel viewModel) {
+        this.searchFilmController = controller;
+        this.searchFilmViewModel = viewModel;
+
+        viewModel.addPropertyChangeListener(evt -> {
+            if (!"state".equals(evt.getPropertyName())) return;
+            SearchFilmState state = (SearchFilmState) evt.getNewValue();
+
+            SwingUtilities.invokeLater(() -> {
+                if (state.getErrorMessage() != null) {
+                    JOptionPane.showMessageDialog(this, state.getErrorMessage(), "Search Error",
+                            JOptionPane.ERROR_MESSAGE);
+
+                } else if (state.getFilmId() != -1) {
+                    int movieId = state.getFilmId();
+                    JFrame movieFrame = new JFrame("Movie Page - ID: " + movieId);
+                    movieFrame.setSize(500, 300);
+                    movieFrame.add(new JLabel("Movie Page for ID: " + movieId), SwingConstants.CENTER);
+                    movieFrame.setVisible(true);
+                }
+            });
+        });
+
+
     }
 
 
@@ -70,6 +101,15 @@ public class LoggedInView extends JPanel {
         );
 
         JTextField searchField = new JTextField(10);
+
+        searchField.addActionListener(e -> {
+            String query = searchField.getText().trim();
+            if (query.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please enter a film name");
+                return;
+            }
+            searchFilmController.execute(query);
+        });
         JLabel findFilmLabel = new JLabel("Find Film:");
 
         filterPanel.add(browseTitle);
