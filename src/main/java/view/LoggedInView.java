@@ -3,12 +3,17 @@ package view;
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
+
+import interface_adapter.popular_movies.PopularMoviesController;
+import interface_adapter.popular_movies.PopularMoviesViewModel;
 import use_case.search_film.*;
 
 public class LoggedInView extends JPanel {
 
     private SearchFilmController searchFilmController;
     private SearchFilmViewModel searchFilmViewModel;
+    private PopularMoviesController popularMoviesController;
+    private PopularMoviesViewModel popularMoviesViewModel;
 
     public LoggedInView() {
 
@@ -62,6 +67,11 @@ public class LoggedInView extends JPanel {
         });
 
 
+    }
+
+    public void setPopularMoviesDependencies(PopularMoviesController controller, PopularMoviesViewModel viewModel) {
+        this.popularMoviesController = controller;
+        this.popularMoviesViewModel = viewModel;
     }
 
 
