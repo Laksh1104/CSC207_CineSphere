@@ -10,13 +10,13 @@ import okhttp3.Response;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import use_case.movie_details.MovieDetailsAccessInterface;
+import use_case.movie_details.MovieDetailsDataAccessInterface;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MovieDetailsDataAccessObject implements MovieDetailsAccessInterface {
+public class MovieDetailsDataAccessObject implements MovieDetailsDataAccessInterface {
 
     private static final Dotenv DOTENV = Dotenv.load();
     private static final String API_KEY = DOTENV.get("TMDB_API_KEY");

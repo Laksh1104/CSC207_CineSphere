@@ -1,7 +1,7 @@
 package view;
 
-import entity.MovieDetails;
-import entity.MovieReview;
+import interface_adapter.movie_details.MovieDetailsViewModel;
+import use_case.movie_details.MovieDetailsOutputData.MovieReviewData;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -18,7 +18,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class MovieDetailsView extends JFrame {
+public class MovieDetailsView extends JPanel {
 
     private static final Color BACKGROUND_COLOR = new Color(0xFFFBE6);
     private static final int POSTER_WIDTH = 300;
@@ -26,39 +26,40 @@ public class MovieDetailsView extends JFrame {
     private static final int REVIEWS_HEIGHT = 120;
     private static final int MAX_REVIEWS = 2;
 
-    public MovieDetailsView(MovieDetails movie) {
-        super(movie.filmName());
-        initializeFrame();
-        buildUI(movie);
-        finalizeFrame();
+    public MovieDetailsView() {
+        initializePanel();
     }
 
-    private void initializeFrame() {
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    public void displayMovieDetails(MovieDetailsViewModel viewModel) {
+        buildUI(viewModel);
+        revalidate();
+        repaint();
+    }
+
+    public void displayError(String errorMessage) {
+        JOptionPane.showMessageDialog(this, errorMessage, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    private void initializePanel() {
         setLayout(new BorderLayout(16, 16));
-        getContentPane().setBackground(BACKGROUND_COLOR);
-        getRootPane().setBorder(new EmptyBorder(16, 16, 16, 16));
+        setBackground(BACKGROUND_COLOR);
+        setBorder(new EmptyBorder(16, 16, 16, 16));
     }
 
-    private void buildUI(MovieDetails movie) {
-        add(createHeaderPanel(movie), BorderLayout.NORTH);
-        add(createCenterPanel(movie), BorderLayout.CENTER);
-        add(createBottomPanel(movie), BorderLayout.SOUTH);
+    private void buildUI(MovieDetailsViewModel viewModel) {
+        removeAll();
+        add(createHeaderPanel(viewModel), BorderLayout.NORTH);
+        add(createCenterPanel(viewModel), BorderLayout.CENTER);
+        add(createBottomPanel(viewModel), BorderLayout.SOUTH);
     }
 
-    private void finalizeFrame() {
-        pack();
-        setLocationRelativeTo(null);
-        setVisible(true);
-    }
-
-    private JPanel createHeaderPanel(MovieDetails movie) {
+    private JPanel createHeaderPanel(MovieDetailsViewModel viewModel) {
         JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
         header.setOpaque(false);
 
-        JLabel title = bold(new JLabel(movie.filmName()));
-        JLabel date = new JLabel(" –  %s  –  ".formatted(movie.releaseDate()));
-        JLabel director = new JLabel("Directed by: %s".formatted(movie.director()));
+        JLabel title = bold(new JLabel(viewModel.filmName()));
+        JLabel date = new JLabel(" –  %s  –  ".formatted(viewModel.releaseDate()));
+        JLabel director = new JLabel("Directed by: %s".formatted(viewModel.director()));
 
         header.add(title);
         header.add(date);
@@ -67,33 +68,33 @@ public class MovieDetailsView extends JFrame {
         return header;
     }
 
-    private JPanel createCenterPanel(MovieDetails movie) {
+    private JPanel createCenterPanel(MovieDetailsViewModel viewModel) {
         JPanel center = new JPanel(new BorderLayout(16, 0));
         center.setOpaque(false);
 
-        center.add(createPosterLabel(movie), BorderLayout.WEST);
-        center.add(createFactsPanel(movie), BorderLayout.CENTER);
+        center.add(createPosterLabel(viewModel), BorderLayout.WEST);
+        center.add(createFactsPanel(viewModel), BorderLayout.CENTER);
 
         return center;
     }
 
-    private JLabel createPosterLabel(MovieDetails movie) {
+    private JLabel createPosterLabel(MovieDetailsViewModel viewModel) {
         JLabel poster = new JLabel("Loading...", SwingConstants.CENTER);
         poster.setPreferredSize(new Dimension(POSTER_WIDTH, POSTER_HEIGHT));
         poster.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
 
-        loadPosterImage(poster, movie);
+        loadPosterImage(poster, viewModel);
 
         return poster;
     }
 
-    private Box createFactsPanel(MovieDetails movie) {
+    private Box createFactsPanel(MovieDetailsViewModel viewModel) {
         Box facts = Box.createVerticalBox();
         facts.setOpaque(false);
 
-        facts.add(new JLabel("Rating: %s".formatted(movie.ratingOutOf5())));
+        facts.add(new JLabel("Rating: %s".formatted(viewModel.ratingOutOf5())));
         facts.add(Box.createVerticalStrut(6));
-        facts.add(new JLabel("Genres: %s".formatted(String.join(", ", movie.genres()))));
+        facts.add(new JLabel("Genres: %s".formatted(String.join(", ", viewModel.genres()))));
         facts.add(Box.createVerticalStrut(12));
         facts.add(createWatchlistButton());
 
@@ -106,15 +107,15 @@ public class MovieDetailsView extends JFrame {
         return watchlistBtn;
     }
 
-    private JScrollPane createBottomPanel(MovieDetails movie) {
+    private JScrollPane createBottomPanel(MovieDetailsViewModel viewModel) {
         JPanel bottom = new JPanel();
         bottom.setOpaque(false);
         bottom.setLayout(new BoxLayout(bottom, BoxLayout.Y_AXIS));
 
-        bottom.add(createDescriptionArea(movie));
+        bottom.add(createDescriptionArea(viewModel));
         bottom.add(Box.createVerticalStrut(8));
         bottom.add(bold(new JLabel("Popular Reviews:")));
-        bottom.add(createReviewsScrollPane(movie));
+        bottom.add(createReviewsScrollPane(viewModel));
 
         JScrollPane scroll = new JScrollPane(bottom,
                 ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
@@ -124,8 +125,8 @@ public class MovieDetailsView extends JFrame {
         return scroll;
     }
 
-    private JTextArea createDescriptionArea(MovieDetails movie) {
-        JTextArea desc = new JTextArea("Description: " + movie.description());
+    private JTextArea createDescriptionArea(MovieDetailsViewModel viewModel) {
+        JTextArea desc = new JTextArea("Description: " + viewModel.description());
         desc.setLineWrap(true);
         desc.setWrapStyleWord(true);
         desc.setEditable(false);
@@ -133,8 +134,8 @@ public class MovieDetailsView extends JFrame {
         return desc;
     }
 
-    private JScrollPane createReviewsScrollPane(MovieDetails movie) {
-        String reviewsText = formatReviews(movie.reviews(), MAX_REVIEWS);
+    private JScrollPane createReviewsScrollPane(MovieDetailsViewModel viewModel) {
+        String reviewsText = formatReviews(viewModel.reviews(), MAX_REVIEWS);
         JTextArea reviews = new JTextArea(reviewsText);
         reviews.setLineWrap(true);
         reviews.setWrapStyleWord(true);
@@ -155,7 +156,7 @@ public class MovieDetailsView extends JFrame {
         return l;
     }
 
-    private static String formatReviews(final List<MovieReview> reviews, int maxReviews) {
+    private static String formatReviews(final List<MovieReviewData> reviews, int maxReviews) {
         if (reviews == null || reviews.isEmpty()) {
             return "No reviews available.";
         }
@@ -167,10 +168,10 @@ public class MovieDetailsView extends JFrame {
                 .collect(Collectors.joining("\n\n"));
     }
 
-    private void loadPosterImage(JLabel posterLabel, MovieDetails movie) {
+    private void loadPosterImage(JLabel posterLabel, MovieDetailsViewModel viewModel) {
         new Thread(() -> {
             try {
-                String posterPath = movie.posterUrl();
+                String posterPath = viewModel.posterUrl();
                 if (posterPath != null && !posterPath.isEmpty()) {
                     BufferedImage originalImage = downloadImage(posterPath);
 
@@ -185,7 +186,6 @@ public class MovieDetailsView extends JFrame {
                 }
             } catch (IOException e) {
                 updatePosterLabelText(posterLabel, "Failed to load image");
-                e.printStackTrace();
             }
         }).start();
     }
