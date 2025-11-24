@@ -17,12 +17,15 @@ public class PopularMoviesInteractor implements PopularMoviesInputBoundary{
 
     @Override
     public void execute(PopularMoviesInputData inputData) {
-        List<Movie> movies = movieDataAccess.getPopularMovies();
-        List<String> posterUrls = movieDataAccess.getPosterUrls(movies);
+        try {
+            List<Movie> movies = movieDataAccess.getPopularMovies();
+            List<String> posterUrls = movieDataAccess.getPosterUrls(movies);
 
-        PopularMoviesOutputData outputData =
-                new PopularMoviesOutputData(posterUrls, inputData.getPage());
+            PopularMoviesOutputData outputData = new PopularMoviesOutputData(posterUrls, inputData.getPage());
 
-        presenter.present(outputData);
+            presenter.present(outputData);
+        } catch (Exception e) {
+            presenter.presenterror(e.getMessage());
+        }
     }
 }
