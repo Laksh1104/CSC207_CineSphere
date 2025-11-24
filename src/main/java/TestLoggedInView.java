@@ -7,6 +7,7 @@ public class TestLoggedInView {
 
         // Create the LoggedInView panel
         LoggedInView loggedInView = new LoggedInView();
+        loggedInView.setMovieDetailsDependencies();
 
         SearchFilmDataAccessInterface api = new SearchFilmAPIAccess();
         SearchFilmViewModel searchFilmViewModel = new SearchFilmViewModel();
