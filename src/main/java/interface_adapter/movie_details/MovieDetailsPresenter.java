@@ -2,18 +2,17 @@ package interface_adapter.movie_details;
 
 import use_case.movie_details.MovieDetailsOutputBoundary;
 import use_case.movie_details.MovieDetailsOutputData;
-import view.MovieDetailsView;
 
 public class MovieDetailsPresenter implements MovieDetailsOutputBoundary {
-    private final MovieDetailsView view;
+    private final MovieDetailsViewModel viewModel;
 
-    public MovieDetailsPresenter(MovieDetailsView view) {
-        this.view = view;
+    public MovieDetailsPresenter(MovieDetailsViewModel viewModel) {
+        this.viewModel = viewModel;
     }
 
     @Override
     public void presentMovieDetails(MovieDetailsOutputData outputData) {
-        MovieDetailsViewModel viewModel = new MovieDetailsViewModel(
+        MovieDetailsState newState = new MovieDetailsState(
             outputData.filmName(),
             outputData.director(),
             outputData.releaseDate(),
@@ -23,11 +22,12 @@ public class MovieDetailsPresenter implements MovieDetailsOutputBoundary {
             outputData.reviews(),
             outputData.posterUrl()
         );
-        view.displayMovieDetails(viewModel);
+
+        viewModel.setState(newState);
     }
 
     @Override
     public void presentError(String errorMessage) {
-        view.displayError(errorMessage);
+        viewModel.setErrorMessage(errorMessage);
     }
 }

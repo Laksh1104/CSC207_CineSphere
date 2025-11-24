@@ -36,7 +36,7 @@ public class MovieDetailsInteractor implements MovieDetailsInputBoundary {
 
             presenter.presentMovieDetails(outputData);
         } catch (Exception e) {
-            presenter.presentError("Failed to load movie details: " + e.getMessage());
+            presenter.presentError(e.getMessage());
         }
     }
 }

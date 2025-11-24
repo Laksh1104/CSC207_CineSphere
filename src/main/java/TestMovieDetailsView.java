@@ -1,6 +1,7 @@
 import data_access.MovieDetailsDataAccessObject;
 import interface_adapter.movie_details.MovieDetailsController;
 import interface_adapter.movie_details.MovieDetailsPresenter;
+import interface_adapter.movie_details.MovieDetailsViewModel;
 import use_case.movie_details.MovieDetailsDataAccessInterface;
 import use_case.movie_details.MovieDetailsInputBoundary;
 import use_case.movie_details.MovieDetailsInteractor;
@@ -13,13 +14,14 @@ public class TestMovieDetailsView {
 
     public static void main(String[] args) {
         final MovieDetailsDataAccessInterface dataAccess = new MovieDetailsDataAccessObject();
-        final MovieDetailsView view = new MovieDetailsView();
-        final MovieDetailsOutputBoundary presenter = new MovieDetailsPresenter(view);
+        final MovieDetailsViewModel viewModel = new MovieDetailsViewModel();
+        final MovieDetailsOutputBoundary presenter = new MovieDetailsPresenter(viewModel);
         final MovieDetailsInputBoundary interactor = new MovieDetailsInteractor(dataAccess, presenter);
         final MovieDetailsController controller = new MovieDetailsController(interactor);
 
-        // Create a JFrame to show the view
-        JFrame frame = new JFrame("Movie Details Test Harness");
+        final MovieDetailsView view = new MovieDetailsView(viewModel);
+
+        final JFrame frame = new JFrame("Movie Details Test Harness");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(600, 800);
         frame.add(view);
