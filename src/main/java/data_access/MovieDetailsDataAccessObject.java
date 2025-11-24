@@ -39,8 +39,7 @@ public class MovieDetailsDataAccessObject implements MovieDetailsDataAccessInter
             return parseResponse(response);
         }
         catch (final IOException e) {
-            System.err.println("Failed to get movie details with error: " + e.getMessage());
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to get movie details with error: " + e.getMessage(), e);
         }
     }
 
