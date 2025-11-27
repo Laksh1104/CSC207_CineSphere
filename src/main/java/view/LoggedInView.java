@@ -3,21 +3,12 @@ package view;
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
-
-import interface_adapter.SearchFilm.SearchFilmController;
-import interface_adapter.SearchFilm.SearchFilmState;
-import interface_adapter.SearchFilm.SearchFilmViewModel;
-import interface_adapter.movie_details.*;
-import use_case.movie_details.*;
-import data_access.MovieDetailsDataAccessObject;
+import use_case.search_film.*;
 
 public class LoggedInView extends JPanel {
 
     private SearchFilmController searchFilmController;
     private SearchFilmViewModel searchFilmViewModel;
-    private MovieDetailsController movieDetailsController;
-    private MovieDetailsView movieDetailsView;
-    private MovieDetailsViewModel movieDetailsViewModel;
 
     public LoggedInView() {
 
@@ -62,27 +53,15 @@ public class LoggedInView extends JPanel {
 
                 } else if (state.getFilmId() != -1) {
                     int movieId = state.getFilmId();
-                    movieDetailsController.showMovieDetails(movieId);
-                    JFrame movieFrame = new JFrame("Movie Page");
-                    movieFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-                    movieFrame.setSize(800, 900);
-                    movieFrame.add(movieDetailsView);
+                    JFrame movieFrame = new JFrame("Movie Page - ID: " + movieId);
+                    movieFrame.setSize(500, 300);
+                    movieFrame.add(new JLabel("Movie Page for ID: " + movieId), SwingConstants.CENTER);
                     movieFrame.setVisible(true);
                 }
             });
         });
 
 
-    }
-
-    public void setMovieDetailsDependencies() {
-
-        movieDetailsViewModel = new MovieDetailsViewModel();
-        MovieDetailsPresenter presenter = new MovieDetailsPresenter(movieDetailsViewModel);
-        MovieDetailsDataAccessInterface object = new MovieDetailsDataAccessObject();
-        MovieDetailsInputBoundary interactor = new MovieDetailsInteractor(object, presenter);
-        movieDetailsController = new MovieDetailsController(interactor);
-        movieDetailsView = new MovieDetailsView(movieDetailsViewModel);
     }
 
 

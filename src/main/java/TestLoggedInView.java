@@ -1,7 +1,3 @@
-import data_access.SearchFilmDataAccessObject;
-import interface_adapter.SearchFilm.SearchFilmController;
-import interface_adapter.SearchFilm.SearchFilmPresenter;
-import interface_adapter.SearchFilm.SearchFilmViewModel;
 import use_case.search_film.*;
 import view.LoggedInView;
 import javax.swing.*;
@@ -11,7 +7,6 @@ public class TestLoggedInView {
 
         // Create the LoggedInView panel
         LoggedInView loggedInView = new LoggedInView();
-        loggedInView.setMovieDetailsDependencies();
 
         SearchFilmDataAccessInterface api = new SearchFilmDataAccessObject();
         SearchFilmViewModel searchFilmViewModel = new SearchFilmViewModel();
