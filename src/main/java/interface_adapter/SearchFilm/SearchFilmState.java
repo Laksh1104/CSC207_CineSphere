@@ -1,4 +1,4 @@
-package use_case.search_film;
+package interface_adapter.SearchFilm;
 
 public class SearchFilmState {
     private Integer filmId;

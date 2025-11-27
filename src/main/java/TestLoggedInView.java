@@ -8,7 +8,7 @@ public class TestLoggedInView {
         // Create the LoggedInView panel
         LoggedInView loggedInView = new LoggedInView();
 
-        SearchFilmDataAccessInterface api = new SearchFilmAPIAccess();
+        SearchFilmDataAccessInterface api = new SearchFilmDataAccessObject();
         SearchFilmViewModel searchFilmViewModel = new SearchFilmViewModel();
         SearchFilmOutputBoundary searchFilmPresenter = new SearchFilmPresenter(searchFilmViewModel);
         SearchFilmInputBoundary searchFilmInteractor = new SearchFilmInteractor(api, searchFilmPresenter);
