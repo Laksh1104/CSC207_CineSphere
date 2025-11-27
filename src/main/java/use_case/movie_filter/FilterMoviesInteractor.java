@@ -18,7 +18,7 @@ public class FilterMoviesInteractor implements FilterMoviesInputBoundary {
     @Override
     public void execute(FilterMoviesInputData inputData) {
 
-        // Fetching movies from DAO
+        // Call DAO directly — NO Local Filtering anymore
         List<Movie> movies = movieDao.getFilteredMovies(
                 inputData.getYear(),
                 inputData.getRating(),
@@ -30,19 +30,11 @@ public class FilterMoviesInteractor implements FilterMoviesInputBoundary {
         // Convert to poster URLs
         List<String> posters = movieDao.getPosterUrls(movies);
 
-        // Extract film IDs
-        List<Integer> filmIds = movies.stream()
-                .map(Movie::getId)
-                .collect(Collectors.toList());
-
-        int totalPages = 10;
-
         // Send to presenter
         presenter.present(new FilterMoviesOutputData(
                 posters,
-                filmIds,
                 inputData.getPage(),
-                totalPages
+                10   // total pages
         ));
     }
 }
