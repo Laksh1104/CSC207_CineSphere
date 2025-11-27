@@ -25,7 +25,7 @@ public class PopularMoviesInteractor implements PopularMoviesInputBoundary{
 
             presenter.present(outputData);
         } catch (Exception e) {
-            presenter.presenterror(e.getMessage());
+            presenter.presentError(e.getMessage());
         }
     }
 }
