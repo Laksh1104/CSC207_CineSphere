@@ -1,10 +1,7 @@
 package view;
 
-import data_access.MovieDetailsDataAccessObject;
 import interface_adapter.filter_movies.FilterMoviesController;
 import interface_adapter.filter_movies.FilterMoviesViewModel;
-import interface_adapter.movie_details.*;
-import use_case.movie_details.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -21,11 +18,8 @@ import java.util.Map;
  */
 public class FilteredView extends JFrame {
 
-    private final FilterMoviesController filterMoviesController;
-    private final FilterMoviesViewModel filterMoviesViewModel;
-    private MovieDetailsController movieDetailsController;
-    private MovieDetailsView movieDetailsView;
-    private MovieDetailsViewModel movieDetailsViewModel;
+    private final FilterMoviesController controller;
+    private final FilterMoviesViewModel viewModel;
 
     // UI components
     private JComboBox<String> yearDropdown;
@@ -52,10 +46,10 @@ public class FilteredView extends JFrame {
             "Romance", 10749
     );
 
-    public FilteredView(FilterMoviesController filterMoviesController,
-                        FilterMoviesViewModel filterMoviesViewModel) {
-        this.filterMoviesController = filterMoviesController;
-        this.filterMoviesViewModel = filterMoviesViewModel;
+    public FilteredView(FilterMoviesController controller,
+                        FilterMoviesViewModel viewModel) {
+        this.controller = controller;
+        this.viewModel = viewModel;
 
         setTitle("CineSphere - Filtered Results");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -63,19 +57,8 @@ public class FilteredView extends JFrame {
         setLocationRelativeTo(null);
 
         buildUI();
-        setMovieDetailsDependencies();
         callFilter();
     }
-
-    public void setMovieDetailsDependencies() {
-        movieDetailsViewModel = new MovieDetailsViewModel();
-        MovieDetailsPresenter presenter = new MovieDetailsPresenter(movieDetailsViewModel);
-        MovieDetailsDataAccessInterface api = new MovieDetailsDataAccessObject();
-        MovieDetailsInputBoundary interactor = new MovieDetailsInteractor(api, presenter);
-        movieDetailsController = new MovieDetailsController(interactor);
-        movieDetailsView = new MovieDetailsView(movieDetailsViewModel);
-    }
-
 
     // ============================================================
     //  UI Setup  (EXACT same as your working GUI)
@@ -177,7 +160,7 @@ public class FilteredView extends JFrame {
         });
 
         nextButton.addActionListener(e -> {
-            if (currentPage < filterMoviesViewModel.getTotalPages()) {
+            if (currentPage < viewModel.getTotalPages()) {
                 currentPage++;
                 callFilter();
             }
@@ -214,7 +197,7 @@ public class FilteredView extends JFrame {
 
         Integer genreId = GENRE_MAP.getOrDefault(genreText, null);
 
-        filterMoviesController.execute(
+        controller.execute(
                 year,
                 rating,
                 genreId == null ? null : String.valueOf(genreId),
@@ -246,14 +229,12 @@ public class FilteredView extends JFrame {
     private void updateGrid() {
         gridPanel.removeAll();
 
-        List<String> posters = filterMoviesViewModel.getPosters();
-        List<Integer> filmIds = filterMoviesViewModel.getFilmIds();
+        List<String> posters = viewModel.getPosters();
 
         int count = Math.min(PAGE_SIZE, posters.size());
 
         for (int i = 0; i < count; i++) {
-            gridPanel.add(createPosterButton(posters.get(i),  filmIds.get(i)));
-
+            gridPanel.add(createPosterLabel(posters.get(i)));
         }
 
         for (int i = count; i < PAGE_SIZE; i++) {
@@ -263,20 +244,16 @@ public class FilteredView extends JFrame {
             gridPanel.add(empty);
         }
 
-        pageLabel.setText(currentPage + " / " + filterMoviesViewModel.getTotalPages());
+        pageLabel.setText(currentPage + " / " + viewModel.getTotalPages());
 
         gridPanel.revalidate();
         gridPanel.repaint();
     }
 
-    private JButton createPosterButton(String urlString, int filmId) {
-        JButton button = new JButton();
-        button.setHorizontalAlignment(SwingConstants.CENTER);
-        button.setBorder(BorderFactory.createEmptyBorder());
-        button.setContentAreaFilled(false);
-        button.setFocusPainted(false);
+    private JLabel createPosterLabel(String urlString) {
+        JLabel label = new JLabel();
+        label.setHorizontalAlignment(SwingConstants.CENTER);
 
-        // Set Image
         try {
             ImageIcon cached = iconCache.get(urlString);
             if (cached == null) {
@@ -285,24 +262,12 @@ public class FilteredView extends JFrame {
                 cached = new ImageIcon(scaled);
                 iconCache.put(urlString, cached);
             }
-            button.setIcon(cached);
+            label.setIcon(cached);
         } catch (Exception e) {
-            button.setText("No Image");
+            label.setText("No Image");
         }
 
-        // ✔ Clicking poster → open movie details
-        button.addActionListener(e -> {
-            movieDetailsController.showMovieDetails(filmId);
-
-            JFrame movieFrame = new JFrame("Movie Details");
-            movieFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-            movieFrame.setSize(800, 900);
-            movieFrame.add(movieDetailsView);
-            movieFrame.setVisible(true);
-        });
-
-        button.setBorder(BorderFactory.createDashedBorder(Color.GRAY));
-        return button;
+        label.setBorder(BorderFactory.createDashedBorder(Color.GRAY));
+        return label;
     }
-
 }
