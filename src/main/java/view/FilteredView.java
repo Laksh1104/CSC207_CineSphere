@@ -30,6 +30,7 @@ public class FilteredView extends JFrame {
     private MovieDetailsView movieDetailsView;
     private MovieDetailsViewModel movieDetailsViewModel;
 
+    private final Color COLOR = new Color(255, 255, 224);
 
     // UI components
     private JComboBox<String> yearDropdown;
@@ -78,33 +79,18 @@ public class FilteredView extends JFrame {
         backgroundPanel.setBackground(new Color(255, 255, 224));
         backgroundPanel.setLayout(new BoxLayout(backgroundPanel, BoxLayout.Y_AXIS));
 
-        JLabel title = new JLabel("CineSphere", SwingConstants.CENTER);
-        title.setForeground(Color.BLACK);
-        title.setFont(new Font("Arial", Font.BOLD, 20));
+        backgroundPanel.add(Box.createRigidArea(new Dimension(0, 20)));
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
-        buttonPanel.setBackground(new Color(255, 255, 224));
-        buttonPanel.setPreferredSize(new Dimension(800, 50));
-        buttonPanel.setMaximumSize(new Dimension(800, 50));
-        buttonPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        HeaderPanel headerPanel = new HeaderPanel();
+        headerPanel.setMaximumSize(new Dimension(800, 50));
+        backgroundPanel.add(headerPanel);
 
-        JButton watchlistButton = new JButton("Watchlist");
-        JButton bookButton = new JButton("Booking");
-        JButton logoutButton = new JButton("Logout");
-        JButton homeButton = new JButton("Home");
-
-        buttonPanel.add(title);
-        buttonPanel.add(homeButton);
-        buttonPanel.add(watchlistButton);
-        buttonPanel.add(bookButton);
-        buttonPanel.add(logoutButton);
-
-        logoutButton.addActionListener(e -> this.dispose());
+        backgroundPanel.add(Box.createRigidArea(new Dimension(0, 20)));
 
         JPanel filterPanel = new JPanel();
         filterPanel.setPreferredSize(new Dimension(800, 40));
         filterPanel.setMaximumSize(new Dimension(800, 40));
-        filterPanel.setBackground(Color.WHITE);
+        filterPanel.setBackground(COLOR);
         filterPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JButton filterButton = new JButton("Filter");
@@ -180,8 +166,6 @@ public class FilteredView extends JFrame {
         pagingPanel.add(pageLabel, BorderLayout.CENTER);
         pagingPanel.add(nextButton, BorderLayout.EAST);
 
-        backgroundPanel.add(Box.createRigidArea(new Dimension(0, 20)));
-        backgroundPanel.add(buttonPanel);
         backgroundPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         backgroundPanel.add(filterPanel);
         backgroundPanel.add(Box.createRigidArea(new Dimension(0, 10)));
