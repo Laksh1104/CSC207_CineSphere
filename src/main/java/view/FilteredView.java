@@ -8,9 +8,12 @@ import use_case.movie_details.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.toedter.calendar.JYearChooser;
+
 
 /**
  * Final FilteredView that:
@@ -33,6 +36,7 @@ public class FilteredView extends JFrame {
     private JComboBox<String> ratingDropdown;
     private JComboBox<String> genreDropdown;
     private JTextField searchField;
+    private JYearChooser yearChooser;
 
     private JLabel filteredByLabel;
     private JPanel gridPanel;
@@ -106,8 +110,9 @@ public class FilteredView extends JFrame {
         JButton filterButton = new JButton("Filter");
         JLabel browseTitle = new JLabel("Browse by: ", SwingConstants.LEFT);
 
-        String[] years = {"All Years", "2025", "2024", "2023", "2022"};
-        yearDropdown = new JComboBox<>(years);
+        yearChooser = new JYearChooser();
+        yearChooser.setYear(Calendar.getInstance().get(Calendar.YEAR));
+
 
         String[] ratings = {"All Ratings", "4.5+", "4.0+", "3.5+", "3.0+", "2.5+", "2.0+", "1.5+", "1.0+"};
         ratingDropdown = new JComboBox<>(ratings);
@@ -119,7 +124,7 @@ public class FilteredView extends JFrame {
         JLabel findFilm = new JLabel("Find a Film: ");
 
         filterPanel.add(browseTitle);
-        filterPanel.add(yearDropdown);
+        filterPanel.add(yearChooser);
         filterPanel.add(ratingDropdown);
         filterPanel.add(genreDropdown);
         filterPanel.add(filterButton);
@@ -190,7 +195,7 @@ public class FilteredView extends JFrame {
     }
 
     private void callFilter() {
-        String year = (String) yearDropdown.getSelectedItem();
+        String year = String.valueOf(yearChooser.getYear());
         String rating = (String) ratingDropdown.getSelectedItem();
         String genreText = (String) genreDropdown.getSelectedItem();
         String search = searchField.getText().trim();
@@ -212,7 +217,7 @@ public class FilteredView extends JFrame {
 
 
     private void updateFilteredByLabel() {
-        String year = (String) yearDropdown.getSelectedItem();
+        String year = String.valueOf(yearChooser.getYear());
         String rating = (String) ratingDropdown.getSelectedItem();
         String genre = (String) genreDropdown.getSelectedItem();
         String search = searchField.getText().trim();
