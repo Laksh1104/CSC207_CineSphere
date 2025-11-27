@@ -71,10 +71,26 @@ public class LoggedInView extends JPanel {
         this.popularMoviesController = controller;
         this.popularMoviesViewModel = viewModel;
 
+        viewModel.addPropertyChangeListener(evt -> {
+            String property = evt.getPropertyName();
+
+            if ("posterUrls".equals(property)) {
+                SwingUtilities.invokeLater(this::refreshPopularMovies);
+            } else if ("errorMessage".equals(property)) {
+                String msg = popularMoviesViewModel.getErrorMessage();
+                if (msg != null) {
+                    SwingUtilities.invokeLater(() ->
+                            JOptionPane.showMessageDialog(this, msg, "Popular Movies Error",
+                                    JOptionPane.ERROR_MESSAGE
+                            )
+                    );
+                }
+            }
+        });
+
         if (popularMoviesController != null) {
             popularMoviesController.loadPopularMovies();
         }
-        refreshPopularMovies();
     }
 
     private JPanel buildFilterPanel() {
@@ -150,7 +166,10 @@ public class LoggedInView extends JPanel {
                 ImageIcon icon = new ImageIcon(new URL(url));
                 Image scaled = icon.getImage().getScaledInstance(200, 300, Image.SCALE_SMOOTH);
                 moviePanel.add(new JLabel(new ImageIcon(scaled)));
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                System.err.println("Failed to load poster from URL: " + url);
+                e.printStackTrace();
+            }
         }
         moviePanel.revalidate();
         moviePanel.repaint();
