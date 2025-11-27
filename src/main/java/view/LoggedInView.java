@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
 
+import interface_adapter.SearchFilm.*;
 import interface_adapter.popular_movies.PopularMoviesController;
 import interface_adapter.popular_movies.PopularMoviesViewModel;
 import use_case.search_film.*;

@@ -1,4 +1,6 @@
 import data_access.PopularMoviesDataAccessObject;
+import data_access.SearchFilmDataAccessObject;
+import interface_adapter.SearchFilm.*;
 import interface_adapter.popular_movies.PopularMoviesController;
 import interface_adapter.popular_movies.PopularMoviesPresenter;
 import interface_adapter.popular_movies.PopularMoviesViewModel;
@@ -15,7 +17,7 @@ public class TestLoggedInView {
         // Create the LoggedInView panel
         LoggedInView loggedInView = new LoggedInView();
 
-        SearchFilmDataAccessInterface api = new SearchFilmAPIAccess();
+        SearchFilmDataAccessInterface api = new SearchFilmDataAccessObject();
         SearchFilmViewModel searchFilmViewModel = new SearchFilmViewModel();
         SearchFilmOutputBoundary searchFilmPresenter = new SearchFilmPresenter(searchFilmViewModel);
         SearchFilmInputBoundary searchFilmInteractor = new SearchFilmInteractor(api, searchFilmPresenter);
@@ -23,7 +25,7 @@ public class TestLoggedInView {
 
         loggedInView.setSearchDependencies(searchFilmController, searchFilmViewModel);
 
-        String bearerToken = "Bearer YOUR_TMDB_TOKEN_HERE";
+        String bearerToken = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0ZjIxZjdhNzBjNjE4ZWVlN2Q2ZDY4NDU0ZDhkN2M4MyIsIm5iZiI6MTc2MDAyMjcwMC43MTIsInN1YiI6IjY4ZTdkMGFjYzA4MTNjMzM3NmFhMTRiNiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.xmj85hm4wS20IGD5DQoA9jR_APNoutqa7sd9TZ-xsiw";
 
         PopularMoviesDataAccessObject popularMoviesDao = new PopularMoviesDataAccessObject(bearerToken);
 
