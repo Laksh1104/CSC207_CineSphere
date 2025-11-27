@@ -4,13 +4,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
 
-import interface_adapter.popular_movies.PopularMoviesController;
-import interface_adapter.popular_movies.PopularMoviesViewModel;
-import use_case.search_film.*;
+import interface_adapter.SearchFilm.SearchFilmController;
+import interface_adapter.SearchFilm.SearchFilmState;
+import interface_adapter.SearchFilm.SearchFilmViewModel;
 import interface_adapter.movie_details.*;
 import use_case.movie_details.*;
 import data_access.MovieDetailsDataAccessObject;
-import view.MovieDetailsView;
 
 public class LoggedInView extends JPanel {
 
@@ -19,9 +18,6 @@ public class LoggedInView extends JPanel {
     private MovieDetailsController movieDetailsController;
     private MovieDetailsView movieDetailsView;
     private MovieDetailsViewModel movieDetailsViewModel;
-    private PopularMoviesController popularMoviesController;
-    private PopularMoviesViewModel popularMoviesViewModel;
-    private JPanel moviePanel;
 
     public LoggedInView() {
 
@@ -36,6 +32,9 @@ public class LoggedInView extends JPanel {
         // Filter
         JPanel filterPanel = buildFilterPanel();
 
+        // Popular film title
+        JPanel popularFilmPanel = buildPopularFilmPanel();
+
         // Posters
         JScrollPane scrollPane = buildPosterScrollPane();
 
@@ -44,7 +43,7 @@ public class LoggedInView extends JPanel {
         add(Box.createRigidArea(new Dimension(0, 20)));
         add(filterPanel);
         add(Box.createRigidArea(new Dimension(0, 30)));
-        // add(popularFilmPanel);
+        add(popularFilmPanel);
         add(scrollPane);
     }
 
@@ -86,31 +85,21 @@ public class LoggedInView extends JPanel {
         movieDetailsView = new MovieDetailsView(movieDetailsViewModel);
     }
 
-    public void setPopularMoviesDependencies(PopularMoviesController controller, PopularMoviesViewModel viewModel) {
-        this.popularMoviesController = controller;
-        this.popularMoviesViewModel = viewModel;
 
-        viewModel.addPropertyChangeListener(evt -> {
-            String property = evt.getPropertyName();
+    private JPanel buildPopularFilmPanel() {
+        JPanel popularFilmPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        popularFilmPanel.setBackground(new Color(255, 255, 224));
+        popularFilmPanel.setPreferredSize(new Dimension(300, 30));
+        popularFilmPanel.setMaximumSize(new Dimension(300, 30));
+        popularFilmPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-            if ("posterUrls".equals(property)) {
-                SwingUtilities.invokeLater(this::refreshPopularMovies);
-            } else if ("errorMessage".equals(property)) {
-                String msg = popularMoviesViewModel.getErrorMessage();
-                if (msg != null) {
-                    SwingUtilities.invokeLater(() ->
-                            JOptionPane.showMessageDialog(this, msg, "Popular Movies Error",
-                                    JOptionPane.ERROR_MESSAGE
-                            )
-                    );
-                }
-            }
-        });
+        JLabel popularFilmLabel = new JLabel("Popular Films This Week:");
+        popularFilmLabel.setFont(new Font("Open Sans", Font.BOLD, 15));
 
-        if (popularMoviesController != null) {
-            popularMoviesController.loadPopularMovies();
-        }
+        popularFilmPanel.add(popularFilmLabel);
+        return popularFilmPanel;
     }
+
 
     private JPanel buildFilterPanel() {
         JPanel filterPanel = new JPanel();
@@ -158,8 +147,28 @@ public class LoggedInView extends JPanel {
 
     private JScrollPane buildPosterScrollPane() {
 
-        moviePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+        String[] moviePosters = {
+                "https://image.tmdb.org/t/p/original/xUWUODKPIilQoFUzjHM6wKJkP3Y.jpg",
+                "https://image.tmdb.org/t/p/original/v9NLaLBbrkDwq44qG51v8T6sPuI.jpg",
+                "https://image.tmdb.org/t/p/original/pHpq9yNUIo6aDoCXEBzjSolywgz.jpg",
+                "https://image.tmdb.org/t/p/original/xR0IhVBjbNU34b8erhJCgRbjXo3.jpg",
+                "https://image.tmdb.org/t/p/original/c4QA1rFQcyBZKaOOdUrDeL1G9Er.jpg",
+                "https://image.tmdb.org/t/p/original/yvirUYrva23IudARHn3mMGVxWqM.jpg",
+                "https://image.tmdb.org/t/p/original/fWVSwgjpT2D78VUh6X8UBd2rorW.jpg",
+                "https://image.tmdb.org/t/p/original/bcP7FtskwsNp1ikpMQJzDPjofP5.jpg",
+                "https://image.tmdb.org/t/p/original/bYe2ZjUhb4Kje0BpWE6kN34u2hv.jpg"
+        };
+
+        JPanel moviePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
         moviePanel.setBackground(new Color(255, 255, 224));
+
+        for (String url : moviePosters) {
+            try {
+                ImageIcon icon = new ImageIcon(new URL(url));
+                Image scaled = icon.getImage().getScaledInstance(200, 300, Image.SCALE_SMOOTH);
+                moviePanel.add(new JLabel(new ImageIcon(scaled)));
+            } catch (Exception ignored) {}
+        }
 
         JScrollPane scrollPane = new JScrollPane(
                 moviePanel,
@@ -175,22 +184,4 @@ public class LoggedInView extends JPanel {
         return scrollPane;
     }
 
-    private void refreshPopularMovies() {
-        if (moviePanel == null) {return;}
-
-        moviePanel.removeAll();
-
-        for (String url: popularMoviesViewModel.getPosterUrls()){
-            try {
-                ImageIcon icon = new ImageIcon(new URL(url));
-                Image scaled = icon.getImage().getScaledInstance(200, 300, Image.SCALE_SMOOTH);
-                moviePanel.add(new JLabel(new ImageIcon(scaled)));
-            } catch (Exception e) {
-                System.err.println("Failed to load poster from URL: " + url);
-                e.printStackTrace();
-            }
-        }
-        moviePanel.revalidate();
-        moviePanel.repaint();
-    }
 }
