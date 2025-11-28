@@ -10,13 +10,9 @@ import javax.swing.*;
 public class TestBookingView {
     public static void main(String[] args) {
 
-        ViewManagerModel viewManagerModel = new ViewManagerModel();
-
         BookMovieViewModel bookMovieViewModel = new BookMovieViewModel();
 
         BookingView bookingView = new BookingView(bookMovieViewModel);
-
-        MovieFactory movieFactory = new MovieFactory();
 
         InMemoryTicketDataAccessObject inMemoryTicketDataAccessObject = new InMemoryTicketDataAccessObject();
 
@@ -34,7 +30,7 @@ public class TestBookingView {
         // Create a simple JFrame to show the view
         JFrame frame = new JFrame("Booking Test Harness");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(1000, 800);
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.add(bookingView);
         frame.setVisible(true);
     }

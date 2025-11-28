@@ -1,6 +1,5 @@
 package interface_adapter.BookMovie;
 
-import interface_adapter.ViewManagerModel;
 import use_case.book_movie.BookMovieOutputBoundary;
 import use_case.book_movie.BookMovieOutputData;
 
@@ -21,22 +20,22 @@ public class BookMoviePresenter implements BookMovieOutputBoundary {
         BookMovieState state = bookMovieViewModel.getState();
 
         // Update ViewModel state
-        state.setMovie(response.getMovie());
-        state.setCinema(response.getCinema());
-        state.setShowtime(response.getShowtime());
+        state.setMovieName(response.getMovieName());
+        state.setCinemaName(response.getCinemaName());
+        state.setDate(response.getDate());
+        state.setStartTime(response.getStartTime());
+        state.setEndTime(response.getEndTime());
         state.setSeats(response.getSeats());
         state.setTotalCost(response.getTotalCost());
 
-        String msg = response.getMovie().getFilmName() + " booked on "
-                + response.getDate() + " at " + response.getCinema().getCinemaName()
-                + " from " + response.getShowtime().getStartTime()
-                + " to " + response.getShowtime().getEndTime()
+        String msg = "Booking confirmed on "
+                + response.getDate()
+                + " from " + response.getStartTime()
+                + " to " + response.getEndTime()
                 + "\nSeats: " + response.getSeatNumbers()
                 + "\nPrice: $" + response.getTotalCost();
 
         state.setBookingSuccessMessage(msg);
-
-        // clear error
         state.setBookingError(null);
 
         bookMovieViewModel.setState(state);
