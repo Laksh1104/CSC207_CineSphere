@@ -3,10 +3,13 @@ package view;
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 import interface_adapter.popular_movies.PopularMoviesController;
 import interface_adapter.popular_movies.PopularMoviesViewModel;
 import use_case.search_film.*;
+import interface_adapter.movie_details.MovieDetailsController;
 
 public class LoggedInView extends JPanel {
 
@@ -14,7 +17,10 @@ public class LoggedInView extends JPanel {
     private SearchFilmViewModel searchFilmViewModel;
     private PopularMoviesController popularMoviesController;
     private PopularMoviesViewModel popularMoviesViewModel;
+    private MovieDetailsController movieDetailsController;
+    private MovieDetailsView movieDetailsView;
     private JPanel moviePanel;
+    private final Map<String, ImageIcon> iconCache = new HashMap<>();
 
     public LoggedInView() {
 
@@ -93,6 +99,12 @@ public class LoggedInView extends JPanel {
         }
     }
 
+    public void setMovieDetailsDependencies(MovieDetailsView movieDetailsView,
+                                            MovieDetailsController movieDetailsController) {
+        this.movieDetailsView = movieDetailsView;
+        this.movieDetailsController = movieDetailsController;
+    }
+
     private JPanel buildFilterPanel() {
         JPanel filterPanel = new JPanel();
         filterPanel.setPreferredSize(new Dimension(800, 40));
@@ -161,17 +173,56 @@ public class LoggedInView extends JPanel {
 
         moviePanel.removeAll();
 
-        for (String url: popularMoviesViewModel.getPosterUrls()){
-            try {
-                ImageIcon icon = new ImageIcon(new URL(url));
-                Image scaled = icon.getImage().getScaledInstance(200, 300, Image.SCALE_SMOOTH);
-                moviePanel.add(new JLabel(new ImageIcon(scaled)));
-            } catch (Exception e) {
-                System.err.println("Failed to load poster from URL: " + url);
-                e.printStackTrace();
-            }
+        java.util.List<String> posterUrls = popularMoviesViewModel.getPosterUrls();
+        java.util.List<Integer> filmIds = popularMoviesViewModel.getFilmIds();
+
+        int count = Math.min(posterUrls.size(), filmIds.size());
+
+        for (int i = 0; i < count; i++) {
+            String url = posterUrls.get(i);
+            int filmId = filmIds.get(i);
+
+            moviePanel.add(createPosterButton(url, filmId));
         }
+
         moviePanel.revalidate();
         moviePanel.repaint();
+    }
+
+    private JButton createPosterButton(String url, int filmId) {
+        JButton button = new JButton();
+        button.setHorizontalAlignment(SwingConstants.CENTER);
+        button.setBorder(BorderFactory.createEmptyBorder());
+        button.setContentAreaFilled(false);
+        button.setFocusPainted(false);
+
+        try {
+            ImageIcon cached = iconCache.get(url);
+            if (cached == null) {
+                ImageIcon original = new ImageIcon(new java.net.URL(url));
+                Image scaled = original.getImage().getScaledInstance(200, 300, Image.SCALE_SMOOTH);
+                cached = new ImageIcon(scaled);
+                iconCache.put(url, cached);
+            }
+            button.setIcon(cached);
+        } catch (Exception e) {
+            button.setText("No Image");
+            e.printStackTrace();
+        }
+
+        button.addActionListener(e -> {
+            movieDetailsController.showMovieDetails(filmId);
+
+            JFrame movieFrame = new JFrame("Movie Details");
+            movieFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            movieFrame.setSize(800, 900);
+            movieFrame.add(movieDetailsView);
+            movieFrame.setVisible(true);
+        });
+
+        // 最终的边框样式
+        button.setBorder(BorderFactory.createDashedBorder(Color.GRAY));
+
+        return button;
     }
 }

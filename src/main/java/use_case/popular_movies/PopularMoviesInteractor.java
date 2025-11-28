@@ -21,7 +21,11 @@ public class PopularMoviesInteractor implements PopularMoviesInputBoundary{
             List<Movie> movies = movieDataAccess.getPopularMovies();
             List<String> posterUrls = movieDataAccess.getPosterUrls(movies);
 
-            PopularMoviesOutputData outputData = new PopularMoviesOutputData(posterUrls, inputData.getPage());
+            List<Integer> filmIds = movies.stream()
+                    .map(Movie::getId)
+                    .toList();
+
+            PopularMoviesOutputData outputData = new PopularMoviesOutputData(posterUrls,filmIds, inputData.getPage());
 
             presenter.present(outputData);
         } catch (Exception e) {

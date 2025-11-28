@@ -1,12 +1,22 @@
+import data_access.MovieDetailsDataAccessObject;
 import data_access.PopularMoviesDataAccessObject;
+import interface_adapter.movie_details.MovieDetailsController;
+import interface_adapter.movie_details.MovieDetailsPresenter;
+import interface_adapter.movie_details.MovieDetailsViewModel;
 import interface_adapter.popular_movies.PopularMoviesController;
 import interface_adapter.popular_movies.PopularMoviesPresenter;
 import interface_adapter.popular_movies.PopularMoviesViewModel;
+import use_case.movie_details.MovieDetailsDataAccessInterface;
+import use_case.movie_details.MovieDetailsInputBoundary;
+import use_case.movie_details.MovieDetailsInteractor;
+import use_case.movie_details.MovieDetailsOutputBoundary;
 import use_case.popular_movies.PopularMoviesInputBoundary;
 import use_case.popular_movies.PopularMoviesInteractor;
 import use_case.popular_movies.PopularMoviesOutputBoundary;
 import use_case.search_film.*;
 import view.LoggedInView;
+import view.MovieDetailsView;
+
 import javax.swing.*;
 
 public class TestLoggedInView {
@@ -23,6 +33,7 @@ public class TestLoggedInView {
 
         loggedInView.setSearchDependencies(searchFilmController, searchFilmViewModel);
 
+        // Create popular movies panel
         String bearerToken = "Bearer YOUR_TMDB_TOKEN_HERE";
 
         PopularMoviesDataAccessObject popularMoviesDao = new PopularMoviesDataAccessObject(bearerToken);
@@ -33,6 +44,18 @@ public class TestLoggedInView {
         PopularMoviesController popularMoviesController = new PopularMoviesController(popularMoviesInteractor);
 
         loggedInView.setPopularMoviesDependencies(popularMoviesController, popularMoviesViewModel);
+
+        // Create movie detail button
+        MovieDetailsDataAccessObject movieDetailsDao = new MovieDetailsDataAccessObject(bearerToken);
+
+        MovieDetailsViewModel movieDetailsViewModel = new MovieDetailsViewModel();
+        MovieDetailsOutputBoundary movieDetailsPresenter = new MovieDetailsPresenter(movieDetailsViewModel);
+        MovieDetailsInputBoundary movieDetailsInteractor = new MovieDetailsInteractor(movieDetailsDao, movieDetailsPresenter);
+        MovieDetailsController movieDetailsController = new MovieDetailsController(movieDetailsInteractor);
+
+        MovieDetailsView movieDetailsView = new MovieDetailsView(movieDetailsViewModel);
+
+        loggedInView.setMovieDetailsDependencies(movieDetailsView, movieDetailsController);
 
 
         // Create window

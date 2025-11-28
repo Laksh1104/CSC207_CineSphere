@@ -15,6 +15,7 @@ public class PopularMoviesPresenter implements PopularMoviesOutputBoundary {
     @Override
     public void present(PopularMoviesOutputData outputData) {
         viewModel.setPosterUrls(outputData.getPosterUrls());
+        viewModel.setFilmIds(outputData.getFilmIds());
         viewModel.setErrorMessage(null);
     }
 

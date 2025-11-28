@@ -10,6 +10,7 @@ public class PopularMoviesViewModel {
     private final PropertyChangeSupport support = new PropertyChangeSupport(this);
 
     private List<String> posterUrls = new ArrayList<>();
+    private List<Integer> filmIds = new ArrayList<>();
     private String errorMessage;
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
@@ -25,6 +26,16 @@ public class PopularMoviesViewModel {
         List<String> old = this.posterUrls;
         this.posterUrls = posterUrls;
         support.firePropertyChange("posterUrls", old, posterUrls);
+    }
+
+    public List<Integer> getFilmIds() {
+        return filmIds;
+    }
+
+    public void setFilmIds(List<Integer> filmIds) {
+        List<Integer> old = this.filmIds;
+        this.filmIds = filmIds;
+        support.firePropertyChange("filmIds", old, filmIds);
     }
 
     public String getErrorMessage() {
