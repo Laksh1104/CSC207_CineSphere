@@ -25,29 +25,27 @@ public class BookMovieController {
     /**
      * Executes the Book Movie Use Case.
      *
-     * @param movie     the selected movie
-     * @param cinema    the selected cinema
-     * @param showtime  the selected showtime
-     * @param seats     the set of selected seats
-     * @param date      the date of the show (from the view's date picker)
+     * @param movieName   name of selected movie
+     * @param cinemaName  name of selected cinema
+     * @param date      selected date yyyy-MM-dd
+     * @param timeRange "HH:mm - HH:mm"
+     * @param seats     set of seat names ("A1", "B3", ...)
      */
-    public void execute(Movie movie, String date, Cinema cinema, ShowTime showtime, Set<String> seats) {
-        if (movie == null || cinema == null || showtime == null || seats == null || seats.isEmpty() || date == null) {
-            bookMovieUseCaseInteractor.execute(null);
-            return;
-        }
+    public void execute(String movieName, String cinemaName, String date, String timeRange, Set<String> seats) {
 
         // Build InputData for the interactor
-        BookMovieInputData inputData = new BookMovieInputData(movie, date, cinema, showtime, seats);
+        BookMovieInputData inputData = new BookMovieInputData(movieName, cinemaName, date, timeRange, seats);
 
         // Call the interactor
         bookMovieUseCaseInteractor.execute(inputData);
     }
 
-    public Set<String> getBookedSeats(Movie m, Cinema c, String date, ShowTime st) {
-        return bookMovieUseCaseInteractor.getBookedSeats(m, c, date, st);
+    public Set<String> getBookedSeats(String movieName, String cinemaName,String date,String startTime,String endTime) {
+        return bookMovieUseCaseInteractor.getBookedSeats(
+                movieName, cinemaName, date, startTime, endTime
+        );
     }
-    public List<Seat> loadSeatLayout(Movie m, Cinema c, String date, ShowTime st) {
-        return bookMovieUseCaseInteractor.loadSeatLayout(m, c, date, st);
+    public List<Seat> loadSeatLayout(String movieName, String cinemaName, String date, String startTime, String endTime) {
+        return bookMovieUseCaseInteractor.loadSeatLayout(movieName, cinemaName, date, startTime, endTime);
     }
 }
