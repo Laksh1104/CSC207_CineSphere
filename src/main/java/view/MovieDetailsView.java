@@ -3,6 +3,7 @@ package view;
 import interface_adapter.movie_details.MovieDetailsState;
 import interface_adapter.movie_details.MovieDetailsViewModel;
 import use_case.movie_details.MovieDetailsOutputData.MovieReviewData;
+import interface_adapter.watchlist.watchlistController;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -21,6 +22,7 @@ public class MovieDetailsView extends JPanel {
     private static final int POSTER_HEIGHT = 420;
     private static final int REVIEWS_HEIGHT = 120;
     private static final int MAX_REVIEWS = 2;
+    private watchlistController watchlistController;
 
 
     public MovieDetailsView(MovieDetailsViewModel viewModel) {
@@ -101,14 +103,26 @@ public class MovieDetailsView extends JPanel {
         facts.add(Box.createVerticalStrut(6));
         facts.add(new JLabel("Genres: %s".formatted(String.join(", ", state.genres()))));
         facts.add(Box.createVerticalStrut(12));
-        facts.add(createWatchlistButton());
-
+        facts.add(createWatchlistButton(state));
         return facts;
     }
 
-    private JButton createWatchlistButton() {
+    private JButton createWatchlistButton(MovieDetailsState state) {
+        boolean isWatchlisted = false;
         JButton watchlistBtn = new JButton("Add To Watchlist");
-        watchlistBtn.addActionListener(e -> watchlistBtn.setText("Already Watchlisted"));
+        if (isWatchlisted) {
+            watchlistBtn.setText("Already Watchlisted");
+        }
+        watchlistBtn.addActionListener(e -> {
+            if(isWatchlisted) {
+                watchlistBtn.setText("Add to Watchlist");
+                //TODO REMOVE
+            }
+            else {
+                watchlistBtn.setText("Already Watchlisted");
+                watchlistController.addToWatchlist(state.posterUrl());
+            }
+        });
         return watchlistBtn;
     }
 
