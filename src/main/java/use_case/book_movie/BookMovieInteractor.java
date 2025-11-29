@@ -31,7 +31,7 @@ public class BookMovieInteractor implements BookMovieInputBoundary {
         Set<String> seats = inputData.getSeats();
 
         // Missing fields
-        if (movieName == null || cinemaName == null || date == null || startTime == null || endTime == null) {
+        if (isNullOrBlank(movieName) || isNullOrBlank(cinemaName) || isNullOrBlank(date) || isNullOrBlank(startTime) || isNullOrBlank(endTime)) {
             bookingPresenter.prepareFailView("Some booking details are missing.");
             return;
         }
@@ -54,9 +54,9 @@ public class BookMovieInteractor implements BookMovieInputBoundary {
             }
         }
 
-
+        int seatsCount = seats.size();
         // Compute cost
-        int totalCost = seats.size() * COST_PER_SEAT;
+        int totalCost = seatsCount * COST_PER_SEAT;
 
         // Create a movie ticket
         MovieTicket movieTicket = new MovieTicket(movieName, cinemaName, date, startTime, endTime, seats, totalCost);
@@ -78,5 +78,9 @@ public class BookMovieInteractor implements BookMovieInputBoundary {
     @Override
     public List<Seat> loadSeatLayout(String movieName, String cinemaName, String date, String startTime, String endTime) {
         return ticketDataAccessObject.getSeatLayout(movieName, cinemaName, date, startTime, endTime);
+    }
+
+    private boolean isNullOrBlank(String s) {
+        return s == null || s.isBlank();
     }
 }

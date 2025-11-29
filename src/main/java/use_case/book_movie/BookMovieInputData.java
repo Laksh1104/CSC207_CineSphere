@@ -2,6 +2,7 @@ package use_case.book_movie;
 
 import entity.Cinema;
 import entity.Movie;
+import entity.Seat;
 import entity.ShowTime;
 
 import java.util.HashSet;
@@ -20,7 +21,7 @@ public class BookMovieInputData {
         this.movieName = movieName;
         this.cinemaName = cinemaName;
         this.date = date;
-        this.seats = seats;
+        this.seats = new HashSet<>(seats);
 
         // Parse "HH:mm - HH:mm"
         String[] split = timeRange.split(" - ");
