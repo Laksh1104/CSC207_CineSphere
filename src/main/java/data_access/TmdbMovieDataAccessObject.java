@@ -92,7 +92,7 @@ public class TmdbMovieDataAccessObject implements FilterMoviesDataAccessInterfac
         }
     }
 
-    /** Rating strings are TMDB scale (0..10): "All Ratings", "4.5+", "6.0-8.5" */
+    /** Rating strings are TMDB scale (0..10)*/
     private RatingRange parseRating(String rating) {
         if (rating == null) return new RatingRange(true, null, null);
 
@@ -162,15 +162,12 @@ public class TmdbMovieDataAccessObject implements FilterMoviesDataAccessInterfac
                     url.append("&with_genres=").append(genreId);
                 }
 
-                // Rating filter via API (still also validated below)
                 if (!range.any) {
                     if (range.min10 != null) url.append("&vote_average.gte=").append(range.min10);
                     if (range.max10 != null) url.append("&vote_average.lte=").append(range.max10);
                 }
 
             } else {
-                // SEARCH overrides: TMDB search endpoint doesn't guarantee discover filters,
-                // but we'll still filter client-side using vote_average after receiving results.
                 url = new StringBuilder(BASE_URL + "/search/movie");
                 url.append("?api_key=").append(API_KEY);
                 url.append("&query=").append(URLEncoder.encode(search.trim(), StandardCharsets.UTF_8));
