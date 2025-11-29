@@ -97,6 +97,19 @@ class BookMovieInteractorTest {
     }
 
     @Test
+    void missingStartTime() {
+        InMemoryTicketTestDAO dao = new InMemoryTicketTestDAO();
+
+        BookMovieInputData input = new BookMovieInputData(
+                "Stargate", "Cinema 2", "2025-11-28", null, Set.of("A1")
+        );
+
+        BookMovieInteractor interactor = new BookMovieInteractor(dao, failPresenter("Some booking details are missing."));
+        interactor.execute(input);
+    }
+
+
+    @Test
     void emptySeatSelectionTest() {
         InMemoryTicketTestDAO dao = new InMemoryTicketTestDAO();
 
