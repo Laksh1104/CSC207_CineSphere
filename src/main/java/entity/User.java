@@ -1,5 +1,7 @@
 package entity;
 
+import java.util.ArrayList;
+
 public class User {
     private final String name;
     private final String password; // plain text
@@ -7,6 +9,7 @@ public class User {
     public User(String name, String password) {
         this.name = name;
         this.password = password;
+
     }
 
     public String getName() {
