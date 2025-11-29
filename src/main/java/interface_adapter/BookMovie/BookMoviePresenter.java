@@ -39,7 +39,7 @@ public class BookMoviePresenter implements BookMovieOutputBoundary {
         state.setBookingError(null);
 
         bookMovieViewModel.setState(state);
-        bookMovieViewModel.firePropertyChange();
+
 
 
     }
