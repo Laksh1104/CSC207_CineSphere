@@ -40,11 +40,6 @@ public class BookMovieController {
         bookMovieUseCaseInteractor.execute(inputData);
     }
 
-    public Set<String> getBookedSeats(String movieName, String cinemaName,String date,String startTime,String endTime) {
-        return bookMovieUseCaseInteractor.getBookedSeats(
-                movieName, cinemaName, date, startTime, endTime
-        );
-    }
     public List<Seat> loadSeatLayout(String movieName, String cinemaName, String date, String startTime, String endTime) {
         return bookMovieUseCaseInteractor.loadSeatLayout(movieName, cinemaName, date, startTime, endTime);
     }
