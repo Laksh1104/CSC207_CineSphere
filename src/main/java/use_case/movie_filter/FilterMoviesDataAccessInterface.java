@@ -1,7 +1,9 @@
 package use_case.movie_filter;
 
 import entity.Movie;
+
 import java.util.List;
+import java.util.Map;
 
 public interface FilterMoviesDataAccessInterface {
 
@@ -16,4 +18,10 @@ public interface FilterMoviesDataAccessInterface {
 
     /** Builds poster URLs for Movie list */
     List<String> getPosterUrls(List<Movie> movies);
+
+    /** Returns all TMDB movie genres as a map: name -> id */
+    Map<String, Integer> getMovieGenres();
+
+    /** Total pages from the most recent TMDB request */
+    int getLastTotalPages();
 }
