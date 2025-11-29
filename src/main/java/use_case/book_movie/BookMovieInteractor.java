@@ -6,8 +6,13 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * The Book Movie Interactor.
+ * Interactor for the Book Movie use case.
+ *
+ * <p>This class implements the application-specific business rules for booking a movie.
+ * It validates input, checks seat availability, calculates cost, creates a MovieTicket,
+ * persists the booking, and passes formatted output to the presenter.
  */
+
 public class BookMovieInteractor implements BookMovieInputBoundary {
 
     private final BookTicketDataAccessInterface ticketDataAccessObject;
