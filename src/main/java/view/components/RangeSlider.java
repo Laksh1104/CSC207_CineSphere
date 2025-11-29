@@ -1,4 +1,4 @@
-package view;
+package view.components;
 
 import javax.swing.JSlider;
 import javax.swing.plaf.SliderUI;

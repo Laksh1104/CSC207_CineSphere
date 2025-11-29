@@ -5,6 +5,8 @@ import interface_adapter.filter_movies.FilterMoviesController;
 import interface_adapter.filter_movies.FilterMoviesViewModel;
 import interface_adapter.movie_details.*;
 import use_case.movie_details.*;
+import view.components.FilterPanel;
+import view.components.HeaderPanel;
 
 import javax.swing.*;
 import java.awt.*;

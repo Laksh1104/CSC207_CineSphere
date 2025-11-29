@@ -1,4 +1,4 @@
-package view;
+package view.components;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicSliderUI;
