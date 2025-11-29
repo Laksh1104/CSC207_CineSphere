@@ -1,6 +1,10 @@
+import data_access.BookingMovieDataAccessObject;
+import data_access.CinemaDataAccessObject;
 import data_access.InMemoryTicketDataAccessObject;
+import entity.CinemaFactory;
 import entity.MovieFactory;
 import interface_adapter.BookMovie.*;
+import interface_adapter.BookingQuery;
 import interface_adapter.ViewManagerModel;
 import use_case.book_movie.*;
 import view.BookingView;
@@ -12,7 +16,15 @@ public class TestBookingView {
 
         BookMovieViewModel bookMovieViewModel = new BookMovieViewModel();
 
-        BookingView bookingView = new BookingView(bookMovieViewModel);
+        BookingMovieDataAccessObject movieDAO =
+                new BookingMovieDataAccessObject(new MovieFactory());
+
+        CinemaDataAccessObject cinemaDAO =
+                new CinemaDataAccessObject(new CinemaFactory());
+
+        BookingQuery bookingQuery = new BookingQuery(movieDAO, cinemaDAO);
+
+        BookingView bookingView = new BookingView(bookMovieViewModel,bookingQuery);
 
         InMemoryTicketDataAccessObject inMemoryTicketDataAccessObject = new InMemoryTicketDataAccessObject();
 

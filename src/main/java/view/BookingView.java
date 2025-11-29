@@ -14,11 +14,14 @@ import java.util.*;
 import java.util.List;
 
 import com.toedter.calendar.JDateChooser;
+import interface_adapter.BookingQuery;
 
 public class BookingView extends JPanel implements PropertyChangeListener {
 
     private final BookMovieViewModel viewModel;
     private BookMovieController controller;
+    private final BookingQuery bookingQuery;
+
 
     // UI Components
     private JComboBox<String> movieDropdown;
@@ -42,8 +45,9 @@ public class BookingView extends JPanel implements PropertyChangeListener {
     private static final Color COLOR = new Color(255, 255, 224);
     private static final int HEIGHT = 25;
 
-    public BookingView(BookMovieViewModel vm) {
+    public BookingView(BookMovieViewModel vm, BookingQuery bookingQuery) {
         this.viewModel = vm;
+        this.bookingQuery = bookingQuery;
         vm.addPropertyChangeListener(this);
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -88,7 +92,7 @@ public class BookingView extends JPanel implements PropertyChangeListener {
             selectedMovieName = movieName;
 
             Movie movie = getMovie(movieName);
-            selectedMovieId = movie.getFilmId();
+            selectedMovieId = movie.getId();
             populateCinemas(selectedMovieId, selectedDate);
         });
 
@@ -311,31 +315,31 @@ public class BookingView extends JPanel implements PropertyChangeListener {
             new BookingMovieDataAccessObject(new MovieFactory());   // ★ INLINE DAO
 
     private void populateMovies() {
-        List<Movie> movies = movieDAO.getNowShowingMovies();
-        movies.sort(Comparator.comparing(Movie::getFilmName));
+        List<Movie> movies = bookingQuery.getMovies();
+        movies.sort(Comparator.comparing(Movie::getTitle));
 
-        for (Movie movie : movies)
-            movieDropdown.addItem(movie.getFilmName());
+        movieDropdown.removeAllItems();
+        for (Movie m : movies) {
+            movieDropdown.addItem(m.getTitle());
+        }
     }
 
     private Movie getMovie(String name) {
-        return movieDAO.getNowShowingMovies().stream()
-                .filter(m -> m.getFilmName().equals(name))
+        return bookingQuery.getMovies().stream()
+                .filter(m -> m.getTitle().equals(name))
                 .findFirst()
                 .orElse(null);
     }
 
     private Cinema getCinema(String name, int filmId, String date) {
-        CinemaDataAccessObject cinemaDAO = new CinemaDataAccessObject(new CinemaFactory());
-        return cinemaDAO.getCinemasForFilm(filmId, date).stream()
+        return bookingQuery.getCinemas(filmId, date).stream()
                 .filter(c -> c.getCinemaName().equals(name))
                 .findFirst()
                 .orElse(null);
     }
 
     private void populateCinemas(int filmId, String date) {
-        CinemaDataAccessObject dao = new CinemaDataAccessObject(new CinemaFactory());
-        List<Cinema> cinemas = dao.getCinemasForFilm(filmId, date);
+        List<Cinema> cinemas = bookingQuery.getCinemas(filmId, date);
 
         cinemaDropdown.removeAllItems();
 
@@ -358,7 +362,7 @@ public class BookingView extends JPanel implements PropertyChangeListener {
             return;
         }
 
-        Map<String, List<ShowTime>> grouped = cinema.getAllShowTimesWithVersion();
+        Map<String, List<ShowTime>> grouped = bookingQuery.getShowtimes(cinema);
 
         for (var entry : grouped.entrySet()) {
             String version = entry.getKey();
