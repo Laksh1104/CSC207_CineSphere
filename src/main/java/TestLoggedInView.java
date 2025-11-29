@@ -3,6 +3,8 @@ import data_access.PopularMoviesDataAccessObject;
 import interface_adapter.movie_details.MovieDetailsController;
 import interface_adapter.movie_details.MovieDetailsPresenter;
 import interface_adapter.movie_details.MovieDetailsViewModel;
+import data_access.SearchFilmDataAccessObject;
+import interface_adapter.SearchFilm.*;
 import interface_adapter.popular_movies.PopularMoviesController;
 import interface_adapter.popular_movies.PopularMoviesPresenter;
 import interface_adapter.popular_movies.PopularMoviesViewModel;
@@ -25,7 +27,7 @@ public class TestLoggedInView {
         // Create the LoggedInView panel
         LoggedInView loggedInView = new LoggedInView();
 
-        SearchFilmDataAccessInterface api = new SearchFilmAPIAccess();
+        SearchFilmDataAccessInterface api = new SearchFilmDataAccessObject();
         SearchFilmViewModel searchFilmViewModel = new SearchFilmViewModel();
         SearchFilmOutputBoundary searchFilmPresenter = new SearchFilmPresenter(searchFilmViewModel);
         SearchFilmInputBoundary searchFilmInteractor = new SearchFilmInteractor(api, searchFilmPresenter);

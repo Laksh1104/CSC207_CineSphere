@@ -9,6 +9,7 @@ import java.util.Map;
 import data_access.MovieDetailsDataAccessObject;
 import interface_adapter.movie_details.MovieDetailsPresenter;
 import interface_adapter.movie_details.MovieDetailsViewModel;
+import interface_adapter.SearchFilm.*;
 import interface_adapter.popular_movies.PopularMoviesController;
 import interface_adapter.popular_movies.PopularMoviesViewModel;
 import use_case.movie_details.MovieDetailsDataAccessInterface;
