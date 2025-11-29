@@ -131,20 +131,4 @@ public class CinemaDataAccessObject implements CinemaDataAccessInterface {
             throw new RuntimeException("Failed to resolve geolocation: " + e.getMessage(), e);
         }
     }
-
-    public static void main(String[] args) {
-        CinemaFactory cinemaFactory = new CinemaFactory();
-        MovieFactory movieFactory = new MovieFactory();
-        CinemaDataAccessObject cinemaDataAccessObject = new CinemaDataAccessObject(cinemaFactory);
-        BookingMovieDataAccessObject movieDataAccessObject = new BookingMovieDataAccessObject(movieFactory);
-        List<Movie> movies = movieDataAccessObject.getNowShowingMovies();
-        String date = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-       for  (Movie movie : movies) {
-           List<Cinema> cinemas = cinemaDataAccessObject.getCinemasForFilm(movie.getFilmId(), date);
-           for(Cinema cinema : cinemas) {
-               System.out.println("Movie: " + movie.getFilmName() + " at Cinema: " + cinema.getCinemaName());
-           }
-       }
-
-    }
 }

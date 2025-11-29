@@ -1,6 +1,10 @@
+import data_access.BookingMovieDataAccessObject;
+import data_access.CinemaDataAccessObject;
 import data_access.InMemoryTicketDataAccessObject;
+import entity.CinemaFactory;
 import entity.MovieFactory;
 import interface_adapter.BookMovie.*;
+import interface_adapter.BookingQuery;
 import interface_adapter.ViewManagerModel;
 import use_case.book_movie.*;
 import view.BookingView;
@@ -10,13 +14,17 @@ import javax.swing.*;
 public class TestBookingView {
     public static void main(String[] args) {
 
-        ViewManagerModel viewManagerModel = new ViewManagerModel();
-
         BookMovieViewModel bookMovieViewModel = new BookMovieViewModel();
 
-        BookingView bookingView = new BookingView(bookMovieViewModel);
+        BookingMovieDataAccessObject movieDAO =
+                new BookingMovieDataAccessObject(new MovieFactory());
 
-        MovieFactory movieFactory = new MovieFactory();
+        CinemaDataAccessObject cinemaDAO =
+                new CinemaDataAccessObject(new CinemaFactory());
+
+        BookingQuery bookingQuery = new BookingQuery(movieDAO, cinemaDAO);
+
+        BookingView bookingView = new BookingView(bookMovieViewModel,bookingQuery);
 
         InMemoryTicketDataAccessObject inMemoryTicketDataAccessObject = new InMemoryTicketDataAccessObject();
 
@@ -34,7 +42,7 @@ public class TestBookingView {
         // Create a simple JFrame to show the view
         JFrame frame = new JFrame("Booking Test Harness");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(1000, 800);
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.add(bookingView);
         frame.setVisible(true);
     }

@@ -1,30 +1,57 @@
 package use_case.book_movie;
 
-import entity.Cinema;
-import entity.Movie;
-import entity.ShowTime;
-
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Input data for the Book Movie use case.
+ *
+ * <p>This class is a simple immutable structure holding the user's booking selection.
+ * It contains movie, cinema, date, time, and selected seats.
+ *
+ * <p>The time range string ("HH:mm - HH:mm") is parsed into start and end times.
+ */
+
 public class BookMovieInputData {
-    private final Movie movie;
-    private final Cinema cinema;
+
+    private final String movieName;
+    private final String cinemaName;
     private final String date;
-    private final ShowTime showtime; // or could be date + time combined
+    private final String startTime;
+    private final String endTime;
     private final Set<String> seats;
 
-    public BookMovieInputData(Movie movie, String date, Cinema cinema, ShowTime showtime, Set<String> seats) {
-        this.movie = movie;
-        this.cinema = cinema;
+    /**
+     * Constructs a new input data object.
+     *
+     * @param movieName the movie title
+     * @param cinemaName the cinema name
+     * @param date the selected date (yyyy-MM-dd)
+     * @param timeRange the full time range, formatted "HH:mm - HH:mm"
+     * @param seats the selected seat identifiers
+     */
+    public BookMovieInputData(String movieName, String cinemaName, String date, String timeRange, Set<String> seats) {
+        this.movieName = movieName;
+        this.cinemaName = cinemaName;
         this.date = date;
-        this.showtime = showtime;
-        this.seats = new HashSet<>(seats); // defensive copy
+        this.seats = new HashSet<>(seats);
+
+        if (timeRange == null) {
+            this.startTime = null;
+            this.endTime = null;
+        }
+        else {
+            // Parse "HH:mm - HH:mm"
+            String[] split = timeRange.split(" - ");
+            this.startTime = split[0];
+            this.endTime = split[1];
+        }
     }
 
-    public Movie getMovie() { return movie; }
-    public Cinema getCinema() { return cinema; }
+    public String getMovieName()     { return movieName; }
+    public String getCinemaName()    { return cinemaName; }
     public String getDate() { return date; }
-    public ShowTime getShowtime() { return showtime; }
+    public String getStartTime() { return startTime; }
+    public String getEndTime() { return endTime; }
     public Set<String> getSeats() { return seats; }
 }
