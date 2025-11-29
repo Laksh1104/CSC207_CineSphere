@@ -12,6 +12,10 @@ public class watchlistController {
         this.interactor = interactor;
     }
 
+    public void removeFromWatchlist(String movieUrl){
+        interactor.removeMovie(new WatchlistInputData(movieUrl));
+    }
+
     public void addToWatchlist(String movieUrl) {
         interactor.addMovie(new WatchlistInputData(movieUrl));
     }

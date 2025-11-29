@@ -48,7 +48,7 @@ public class MovieTicket {
     @Override
     public String toString() {
         String seatList = seats == null ? "[]" : String.join(", ", seats);
-        String movieName = movie != null ? movie.getFilmName() : "null";
+        String movieName = movie != null ? movie.getTitle() : "null";
         String cinemaName = cinema != null ? cinema.getCinemaName() : "null";
         String costFormatted = String.format("$%.2f", cost);
 

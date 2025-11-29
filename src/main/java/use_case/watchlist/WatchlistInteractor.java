@@ -25,6 +25,12 @@ public class WatchlistInteractor implements WatchlistInputBoundary{
     }
 
     @Override
+    public void removeMovie(WatchlistInputData data) {
+        watchlist.remove(data.movieUrl);
+        loadPage();
+    }
+
+    @Override
     public List<String> loadPage() {
         List<String> all = watchlist.getMovies();
 

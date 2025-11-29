@@ -84,7 +84,7 @@ public class BookingView extends JPanel implements PropertyChangeListener {
             if (isNullOrPlaceholder(movieName, "Select Movie")) return;
 
             selectedMovie = getMovie(movieName);
-            populateCinemas(selectedMovie.getFilmId(), selectedDate);
+            populateCinemas(selectedMovie.getId(), selectedDate);
         });
 
         selectionPanel.add(labeled("Movie:", movieDropdown));
@@ -105,7 +105,7 @@ public class BookingView extends JPanel implements PropertyChangeListener {
 
             selectedDate = new SimpleDateFormat("yyyy-MM-dd").format(date);
             if (selectedMovie != null)
-                populateCinemas(selectedMovie.getFilmId(), selectedDate);
+                populateCinemas(selectedMovie.getId(), selectedDate);
         });
 
         selectionPanel.add(labeled("Date:", dateChooser));
@@ -124,7 +124,7 @@ public class BookingView extends JPanel implements PropertyChangeListener {
 
             if (name.equals("This film is not playing on this date.")) return;
 
-            selectedCinema = getCinema(name, selectedMovie.getFilmId(), selectedDate);
+            selectedCinema = getCinema(name, selectedMovie.getId(), selectedDate);
             populateShowTimes(selectedCinema);
         });
 
@@ -176,7 +176,7 @@ public class BookingView extends JPanel implements PropertyChangeListener {
         if (isInvalidSelection(movieName, cinemaName, timeDisplay)) return;
 
         selectedMovie = getMovie(movieName);
-        selectedCinema = getCinema(cinemaName, selectedMovie.getFilmId(), selectedDate);
+        selectedCinema = getCinema(cinemaName, selectedMovie.getId(), selectedDate);
         selectedShowtime = getShowtime(timeDisplay);
 
         // Update state
@@ -307,15 +307,15 @@ public class BookingView extends JPanel implements PropertyChangeListener {
 
     private void populateMovies() {
         List<Movie> movies = movieDAO.getNowShowingMovies();
-        movies.sort(Comparator.comparing(Movie::getFilmName));
+        movies.sort(Comparator.comparing(Movie::getTitle));
 
         for (Movie movie : movies)
-            movieDropdown.addItem(movie.getFilmName());
+            movieDropdown.addItem(movie.getTitle());
     }
 
     private Movie getMovie(String name) {
         return movieDAO.getNowShowingMovies().stream()
-                .filter(m -> m.getFilmName().equals(name))
+                .filter(m -> m.getTitle().equals(name))
                 .findFirst()
                 .orElse(null);
     }

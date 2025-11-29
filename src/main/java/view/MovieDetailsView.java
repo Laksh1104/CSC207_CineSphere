@@ -123,7 +123,7 @@ public class MovieDetailsView extends JPanel {
         watchlistBtn.addActionListener(e -> {
             if(isWatchlisted) {
                 watchlistBtn.setText("Add to Watchlist");
-                //TODO REMOVE
+                watchlistController.removeFromWatchlist(state.posterUrl());
             }
             else {
                 watchlistBtn.setText("Already Watchlisted");

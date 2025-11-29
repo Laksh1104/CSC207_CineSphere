@@ -10,6 +10,10 @@ public class Watchlist {
         movies.add(movieUrl);
     }
 
+    public void remove(String movieUrl) {
+        movies.remove(movieUrl);
+    }
+
     public List<String> getMovies() {
         return movies;
     }

@@ -11,7 +11,7 @@ public class InMemoryTicketDataAccessObject implements BookTicketDataAccessInter
     private final Map<String, List<Seat>> seatLayoutMap = new HashMap<>();
 
     private String key(Movie m, Cinema c, String date, ShowTime st) {
-        return m.getFilmId() + "|" +
+        return m.getId() + "|" +
                 c.getCinemaId() + "|" +
                 date + "|" +
                 st.getStartTime();

@@ -27,7 +27,7 @@ public class BookMoviePresenter implements BookMovieOutputBoundary {
         state.setSeats(response.getSeats());
         state.setTotalCost(response.getTotalCost());
 
-        String msg = response.getMovie().getFilmName() + " booked on "
+        String msg = response.getMovie().getTitle() + " booked on "
                 + response.getDate() + " at " + response.getCinema().getCinemaName()
                 + " from " + response.getShowtime().getStartTime()
                 + " to " + response.getShowtime().getEndTime()
