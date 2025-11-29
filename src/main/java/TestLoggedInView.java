@@ -46,17 +46,7 @@ public class TestLoggedInView {
         loggedInView.setPopularMoviesDependencies(popularMoviesController, popularMoviesViewModel);
 
         // Create movie detail button
-        MovieDetailsDataAccessObject movieDetailsDao = new MovieDetailsDataAccessObject(bearerToken);
-
-        MovieDetailsViewModel movieDetailsViewModel = new MovieDetailsViewModel();
-        MovieDetailsOutputBoundary movieDetailsPresenter = new MovieDetailsPresenter(movieDetailsViewModel);
-        MovieDetailsInputBoundary movieDetailsInteractor = new MovieDetailsInteractor(movieDetailsDao, movieDetailsPresenter);
-        MovieDetailsController movieDetailsController = new MovieDetailsController(movieDetailsInteractor);
-
-        MovieDetailsView movieDetailsView = new MovieDetailsView(movieDetailsViewModel);
-
-        loggedInView.setMovieDetailsDependencies(movieDetailsView, movieDetailsController);
-
+        loggedInView.setMovieDetailsDependencies();
 
         // Create window
         JFrame frame = new JFrame("LoggedInView Test Harness");

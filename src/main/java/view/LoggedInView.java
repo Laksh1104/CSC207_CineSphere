@@ -6,8 +6,15 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import data_access.MovieDetailsDataAccessObject;
+import interface_adapter.movie_details.MovieDetailsPresenter;
+import interface_adapter.movie_details.MovieDetailsViewModel;
 import interface_adapter.popular_movies.PopularMoviesController;
 import interface_adapter.popular_movies.PopularMoviesViewModel;
+import use_case.movie_details.MovieDetailsDataAccessInterface;
+import use_case.movie_details.MovieDetailsInputBoundary;
+import use_case.movie_details.MovieDetailsInteractor;
+import use_case.movie_details.MovieDetailsOutputBoundary;
 import use_case.search_film.*;
 import interface_adapter.movie_details.MovieDetailsController;
 
@@ -19,7 +26,11 @@ public class LoggedInView extends JPanel {
     private PopularMoviesViewModel popularMoviesViewModel;
     private MovieDetailsController movieDetailsController;
     private MovieDetailsView movieDetailsView;
+
+    // UI
     private JPanel moviePanel;
+
+    // Cache
     private final Map<String, ImageIcon> iconCache = new HashMap<>();
 
     public LoggedInView() {
@@ -99,10 +110,14 @@ public class LoggedInView extends JPanel {
         }
     }
 
-    public void setMovieDetailsDependencies(MovieDetailsView movieDetailsView,
-                                            MovieDetailsController movieDetailsController) {
-        this.movieDetailsView = movieDetailsView;
-        this.movieDetailsController = movieDetailsController;
+    public void setMovieDetailsDependencies() {
+
+        MovieDetailsViewModel movieDetailsViewModel = new MovieDetailsViewModel();
+        MovieDetailsOutputBoundary movieDetailsPresenter = new MovieDetailsPresenter(movieDetailsViewModel);
+        MovieDetailsDataAccessInterface api = new MovieDetailsDataAccessObject();
+        MovieDetailsInputBoundary movieDetailsInteractor = new MovieDetailsInteractor(api, movieDetailsPresenter);
+        movieDetailsController = new MovieDetailsController(movieDetailsInteractor);
+        movieDetailsView = new MovieDetailsView(movieDetailsViewModel);
     }
 
     private JPanel buildFilterPanel() {
@@ -220,7 +235,6 @@ public class LoggedInView extends JPanel {
             movieFrame.setVisible(true);
         });
 
-        // 最终的边框样式
         button.setBorder(BorderFactory.createDashedBorder(Color.GRAY));
 
         return button;
