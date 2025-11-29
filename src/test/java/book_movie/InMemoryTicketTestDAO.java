@@ -12,7 +12,7 @@ public class InMemoryTicketTestDAO implements BookTicketDataAccessInterface {
     public List<Seat> seatLayout = new ArrayList<>();
 
     public InMemoryTicketTestDAO() {
-        // default layout (A1–A5 only for testing)
+        // default layout (A1–A3, B1 only for testing)
         seatLayout = List.of(
                 new Seat("A1"), new Seat("A2"), new Seat("A3"), new Seat("B1")
         );

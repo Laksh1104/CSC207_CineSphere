@@ -36,10 +36,16 @@ public class BookMovieInputData {
         this.date = date;
         this.seats = new HashSet<>(seats);
 
-        // Parse "HH:mm - HH:mm"
-        String[] split = timeRange.split(" - ");
-        this.startTime = split[0];
-        this.endTime = split[1];
+        if (timeRange == null) {
+            this.startTime = null;
+            this.endTime = null;
+        }
+        else {
+            // Parse "HH:mm - HH:mm"
+            String[] split = timeRange.split(" - ");
+            this.startTime = split[0];
+            this.endTime = split[1];
+        }
     }
 
     public String getMovieName()     { return movieName; }
