@@ -73,7 +73,7 @@ public class MovieDetailsDataAccessObject implements MovieDetailsDataAccessInter
                 json.getString("title"),
                 parseDirector(json),
                 json.getString("release_date"),
-                parseRatingOutOf10(json),   // ✅ out of 10 now
+                parseRatingOutOf10(json),
                 parseGenres(json),
                 json.getString("overview"),
                 parseReviews(json),
@@ -103,7 +103,6 @@ public class MovieDetailsDataAccessObject implements MovieDetailsDataAccessInter
         return null;
     }
 
-    // ✅ TMDB vote_average is already 0..10
     private double parseRatingOutOf10(final JSONObject json) {
         double voteOutOf10 = json.optDouble("vote_average", 0.0);
 
