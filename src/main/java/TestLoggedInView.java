@@ -1,14 +1,24 @@
+import data_access.MovieDetailsDataAccessObject;
 import data_access.PopularMoviesDataAccessObject;
+import interface_adapter.movie_details.MovieDetailsController;
+import interface_adapter.movie_details.MovieDetailsPresenter;
+import interface_adapter.movie_details.MovieDetailsViewModel;
 import data_access.SearchFilmDataAccessObject;
 import interface_adapter.SearchFilm.*;
 import interface_adapter.popular_movies.PopularMoviesController;
 import interface_adapter.popular_movies.PopularMoviesPresenter;
 import interface_adapter.popular_movies.PopularMoviesViewModel;
+import use_case.movie_details.MovieDetailsDataAccessInterface;
+import use_case.movie_details.MovieDetailsInputBoundary;
+import use_case.movie_details.MovieDetailsInteractor;
+import use_case.movie_details.MovieDetailsOutputBoundary;
 import use_case.popular_movies.PopularMoviesInputBoundary;
 import use_case.popular_movies.PopularMoviesInteractor;
 import use_case.popular_movies.PopularMoviesOutputBoundary;
 import use_case.search_film.*;
 import view.LoggedInView;
+import view.MovieDetailsView;
+
 import javax.swing.*;
 
 public class TestLoggedInView {
@@ -25,7 +35,8 @@ public class TestLoggedInView {
 
         loggedInView.setSearchDependencies(searchFilmController, searchFilmViewModel);
 
-        String bearerToken = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0ZjIxZjdhNzBjNjE4ZWVlN2Q2ZDY4NDU0ZDhkN2M4MyIsIm5iZiI6MTc2MDAyMjcwMC43MTIsInN1YiI6IjY4ZTdkMGFjYzA4MTNjMzM3NmFhMTRiNiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.xmj85hm4wS20IGD5DQoA9jR_APNoutqa7sd9TZ-xsiw";
+        // Create popular movies panel
+        String bearerToken = "Bearer YOUR_TMDB_TOKEN_HERE";
 
         PopularMoviesDataAccessObject popularMoviesDao = new PopularMoviesDataAccessObject(bearerToken);
 
@@ -36,6 +47,8 @@ public class TestLoggedInView {
 
         loggedInView.setPopularMoviesDependencies(popularMoviesController, popularMoviesViewModel);
 
+        // Create movie detail button
+        loggedInView.setMovieDetailsDependencies();
 
         // Create window
         JFrame frame = new JFrame("LoggedInView Test Harness");
