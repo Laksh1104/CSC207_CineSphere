@@ -40,8 +40,6 @@ public class BookMoviePresenter implements BookMovieOutputBoundary {
 
         bookMovieViewModel.setState(state);
 
-
-
     }
 
     @Override
