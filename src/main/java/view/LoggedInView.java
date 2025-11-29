@@ -46,6 +46,10 @@ public class LoggedInView extends JPanel {
         // Filter
         JPanel filterPanel = buildFilterPanel();
 
+        // Popular lavel
+        JLabel popularLabel = new JLabel("Popular Movies");
+        popularLabel.setFont(new Font("Open Sans", Font.BOLD, 15));
+
         // Posters
         JScrollPane scrollPane = buildPosterScrollPane();
 
@@ -54,7 +58,7 @@ public class LoggedInView extends JPanel {
         add(Box.createRigidArea(new Dimension(0, 20)));
         add(filterPanel);
         add(Box.createRigidArea(new Dimension(0, 30)));
-        // add(popularFilmPanel);
+        add(popularLabel);
         add(scrollPane);
     }
 
