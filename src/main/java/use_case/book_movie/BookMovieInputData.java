@@ -8,23 +8,30 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class BookMovieInputData {
-    private final Movie movie;
-    private final Cinema cinema;
+
+    private final String movieName;
+    private final String cinemaName;
     private final String date;
-    private final ShowTime showtime; // or could be date + time combined
+    private final String startTime;
+    private final String endTime;
     private final Set<String> seats;
 
-    public BookMovieInputData(Movie movie, String date, Cinema cinema, ShowTime showtime, Set<String> seats) {
-        this.movie = movie;
-        this.cinema = cinema;
+    public BookMovieInputData(String movieName, String cinemaName, String date, String timeRange, Set<String> seats) {
+        this.movieName = movieName;
+        this.cinemaName = cinemaName;
         this.date = date;
-        this.showtime = showtime;
-        this.seats = new HashSet<>(seats); // defensive copy
+        this.seats = seats;
+
+        // Parse "HH:mm - HH:mm"
+        String[] split = timeRange.split(" - ");
+        this.startTime = split[0];
+        this.endTime = split[1];
     }
 
-    public Movie getMovie() { return movie; }
-    public Cinema getCinema() { return cinema; }
+    public String getMovieName()     { return movieName; }
+    public String getCinemaName()    { return cinemaName; }
     public String getDate() { return date; }
-    public ShowTime getShowtime() { return showtime; }
+    public String getStartTime() { return startTime; }
+    public String getEndTime() { return endTime; }
     public Set<String> getSeats() { return seats; }
 }
