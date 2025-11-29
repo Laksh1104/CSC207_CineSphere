@@ -1,6 +1,7 @@
 package data_access;
 
 import entity.Movie;
+import entity.MovieFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import use_case.movie_filter.FilterMoviesDataAccessInterface;
@@ -18,11 +19,13 @@ public class TmdbMovieDataAccessObject implements FilterMoviesDataAccessInterfac
 
     private final String API_KEY;
     private static final String BASE_URL = "https://api.themoviedb.org/3";
-    private static final String IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
+
 
     private final HttpClient client = HttpClient.newHttpClient();
+    private final MovieFactory movieFactory = new MovieFactory();
 
     public TmdbMovieDataAccessObject(String apiKey) {
+
         this.API_KEY = apiKey;
     }
 
@@ -95,7 +98,9 @@ public class TmdbMovieDataAccessObject implements FilterMoviesDataAccessInterfac
                     String title = obj.optString("title");
                     String posterPath = obj.optString("poster_path", null);
 
-                    movies.add(new Movie(id, title, posterPath));
+                    // Using movie factory to create the object
+                    Movie movie = movieFactory.fromTMDB(id, title, posterPath);
+                    movies.add(movie);
                 }
             }
 
@@ -113,7 +118,7 @@ public class TmdbMovieDataAccessObject implements FilterMoviesDataAccessInterfac
 
         for (Movie m : movies) {
             if (m.getPosterPath() != null && !m.getPosterPath().isEmpty()) {
-                urls.add(IMAGE_BASE_URL + m.getPosterPath());
+                urls.add(m.getPosterPath());
             }
         }
 
