@@ -4,9 +4,10 @@ import javax.swing.*;
 import java.awt.*;
 
 public class HeaderPanel extends JPanel {
+    private final Color COLOR = new Color(255, 255, 224);
     public HeaderPanel() {
         super(new FlowLayout(FlowLayout.CENTER, 20, 10));
-        setBackground(Color.decode("#f9f9d0"));
+        setBackground(COLOR);
 
         JLabel title = new JLabel("CineSphere");
         title.setFont(new Font("Arial", Font.BOLD, 20));

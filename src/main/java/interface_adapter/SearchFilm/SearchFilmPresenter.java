@@ -1,4 +1,4 @@
-package use_case.search_film;
+package interface_adapter.SearchFilm;
 
 import use_case.search_film.SearchFilmOutputBoundary;
 import use_case.search_film.SearchFilmOutputData;

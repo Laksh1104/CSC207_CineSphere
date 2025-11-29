@@ -17,10 +17,17 @@ import java.util.stream.Collectors;
 
 public class MovieDetailsView extends JPanel {
 
-    private static final Color BACKGROUND_COLOR = new Color(0xFFFBE6);
+    private static final Color BACKGROUND_COLOR = new Color(0xF7F7F7);
+
     private static final int POSTER_WIDTH = 300;
     private static final int POSTER_HEIGHT = 420;
+
+    private static final int DESCRIPTION_HEIGHT = 120;
+    private static final int DESCRIPTION_WIDTH = 400;
+
     private static final int REVIEWS_HEIGHT = 120;
+    private static final int REVIEWS_WIDTH = 400;
+
     private static final int MAX_REVIEWS = 2;
     private watchlistController watchlistController;
 
@@ -88,7 +95,7 @@ public class MovieDetailsView extends JPanel {
     private JLabel createPosterLabel(MovieDetailsState state) {
         JLabel poster = new JLabel("Loading...", SwingConstants.CENTER);
         poster.setPreferredSize(new Dimension(POSTER_WIDTH, POSTER_HEIGHT));
-        poster.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        poster.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
 
         loadPosterImage(poster, state);
 
@@ -126,56 +133,60 @@ public class MovieDetailsView extends JPanel {
         return watchlistBtn;
     }
 
-    private JScrollPane createBottomPanel(MovieDetailsState state) {
-        JPanel bottom = new JPanel();
+    private JComponent createBottomPanel(MovieDetailsState state) {
+        Box bottom = Box.createVerticalBox();
         bottom.setOpaque(false);
-        bottom.setLayout(new BoxLayout(bottom, BoxLayout.Y_AXIS));
 
-        bottom.add(createDescriptionArea(state));
-        bottom.add(Box.createVerticalStrut(8));
-        bottom.add(bold(new JLabel("Popular Reviews:")));
-        bottom.add(createReviewsScrollPane(state));
+        bottom.add(createDescriptionPanel(state));
+        bottom.add(Box.createVerticalStrut(12));
+        bottom.add(createReviewsPanel(state));
 
-        JScrollPane scroll = new JScrollPane(bottom,
-                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
-                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        scroll.setBorder(null);
-
-        return scroll;
+        return bottom;
     }
 
-    private JTextArea createDescriptionArea(MovieDetailsState state) {
-        JTextArea desc = new JTextArea("Description: " + state.description());
+    private JScrollPane createDescriptionPanel(MovieDetailsState state) {
+        JTextArea desc = new JTextArea(state.description() == null ? "" : state.description());
         desc.setLineWrap(true);
         desc.setWrapStyleWord(true);
         desc.setEditable(false);
-        desc.setBorder(new EmptyBorder(8, 8, 8, 8));
-        return desc;
+        desc.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+
+        JScrollPane descScroll = new JScrollPane(desc,
+            ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+
+        descScroll.setBorder(BorderFactory.createTitledBorder("Description"));
+        descScroll.setPreferredSize(new Dimension(DESCRIPTION_WIDTH, DESCRIPTION_HEIGHT));
+        descScroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, DESCRIPTION_HEIGHT));
+
+        return descScroll;
     }
 
-    private JScrollPane createReviewsScrollPane(MovieDetailsState state) {
+    private JScrollPane createReviewsPanel(MovieDetailsState state) {
         String reviewsText = formatReviews(state.reviews(), MAX_REVIEWS);
-        JTextArea reviews = new JTextArea(reviewsText);
-        reviews.setLineWrap(true);
-        reviews.setWrapStyleWord(true);
+        JEditorPane reviews = new JEditorPane("text/html", "<html>%s</html>".formatted(reviewsText));
         reviews.setEditable(false);
-        reviews.setBorder(new EmptyBorder(8, 8, 8, 8));
+        reviews.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+        reviews.setFont(new JLabel().getFont());
+        reviews.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
 
         JScrollPane reviewsScroll = new JScrollPane(reviews,
-                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
-                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        reviewsScroll.setPreferredSize(new Dimension(0, REVIEWS_HEIGHT));
-        reviewsScroll.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+            ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+
+        reviewsScroll.setBorder(BorderFactory.createTitledBorder("Popular Reviews"));
+        reviewsScroll.setPreferredSize(new Dimension(REVIEWS_WIDTH, REVIEWS_HEIGHT));
+        reviewsScroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, REVIEWS_HEIGHT));
 
         return reviewsScroll;
     }
 
-    private static JLabel bold(JLabel l) {
+    private JLabel bold(JLabel l) {
         l.setFont(l.getFont().deriveFont(Font.BOLD, l.getFont().getSize2D() + 1f));
         return l;
     }
 
-    private static String formatReviews(final List<MovieReviewData> reviews, int maxReviews) {
+    private String formatReviews(final List<MovieReviewData> reviews, int maxReviews) {
         if (reviews == null || reviews.isEmpty()) {
             return "No reviews available.";
         }
@@ -183,8 +194,15 @@ public class MovieDetailsView extends JPanel {
         return reviews
                 .stream()
                 .limit(maxReviews)
-                .map(review -> "%s - \"%s\"".formatted(review.author(), review.content()))
-                .collect(Collectors.joining("\n\n"));
+                .map(this::formatReview)
+                .collect(Collectors.joining("<br><br>"));
+    }
+
+    private String formatReview(final MovieReviewData review) {
+        return "<b>%s</b>: <blockquote>%s</blockquote>".formatted(
+                review.author(),
+                review.content().replace("\n", "<br>")
+        );
     }
 
     private void loadPosterImage(JLabel posterLabel, MovieDetailsState state) {

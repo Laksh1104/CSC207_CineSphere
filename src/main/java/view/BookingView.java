@@ -5,7 +5,6 @@ import data_access.BookingMovieDataAccessObject;
 import entity.*;
 import interface_adapter.BookMovie.*;
 
-
 import javax.swing.*;
 import java.awt.*;
 import java.beans.PropertyChangeEvent;
@@ -16,354 +15,385 @@ import java.util.List;
 
 import com.toedter.calendar.JDateChooser;
 
-
 public class BookingView extends JPanel implements PropertyChangeListener {
 
-    private final BookMovieViewModel bookMovieViewModel;
-    private BookMovieController bookMovieController;
+    private final BookMovieViewModel viewModel;
+    private BookMovieController controller;
 
+    // UI Components
     private JComboBox<String> movieDropdown;
-    private JComboBox<String> theaterDropdown;
+    private JComboBox<String> cinemaDropdown;
     private JComboBox<String> timeDropdown;
+
+    private JPanel seatPanelWrapper;
     private SeatSelectionPanel seatPanel;
 
-    private Movie selectedMovie = null;
-    private Cinema selectedCinema = null;
-    private ShowTime selectedShowtime = null;
+    // Selected domain objects
+    private Movie selectedMovie;
+    private Cinema selectedCinema;
+    private ShowTime selectedShowtime;
+
     private final Map<String, ShowTime> showtimeMap = new HashMap<>();
     private String selectedDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
 
-    private final Color COLOR = new Color(255, 255, 224);
-    private final int HEIGHT = 25;
+    private static final Color COLOR = new Color(255, 255, 224);
+    private static final int HEIGHT = 25;
 
-    public BookingView(BookMovieViewModel bookMovieViewModel) {
-        this.bookMovieViewModel = bookMovieViewModel;
-        this.bookMovieViewModel.addPropertyChangeListener(this);
+    public BookingView(BookMovieViewModel vm) {
+        this.viewModel = vm;
+        vm.addPropertyChangeListener(this);
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(COLOR);
+
         add(Box.createVerticalStrut(10));
         add(new HeaderPanel(), BorderLayout.NORTH);
-        setupSelectionPanel();
 
-        setupSeatPanel();
+        setupSelectionPanel();
+        setupSeatPanelWrapper();
         setupBookButton();
     }
 
     public void setBookMovieController(BookMovieController controller) {
-        this.bookMovieController = controller;
+        this.controller = controller;
     }
 
-    private void setupHeader() {
-        add(Box.createVerticalStrut(10)); // 10px gap
 
-        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
-        headerPanel.setBackground(COLOR);
-        headerPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 10000));
+    // UI Setup
 
-        JLabel title = new JLabel("CineSphere");
-        title.setFont(new Font("Arial", Font.BOLD, 20));
-
-        JButton homeButton = new JButton("Home");
-        JButton watchlistButton = new JButton("Watchlist");
-        JButton bookButton = new JButton("Booking");
-        JButton logoutButton = new JButton("Logout");
-
-        headerPanel.add(title);
-        headerPanel.add(homeButton);
-        headerPanel.add(watchlistButton);
-        headerPanel.add(bookButton);
-        headerPanel.add(logoutButton);
-
-        add(headerPanel);
-
+    private void setupSeatPanelWrapper() {
+        seatPanelWrapper = new JPanel(new FlowLayout());
+        seatPanelWrapper.setBackground(COLOR);
+        add(seatPanelWrapper);
     }
 
     private void setupSelectionPanel() {
+
         JPanel selectionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
         selectionPanel.setBackground(COLOR);
 
         // Movie Dropdown
-        movieDropdown = new JComboBox<>(new String[]{"Select Movie"});
-        movieDropdown.setPreferredSize(new Dimension(300, HEIGHT));
+        movieDropdown = createDropdown(300);
+        movieDropdown.addItem("Select Movie");
         populateMovies();
 
         movieDropdown.addActionListener(e -> {
+            clearSeatGrid();
+
             String movieName = (String) movieDropdown.getSelectedItem();
-            if (movieName != null && !movieName.equals("Select Movie")) {
-                selectedMovie = getMovieObject(movieName);
+            if (isNullOrPlaceholder(movieName, "Select Movie")) return;
 
-                populateCinemas(selectedMovie.getFilmId(), selectedDate);
-
-                BookMovieState state = bookMovieViewModel.getState();
-                state.setMovie(selectedMovie);
-                bookMovieViewModel.setState(state);
-            }
+            selectedMovie = getMovie(movieName);
+            populateCinemas(selectedMovie.getFilmId(), selectedDate);
         });
-        JPanel moviePanel = new JPanel(new BorderLayout());
-        moviePanel.setBackground(COLOR);
-        moviePanel.add(new JLabel("Movie: "), BorderLayout.WEST);
-        moviePanel.add(movieDropdown, BorderLayout.CENTER);
+
+        selectionPanel.add(labeled("Movie:", movieDropdown));
+
 
         // Date Picker
-        JPanel datePanel = new JPanel(new BorderLayout());
-        datePanel.setBackground(COLOR);
-        datePanel.add(new JLabel("Date: "), BorderLayout.WEST);
-
         JDateChooser dateChooser = new JDateChooser();
         dateChooser.setPreferredSize(new Dimension(150, HEIGHT));
         dateChooser.setDateFormatString("yyyy-MM-dd");
-        Date today = new Date();
-        dateChooser.setMinSelectableDate(today);
-        dateChooser.setDate(today);
+        dateChooser.setMinSelectableDate(new Date());
+        dateChooser.setDate(new Date());
 
         dateChooser.addPropertyChangeListener("date", evt -> {
+            clearSeatGrid();
+
             Date date = dateChooser.getDate();
-            if (date != null) {
-                selectedDate = new SimpleDateFormat("yyyy-MM-dd").format(date);
+            if (date == null) return;
 
+            selectedDate = new SimpleDateFormat("yyyy-MM-dd").format(date);
+            if (selectedMovie != null)
                 populateCinemas(selectedMovie.getFilmId(), selectedDate);
-
-                BookMovieState state = bookMovieViewModel.getState();
-                state.setDate(selectedDate);
-                bookMovieViewModel.setState(state);
-            }
         });
-        datePanel.add(dateChooser, BorderLayout.CENTER);
+
+        selectionPanel.add(labeled("Date:", dateChooser));
+
 
         // Cinema Dropdown
-        theaterDropdown = new JComboBox<>(new String[]{"Select Cinema"});
-        JPanel theaterPanel = new JPanel(new BorderLayout());
-        theaterPanel.setBackground(COLOR);
-        theaterPanel.setPreferredSize(new Dimension(300, HEIGHT));
-        theaterPanel.add(new JLabel("Cinema: "), BorderLayout.WEST);
-        theaterPanel.add(theaterDropdown, BorderLayout.CENTER);
+        cinemaDropdown = createDropdown(300);
+        cinemaDropdown.addItem("Select Cinema");
 
-        theaterDropdown.addActionListener(e -> {
-            String cinemaName = (String) theaterDropdown.getSelectedItem();
+        cinemaDropdown.addActionListener(e -> {
+            clearSeatGrid();
 
-            if (cinemaName != null && !cinemaName.equals("Select Cinema") && selectedMovie != null) {
-                selectedCinema = getCinemaObject(cinemaName, selectedMovie.getFilmId(), selectedDate);
+            String name = (String) cinemaDropdown.getSelectedItem();
+            if (isNullOrPlaceholder(name, "Select Cinema")) return;
 
-                populateShowTime(selectedCinema);
 
-                BookMovieState state = bookMovieViewModel.getState();
-                state.setCinema(selectedCinema);
-                bookMovieViewModel.setState(state);
-            }
+            if (name.equals("This film is not playing on this date.")) return;
+
+            selectedCinema = getCinema(name, selectedMovie.getFilmId(), selectedDate);
+            populateShowTimes(selectedCinema);
         });
+
+        selectionPanel.add(labeled("Cinema:", cinemaDropdown));
+
 
         // Time Dropdown
-        timeDropdown = new JComboBox<>(new String[]{"Select Time"});
-        JPanel timePanel = new JPanel(new BorderLayout());
-        timePanel.setBackground(COLOR);
-        timePanel.setPreferredSize(new Dimension(250, HEIGHT));
-        timePanel.add(new JLabel("Time: "), BorderLayout.WEST);
-        timePanel.add(timeDropdown, BorderLayout.CENTER);
+        timeDropdown = createDropdown(250);
+        timeDropdown.addItem("Select Time");
 
         timeDropdown.addActionListener(e -> {
-            selectedShowtime = getSelectedShowtime();
-            updateSeatGridForCurrentSelection();
+            clearSeatGrid();
         });
 
+        selectionPanel.add(labeled("Time:", timeDropdown));
 
 
-        selectionPanel.add(moviePanel);
-        selectionPanel.add(datePanel);
-        selectionPanel.add(theaterPanel);
-        selectionPanel.add(timePanel);
+        // Select Button
+        JButton select = new JButton("Select");
+        select.addActionListener(e -> handleSelect());
+        selectionPanel.add(select);
+
         add(selectionPanel);
     }
 
-    private void setupSeatPanel() {
 
-        JPanel seatPanelContainer = new JPanel();
-        seatPanelContainer.setLayout(new BoxLayout(seatPanelContainer, BoxLayout.Y_AXIS));
-        seatPanelContainer.setBackground(COLOR);
-
-        // Add vertical spacing above
-        seatPanelContainer.add(Box.createVerticalStrut(15));
-
-        JLabel seatsLabel = new JLabel("Seating Arrangement:");
-        seatsLabel.setFont(new Font("Arial", Font.BOLD, 18));
-
-        seatPanel = new SeatSelectionPanel(Collections.emptySet());
-
-        seatPanelContainer.add(seatsLabel);
-        // Add vertical spacing below
-        seatPanelContainer.add(Box.createVerticalStrut(15));
-
-        seatPanelContainer.add(seatPanel);
-
-        JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-        wrapper.setBackground(COLOR);
-        wrapper.add(seatPanelContainer);
-
-        add(wrapper);
-
+    private JPanel labeled(String text, JComponent component) {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(COLOR);
+        panel.add(new JLabel(text), BorderLayout.WEST);
+        panel.add(component, BorderLayout.CENTER);
+        return panel;
     }
+
+    private JComboBox<String> createDropdown(int width) {
+        JComboBox<String> cb = new JComboBox<>();
+        cb.setPreferredSize(new Dimension(width, HEIGHT));
+        return cb;
+    }
+
+
+    // Select Handler
+
+    private void handleSelect() {
+        String movieName = (String) movieDropdown.getSelectedItem();
+        String cinemaName = (String) cinemaDropdown.getSelectedItem();
+        String timeDisplay = (String) timeDropdown.getSelectedItem();
+
+        if (isInvalidSelection(movieName, cinemaName, timeDisplay)) return;
+
+        selectedMovie = getMovie(movieName);
+        selectedCinema = getCinema(cinemaName, selectedMovie.getFilmId(), selectedDate);
+        selectedShowtime = getShowtime(timeDisplay);
+
+        // Update state
+        BookMovieState state = viewModel.getState();
+        state.setMovie(selectedMovie);
+        state.setCinema(selectedCinema);
+        state.setDate(selectedDate);
+        state.setShowtime(selectedShowtime);
+        viewModel.setState(state);
+
+        buildSeatGrid();
+    }
+
+
+    // Book Button
 
     private void setupBookButton() {
-        JButton bookMovieButton = new JButton("Book Movie");
-        bookMovieButton.setFont(new Font("Arial", Font.BOLD, 18));
-        bookMovieButton.setForeground(Color.BLACK);
-        bookMovieButton.setFocusPainted(false);
+        JButton bookBtn = new JButton("Book Movie");
+        bookBtn.setFont(new Font("Arial", Font.BOLD, 18));
+        bookBtn.setBackground(Color.WHITE);
 
-        bookMovieButton.addActionListener(e -> {
-            if (bookMovieController != null) {
-                selectedShowtime = getSelectedShowtime();
+        bookBtn.addActionListener(e -> {
 
-                BookMovieState state = bookMovieViewModel.getState();
-                state.setShowtime(selectedShowtime);
-                bookMovieViewModel.setState(state);
+            if (controller == null) return;
 
-                if (selectedMovie != null && selectedCinema != null && selectedShowtime != null &&
-                        !seatPanel.getSelectedSeats().isEmpty()) {
-                    bookMovieController.execute(
-                            selectedMovie,
-                            selectedDate,
-                            selectedCinema,
-                            selectedShowtime,
-                            new HashSet<>(seatPanel.getSelectedSeats())
-                    );
-                } else {
-                    JOptionPane.showMessageDialog(this,
-                            "Please select movie, cinema, date, time, and seats.",
-                            "Incomplete Booking", JOptionPane.WARNING_MESSAGE);
-                }
+            if (seatPanel == null) {
+                warn("Please click Select to load the seat map before booking.");
+                return;
             }
+
+            if (selectedMovie == null || selectedCinema == null || selectedShowtime == null) {
+                warn("Please select movie, cinema, date, and time.");
+                return;
+            }
+
+            if (seatPanel.getSelectedSeats().isEmpty()) {
+                warn("Please select at least one seat before booking.");
+                return;
+            }
+
+            controller.execute(
+                    selectedMovie,
+                    selectedDate,
+                    selectedCinema,
+                    selectedShowtime,
+                    new HashSet<>(seatPanel.getSelectedSeats())
+            );
         });
 
-        JPanel bookButtonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        bookButtonPanel.setBackground(COLOR);
-        bookButtonPanel.add(bookMovieButton);
-        add(bookButtonPanel);
+        JPanel wrapper = new JPanel(new FlowLayout());
+        wrapper.add(bookBtn);
+        wrapper.setBackground(COLOR);
+        add(wrapper);
     }
 
-    /** PropertyChangeListener updates UI when state changes */
+
+    private void warn(String msg) {
+        JOptionPane.showMessageDialog(this, msg, "Warning", JOptionPane.WARNING_MESSAGE);
+    }
+
+
+    // Seat Grid Methods
+
+    private void clearSeatGrid() {
+        seatPanelWrapper.removeAll();
+        seatPanelWrapper.revalidate();
+        seatPanelWrapper.repaint();
+        seatPanel = null;
+    }
+
+    private void refreshSeatPanel(SeatSelectionPanel newPanel) {
+        seatPanelWrapper.removeAll();
+        seatPanel = newPanel;
+        seatPanelWrapper.add(seatPanel);
+        seatPanelWrapper.revalidate();
+        seatPanelWrapper.repaint();
+    }
+
+    private void buildSeatGrid() {
+        if (selectedMovie == null || selectedCinema == null || selectedShowtime == null) {
+            warn("Please choose movie, date, cinema, and showtime first.");
+            return;
+        }
+
+        List<Seat> seats = controller.loadSeatLayout(
+                selectedMovie, selectedCinema, selectedDate, selectedShowtime
+        );
+
+        Set<String> unavailable = new HashSet<>();
+        for (Seat s : seats)
+            if (s.isBooked()) unavailable.add(s.getSeatName());
+
+        refreshSeatPanel(new SeatSelectionPanel(unavailable));
+    }
+
+
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         BookMovieState state = (BookMovieState) evt.getNewValue();
 
-        // 1) Mark unavailable seats
-        if (!state.getSeats().isEmpty()) {
-            seatPanel.markSeatsAsUnavailable(state.getSeats());
-        }
-
-        // 2) Show error
         if (state.getBookingError() != null) {
             JOptionPane.showMessageDialog(this, state.getBookingError(),
                     "Booking Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        // 3) Show success message
+        if (seatPanel == null) return;
+
         if (state.getBookingSuccessMessage() != null) {
             JOptionPane.showMessageDialog(this,
                     state.getBookingSuccessMessage(),
-                    "Booking Confirmed",
-                    JOptionPane.INFORMATION_MESSAGE);
+                    "Booking Confirmed", JOptionPane.INFORMATION_MESSAGE);
+
             state.setBookingSuccessMessage(null);
         }
+
+        Set<String> newlyBooked = state.getSeats();
+        if (newlyBooked != null && !newlyBooked.isEmpty()) {
+            seatPanel.markSeatsAsUnavailable(newlyBooked);
+        }
     }
+
+
+    // Data Access Helpers
+
+    private final BookingMovieDataAccessObject movieDAO =
+            new BookingMovieDataAccessObject(new MovieFactory());   // ★ INLINE DAO
 
     private void populateMovies() {
-        MovieFactory movieFactory = new MovieFactory();
-        BookingMovieDataAccessObject movieDAO = new BookingMovieDataAccessObject(movieFactory);
         List<Movie> movies = movieDAO.getNowShowingMovies();
-
         movies.sort(Comparator.comparing(Movie::getFilmName));
 
-        for (Movie movie : movies) {
+        for (Movie movie : movies)
             movieDropdown.addItem(movie.getFilmName());
-        }
     }
 
-    private Movie getMovieObject(String film_name){
-        MovieFactory movieFactory = new MovieFactory();
-        BookingMovieDataAccessObject movieDAO = new BookingMovieDataAccessObject(movieFactory);
-        List<Movie> movies = movieDAO.getNowShowingMovies();
-        for  (Movie movie : movies) {
-            if(movie.getFilmName().equals(film_name)) {
-                return movie;
-            }
-        }
-        return null;
+    private Movie getMovie(String name) {
+        return movieDAO.getNowShowingMovies().stream()
+                .filter(m -> m.getFilmName().equals(name))
+                .findFirst()
+                .orElse(null);
     }
 
-    private Cinema getCinemaObject(String cinema_name, int filmId, String date) {
-        CinemaFactory cinemaFactory = new CinemaFactory();
-        CinemaDataAccessObject cinemaDAO = new CinemaDataAccessObject(cinemaFactory);
-        List<Cinema> cinemas = cinemaDAO.getCinemasForFilm(filmId, date);
-
-        for (Cinema cinema : cinemas) {
-            if (cinema.getCinemaName().equals(cinema_name)) {
-                return cinema;
-            }
-        }
-        return null;
+    private Cinema getCinema(String name, int filmId, String date) {
+        CinemaDataAccessObject cinemaDAO = new CinemaDataAccessObject(new CinemaFactory());
+        return cinemaDAO.getCinemasForFilm(filmId, date).stream()
+                .filter(c -> c.getCinemaName().equals(name))
+                .findFirst()
+                .orElse(null);
     }
 
-    public ShowTime getSelectedShowtime() {
-        String selected = (String) timeDropdown.getSelectedItem();
-        if (selected != null) {
-            return showtimeMap.get(selected);
-        }
-        return null;
-    }
+    private void populateCinemas(int filmId, String date) {
+        CinemaDataAccessObject dao = new CinemaDataAccessObject(new CinemaFactory());
+        List<Cinema> cinemas = dao.getCinemasForFilm(filmId, date);
 
-    private void populateCinemas(int movie_Id, String date){
-        CinemaFactory cinemaFactory = new CinemaFactory();
-        CinemaDataAccessObject cinemaDAO = new CinemaDataAccessObject(cinemaFactory);
-        List<Cinema> cinemas = cinemaDAO.getCinemasForFilm(movie_Id, date);
+        cinemaDropdown.removeAllItems();
+
+        if (cinemas.isEmpty()) {
+            cinemaDropdown.addItem("This film is not playing on this date.");
+            return;
+        }
+
         cinemas.sort(Comparator.comparing(Cinema::getCinemaName));
-        theaterDropdown.removeAllItems();
-
-        for (Cinema cinema : cinemas) {
-            theaterDropdown.addItem(cinema.getCinemaName());
-        }
+        for (Cinema c : cinemas)
+            cinemaDropdown.addItem(c.getCinemaName());
     }
 
-    private void populateShowTime(Cinema cinema) {
+    private void populateShowTimes(Cinema cinema) {
         timeDropdown.removeAllItems();
-        showtimeMap.clear(); // clear previous showtimes
+        showtimeMap.clear();
 
-        Map<String, List<ShowTime>> allShowTimes = cinema.getAllShowTimesWithVersion();
+        if (cinema == null) {
+            timeDropdown.addItem("No showtime is available.");
+            return;
+        }
 
-        for (Map.Entry<String, List<ShowTime>> entry : allShowTimes.entrySet()) {
+        Map<String, List<ShowTime>> grouped = cinema.getAllShowTimesWithVersion();
+
+        for (var entry : grouped.entrySet()) {
             String version = entry.getKey();
-            List<ShowTime> showTimes = entry.getValue();
-
-            for (ShowTime st : showTimes) {
+            for (ShowTime st : entry.getValue()) {
                 String display = version + ": " + st.getStartTime() + " - " + st.getEndTime();
                 timeDropdown.addItem(display);
-                showtimeMap.put(display, st); // store mapping
+                showtimeMap.put(display, st);
             }
         }
 
+        if (timeDropdown.getItemCount() == 0)
+            timeDropdown.addItem("No showtimes are available.");
     }
 
-    private void refreshSeatPanel(SeatSelectionPanel newPanel) {
-        Container parent = seatPanel.getParent();
-        parent.remove(seatPanel);
-        seatPanel = newPanel;
-        parent.add(seatPanel);
-        parent.revalidate();
-        parent.repaint();
+    private ShowTime getShowtime(String display) {
+        if (display == null || !showtimeMap.containsKey(display))
+            return null;
+        return showtimeMap.get(display);
     }
 
-    private void updateSeatGridForCurrentSelection() {
-        if (selectedMovie == null || selectedCinema == null || selectedShowtime == null)
-            return;
 
-        Set<String> unavailable = bookMovieController.getBookedSeats(
-                selectedMovie,
-                selectedCinema,
-                selectedDate,
-                selectedShowtime
-        );
+    private boolean isNullOrPlaceholder(String s, String placeholder) {
+        return s == null || s.equals(placeholder);
+    }
 
-        SeatSelectionPanel newPanel = new SeatSelectionPanel(unavailable);
-        refreshSeatPanel(newPanel);
+    private boolean isInvalidSelection(String movieName, String cinemaName, String timeDisplay) {
+        if (isNullOrPlaceholder(movieName, "Select Movie")) {
+            warn("Please select a movie.");
+            return true;
+        }
+        if (isNullOrPlaceholder(cinemaName, "Select Cinema") ||
+                cinemaName.equals("This film is not playing on this date.")) {
+            warn("Please select a valid cinema.");
+            return true;
+        }
+        if (isNullOrPlaceholder(timeDisplay, "Select Time") ||
+                timeDisplay.equals("No showtime is available.")) {
+            warn("Please select a valid showtime.");
+            return true;
+        }
+        return false;
     }
 }

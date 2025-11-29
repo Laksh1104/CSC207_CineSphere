@@ -1,4 +1,4 @@
-import data_access.TicketDataAccessObject;
+import data_access.InMemoryTicketDataAccessObject;
 import entity.MovieFactory;
 import interface_adapter.BookMovie.*;
 import interface_adapter.ViewManagerModel;
@@ -18,13 +18,13 @@ public class TestBookingView {
 
         MovieFactory movieFactory = new MovieFactory();
 
-        TicketDataAccessObject ticketDataAccessObject = new TicketDataAccessObject();
+        InMemoryTicketDataAccessObject inMemoryTicketDataAccessObject = new InMemoryTicketDataAccessObject();
 
         BookMoviePresenter presenter =
                 new BookMoviePresenter(bookMovieViewModel);
 
         BookMovieInputBoundary interactor =
-                new BookMovieInteractor(ticketDataAccessObject, presenter);
+                new BookMovieInteractor(inMemoryTicketDataAccessObject, presenter);
 
         BookMovieController controller =
                 new BookMovieController(interactor);

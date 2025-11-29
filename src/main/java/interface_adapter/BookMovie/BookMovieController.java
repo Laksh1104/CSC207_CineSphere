@@ -2,10 +2,12 @@ package interface_adapter.BookMovie;
 
 import entity.Cinema;
 import entity.Movie;
+import entity.Seat;
 import entity.ShowTime;
 import use_case.book_movie.BookMovieInputBoundary;
 import use_case.book_movie.BookMovieInputData;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -14,10 +16,10 @@ import java.util.Set;
  */
 public class BookMovieController {
 
-    private final BookMovieInputBoundary BookMovieUseCaseInteractor;
+    private final BookMovieInputBoundary bookMovieUseCaseInteractor;
 
-    public BookMovieController(BookMovieInputBoundary BookMovieUseCaseInteractor) {
-        this.BookMovieUseCaseInteractor = BookMovieUseCaseInteractor;
+    public BookMovieController(BookMovieInputBoundary bookMovieUseCaseInteractor) {
+        this.bookMovieUseCaseInteractor = bookMovieUseCaseInteractor;
     }
 
     /**
@@ -31,7 +33,7 @@ public class BookMovieController {
      */
     public void execute(Movie movie, String date, Cinema cinema, ShowTime showtime, Set<String> seats) {
         if (movie == null || cinema == null || showtime == null || seats == null || seats.isEmpty() || date == null) {
-            BookMovieUseCaseInteractor.execute(null);
+            bookMovieUseCaseInteractor.execute(null);
             return;
         }
 
@@ -39,10 +41,13 @@ public class BookMovieController {
         BookMovieInputData inputData = new BookMovieInputData(movie, date, cinema, showtime, seats);
 
         // Call the interactor
-        BookMovieUseCaseInteractor.execute(inputData);
+        bookMovieUseCaseInteractor.execute(inputData);
     }
 
     public Set<String> getBookedSeats(Movie m, Cinema c, String date, ShowTime st) {
-        return BookMovieUseCaseInteractor.getBookedSeats(m, c, date, st);
+        return bookMovieUseCaseInteractor.getBookedSeats(m, c, date, st);
+    }
+    public List<Seat> loadSeatLayout(Movie m, Cinema c, String date, ShowTime st) {
+        return bookMovieUseCaseInteractor.loadSeatLayout(m, c, date, st);
     }
 }

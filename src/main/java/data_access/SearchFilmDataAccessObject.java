@@ -1,12 +1,13 @@
-package use_case.search_film;
+package data_access;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import use_case.search_film.SearchFilmDataAccessInterface;
 
-public class SearchFilmAPIAccess implements SearchFilmDataAccessInterface{
+public class SearchFilmDataAccessObject implements SearchFilmDataAccessInterface {
     private static final String API_TOKEN = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJmYjQ3NTdjZWNmMTdjNDQyMDcyM2M0NTdhYWNkNjFlNiIsIm5iZiI6MTc2Mjc5NDA2My4xNjMsInN1YiI6IjY5MTIxYTRmMGZmMTVkYTY4NDlhYzQ3YyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.bUPbgDcky9nR63moe3ftxhKkuEQPJ-bB0F5qmL2AUfo";
     private final OkHttpClient client = new OkHttpClient();
 
