@@ -64,7 +64,7 @@ public class    BookingMovieDataAccessObject implements MovieDataAccessInterface
                 int filmId = film.getInt("film_id");
                 String filmName = film.getString("film_name");
 
-                Movie movie = movieFactory.create(filmId, filmName);
+                Movie movie = movieFactory.fromMovieGlu(filmId, filmName);
                 movies.add(movie);
 
             }

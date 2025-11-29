@@ -1,20 +1,23 @@
 package entity;
 
-
 public class Movie {
 
-    private String film_name;
-    private int film_id;
+    private final int id;
+    private final String title;
+    private final String posterPath;
 
-    public Movie(int film_id, String film_name) {
-        this.film_id = film_id;
-        this.film_name = film_name;
+
+
+    // Full 3-arg constructor (TMDB)
+    public Movie(int id, String title, String posterPath) {
+        this.id = id;
+        this.title = title;
+        this.posterPath = posterPath;
     }
 
-    public String getFilmName() {
-        return film_name;
-    }
-    public int getFilmId() {
-        return film_id;
-    }
+
+    public int getId() { return id; }
+    public String getTitle() { return title; }
+    public String getPosterPath() { return posterPath; }
+
 }

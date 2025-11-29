@@ -10,7 +10,6 @@ public class MovieTicket {
     private final ShowTime time;
     private final Set<String> seats;
     private final int cost;
-    public  final int SEAT_PRICE = 20;
 
     public MovieTicket(Movie movie, Cinema cinema, String date, ShowTime time, Set<String> seats,  int cost) {
         this.movie = movie;

@@ -1,10 +1,8 @@
 package use_case.book_movie;
 
-import entity.MovieTicket;
-import entity.Movie;
-import entity.Cinema;
-import entity.ShowTime;
+import entity.*;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -46,20 +44,14 @@ public class BookMovieInteractor implements BookMovieInputBoundary {
         ticketDataAccessObject.saveBooking(ticket);
 
         // get updated booked seats for this showtime
-        Set<String> bookedSeats = ticketDataAccessObject.getBookedSeats(
-                inputData.getMovie(),
-                inputData.getCinema(),
-                inputData.getDate(),
-                inputData.getShowtime()
-        );
+        Set<String> newlyBooked = inputData.getSeats();
 
-        // Create Output Data for presenter
         BookMovieOutputData outputData = new BookMovieOutputData(
                 movie,
                 date,
                 cinema,
                 showtime,
-                bookedSeats,
+                newlyBooked,
                 totalCost
         );
 
@@ -69,5 +61,10 @@ public class BookMovieInteractor implements BookMovieInputBoundary {
     @Override
     public Set<String> getBookedSeats(Movie m, Cinema c, String date, ShowTime st) {
         return ticketDataAccessObject.getBookedSeats(m, c, date, st);
+    }
+
+    @Override
+    public List<Seat> loadSeatLayout(Movie m, Cinema c, String date, ShowTime st) {
+        return ticketDataAccessObject.getSeatLayout(m, c, date, st);
     }
 }
