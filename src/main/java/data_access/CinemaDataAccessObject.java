@@ -140,9 +140,9 @@ public class CinemaDataAccessObject implements CinemaDataAccessInterface {
         List<Movie> movies = movieDataAccessObject.getNowShowingMovies();
         String date = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
        for  (Movie movie : movies) {
-           List<Cinema> cinemas = cinemaDataAccessObject.getCinemasForFilm(movie.getFilmId(), date);
+           List<Cinema> cinemas = cinemaDataAccessObject.getCinemasForFilm(movie.getId(), date);
            for(Cinema cinema : cinemas) {
-               System.out.println("Movie: " + movie.getFilmName() + " at Cinema: " + cinema.getCinemaName());
+               System.out.println("Movie: " + movie.getTitle() + " at Cinema: " + cinema.getCinemaName());
            }
        }
 
