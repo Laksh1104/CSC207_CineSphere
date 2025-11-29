@@ -92,7 +92,6 @@ public class FilteredView extends JFrame {
             callFilter();
         });
 
-        // ---- Filtered-by label row ----
         JPanel filteredByPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         filteredByPanel.setBackground(COLOR);
         filteredByPanel.setPreferredSize(new Dimension(860, 30));
@@ -102,7 +101,6 @@ public class FilteredView extends JFrame {
         filteredByLabel = new JLabel();
         filteredByPanel.add(filteredByLabel);
 
-        // ---- Grid panel ----
         gridPanel = new JPanel(new GridLayout(2, 4, 10, 10));
         gridPanel.setBackground(COLOR);
         gridPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
@@ -110,7 +108,6 @@ public class FilteredView extends JFrame {
         gridPanel.setMaximumSize(new Dimension(850, 650));
         gridPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // ---- Paging panel ----
         JPanel pagingPanel = new JPanel(new BorderLayout());
         pagingPanel.setBackground(COLOR);
         pagingPanel.setPreferredSize(new Dimension(860, 40));

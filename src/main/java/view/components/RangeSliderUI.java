@@ -26,7 +26,6 @@ public class RangeSliderUI extends BasicSliderUI {
     protected void calculateThumbLocation() {
         super.calculateThumbLocation();
 
-        // position upper thumb based on high value
         int upperPosition = xPositionForValue(((RangeSlider) slider).getHighValue());
 
         upperThumbRect.x = upperPosition - (upperThumbRect.width / 2);
@@ -37,7 +36,6 @@ public class RangeSliderUI extends BasicSliderUI {
     public void paint(Graphics g, JComponent c) {
         super.paint(g, c);
 
-        // paint the upper thumb (super.paint paints the lower thumb via thumbRect)
         Rectangle saved = new Rectangle(thumbRect);
         thumbRect.setBounds(upperThumbRect);
         paintThumb(g);
@@ -78,12 +76,10 @@ public class RangeSliderUI extends BasicSliderUI {
             currentMouseX = e.getX();
             currentMouseY = e.getY();
 
-            // pick the closer thumb
             boolean lowerHit = thumbRect.contains(currentMouseX, currentMouseY);
             boolean upperHit = upperThumbRect.contains(currentMouseX, currentMouseY);
 
             if (upperHit && lowerHit) {
-                // if both: choose nearest center
                 int lowerCenter = thumbRect.x + thumbRect.width / 2;
                 int upperCenter = upperThumbRect.x + upperThumbRect.width / 2;
                 upperThumbSelected = Math.abs(currentMouseX - upperCenter) < Math.abs(currentMouseX - lowerCenter);

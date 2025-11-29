@@ -22,7 +22,6 @@ public class RangeSlider extends JSlider {
 
     @Override
     public void updateUI() {
-        // install our custom UI (two thumbs)
         setUI((SliderUI) new RangeSliderUI(this));
         updateLabelUIs();
     }
