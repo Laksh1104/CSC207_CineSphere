@@ -7,18 +7,21 @@ import java.net.URL;
 import interface_adapter.SearchFilm.*;
 import interface_adapter.popular_movies.PopularMoviesController;
 import interface_adapter.popular_movies.PopularMoviesViewModel;
-import use_case.search_film.*;
 
 public class LoggedInView extends JPanel {
 
     private SearchFilmController searchFilmController;
     private SearchFilmViewModel searchFilmViewModel;
+
     private PopularMoviesController popularMoviesController;
     private PopularMoviesViewModel popularMoviesViewModel;
+
     private JPanel moviePanel;
 
-    public LoggedInView() {
+    // ✅ Reusable filter panel (like HeaderPanel)
+    private final FilterPanel filterPanel;
 
+    public LoggedInView() {
 
         setBackground(new Color(255, 255, 224));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -27,8 +30,9 @@ public class LoggedInView extends JPanel {
         HeaderPanel headerPanel = new HeaderPanel();
         headerPanel.setMaximumSize(new Dimension(800, 50));
 
-        // Filter
-        JPanel filterPanel = buildFilterPanel();
+        // ✅ Filter (no duplicated UI code)
+        filterPanel = new FilterPanel();
+        filterPanel.setMaximumSize(new Dimension(860, 70));
 
         // Posters
         JScrollPane scrollPane = buildPosterScrollPane();
@@ -38,13 +42,26 @@ public class LoggedInView extends JPanel {
         add(Box.createRigidArea(new Dimension(0, 20)));
         add(filterPanel);
         add(Box.createRigidArea(new Dimension(0, 30)));
-        // add(popularFilmPanel);
         add(scrollPane);
     }
 
     public void setSearchDependencies(SearchFilmController controller, SearchFilmViewModel viewModel) {
         this.searchFilmController = controller;
         this.searchFilmViewModel = viewModel;
+
+        // ✅ Wire FilterPanel search to SearchFilmController
+        filterPanel.setOnSearch(query -> {
+            if (searchFilmController != null) {
+                searchFilmController.execute(query);
+            }
+        });
+
+        // Filter button isn't used on LoggedInView (FilteredView uses it),
+        // but we keep it harmless.
+        filterPanel.setOnFilter(() -> {
+            // Optional: do nothing or show message
+            // JOptionPane.showMessageDialog(this, "Use the Browse page to filter movies.");
+        });
 
         viewModel.addPropertyChangeListener(evt -> {
             if (!"state".equals(evt.getPropertyName())) return;
@@ -64,8 +81,6 @@ public class LoggedInView extends JPanel {
                 }
             });
         });
-
-
     }
 
     public void setPopularMoviesDependencies(PopularMoviesController controller, PopularMoviesViewModel viewModel) {
@@ -94,52 +109,7 @@ public class LoggedInView extends JPanel {
         }
     }
 
-    private JPanel buildFilterPanel() {
-        JPanel filterPanel = new JPanel();
-        filterPanel.setPreferredSize(new Dimension(800, 40));
-        filterPanel.setMaximumSize(new Dimension(800, 40));
-        filterPanel.setBackground(Color.WHITE);
-        filterPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JButton filterButton = new JButton("Filter");
-        JLabel browseTitle = new JLabel("Browse Films By:");
-
-        JComboBox<String> yearDropdown = new JComboBox<>(
-                new String[]{"All Years", "2025", "2024", "2023", "2022"}
-        );
-        JComboBox<String> genreDropdown = new JComboBox<>(
-                new String[]{"All Genres", "Action", "Comedy", "Drama", "Sci-Fi", "Horror", "Romance"}
-        );
-        JComboBox<String> ratingDropdown = new JComboBox<>(
-                new String[]{"All ratings", "4.5+", "4.0+", "3.5+", "3.0+", "2.5+", "2.0+", "1.5+", "1.0+"}
-        );
-
-        JTextField searchField = new JTextField(10);
-
-        searchField.addActionListener(e -> {
-            String query = searchField.getText().trim();
-            if (query.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Please enter a film name");
-                return;
-            }
-            searchFilmController.execute(query);
-        });
-        JLabel findFilmLabel = new JLabel("Find Film:");
-
-        filterPanel.add(browseTitle);
-        filterPanel.add(yearDropdown);
-        filterPanel.add(genreDropdown);
-        filterPanel.add(ratingDropdown);
-        filterPanel.add(filterButton);
-        filterPanel.add(findFilmLabel);
-        filterPanel.add(searchField);
-
-        return filterPanel;
-    }
-
-
     private JScrollPane buildPosterScrollPane() {
-
         moviePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
         moviePanel.setBackground(new Color(255, 255, 224));
 
@@ -158,11 +128,11 @@ public class LoggedInView extends JPanel {
     }
 
     private void refreshPopularMovies() {
-        if (moviePanel == null) {return;}
+        if (moviePanel == null) return;
 
         moviePanel.removeAll();
 
-        for (String url: popularMoviesViewModel.getPosterUrls()){
+        for (String url : popularMoviesViewModel.getPosterUrls()) {
             try {
                 ImageIcon icon = new ImageIcon(new URL(url));
                 Image scaled = icon.getImage().getScaledInstance(200, 300, Image.SCALE_SMOOTH);
