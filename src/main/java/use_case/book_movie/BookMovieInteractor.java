@@ -31,7 +31,7 @@ public class BookMovieInteractor implements BookMovieInputBoundary {
         Set<String> seats = inputData.getSeats();
 
         // Missing fields
-        if (movieName == null || cinemaName == null || date == null || startTime == null || endTime == null || seats == null) {
+        if (movieName == null || cinemaName == null || date == null || startTime == null || endTime == null) {
             bookingPresenter.prepareFailView("Some booking details are missing.");
             return;
         }
