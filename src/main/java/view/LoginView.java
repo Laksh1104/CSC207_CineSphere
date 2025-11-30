@@ -28,6 +28,11 @@ public class LoginView extends JFrame {
     private JLabel errorLabel;
     private JLabel statusLabel; // shows logged-in info
 
+    // NEW overload for cases where you only want login (e.g., from Logout)
+    public LoginView(LoginController loginController, LoginViewModel loginViewModel) {
+        this(loginController, loginViewModel, null, null);
+    }
+
     public LoginView(LoginController loginController,
                      LoginViewModel loginViewModel,
                      SignupController signupController,
@@ -113,10 +118,21 @@ public class LoginView extends JFrame {
         loginButton.addActionListener(e -> handleLogin());
 
         // sign up button (reuse fields)
-        signupButton.addActionListener(e -> handleSignup());
+        signupButton.addActionListener(e -> {
+            if (signupController == null) {
+                JOptionPane.showMessageDialog(this, "Sign up is not available from this screen.");
+                return;
+            }
+            handleSignup();
+        });
 
         // cancel button: close app
         cancelButton.addActionListener(e -> dispose());
+
+        // disable signup if not provided
+        if (signupController == null || signupViewModel == null) {
+            signupButton.setEnabled(false);
+        }
 
         // Listen for login state changes
         loginViewModel.addPropertyChangeListener(evt -> {
@@ -137,27 +153,29 @@ public class LoginView extends JFrame {
         });
 
         // Listen for signup state changes (show dialogs here, not in presenter)
-        signupViewModel.addPropertyChangeListener(evt -> {
-            if ("state".equals(evt.getPropertyName())) {
-                SignupState state = (SignupState) evt.getNewValue();
+        if (signupViewModel != null) {
+            signupViewModel.addPropertyChangeListener(evt -> {
+                if ("state".equals(evt.getPropertyName())) {
+                    SignupState state = (SignupState) evt.getNewValue();
 
-                if (state.getErrorMessage() != null && !state.getErrorMessage().isEmpty()) {
-                    JOptionPane.showMessageDialog(
-                            this,
-                            state.getErrorMessage(),
-                            "Sign up failed",
-                            JOptionPane.ERROR_MESSAGE
-                    );
-                } else if (state.isSignupSuccess()) {
-                    JOptionPane.showMessageDialog(
-                            this,
-                            "Account created for " + state.getUsername(),
-                            "Sign up successful",
-                            JOptionPane.INFORMATION_MESSAGE
-                    );
+                    if (state.getErrorMessage() != null && !state.getErrorMessage().isEmpty()) {
+                        JOptionPane.showMessageDialog(
+                                this,
+                                state.getErrorMessage(),
+                                "Sign up failed",
+                                JOptionPane.ERROR_MESSAGE
+                        );
+                    } else if (state.isSignupSuccess()) {
+                        JOptionPane.showMessageDialog(
+                                this,
+                                "Account created for " + state.getUsername(),
+                                "Sign up successful",
+                                JOptionPane.INFORMATION_MESSAGE
+                        );
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     private void handleLogin() {

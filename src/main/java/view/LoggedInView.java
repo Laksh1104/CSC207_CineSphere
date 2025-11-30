@@ -11,6 +11,7 @@ import interface_adapter.movie_details.MovieDetailsViewModel;
 import interface_adapter.SearchFilm.*;
 import interface_adapter.popular_movies.PopularMoviesController;
 import interface_adapter.popular_movies.PopularMoviesViewModel;
+import interface_adapter.logout.LogoutController;
 import use_case.movie_details.MovieDetailsDataAccessInterface;
 import use_case.movie_details.MovieDetailsInputBoundary;
 import use_case.movie_details.MovieDetailsInteractor;
@@ -27,6 +28,12 @@ public class LoggedInView extends JPanel {
     private MovieDetailsController movieDetailsController;
     private MovieDetailsView movieDetailsView;
 
+    // LOGOUT
+    private LogoutController logoutController;
+
+    // Header (so we can wire logout button)
+    private final HeaderPanel headerPanel;
+
     // UI
     private JPanel moviePanel;
 
@@ -35,13 +42,20 @@ public class LoggedInView extends JPanel {
 
     public LoggedInView() {
 
-
         setBackground(new Color(255, 255, 224));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         // Header
-        HeaderPanel headerPanel = new HeaderPanel();
+        headerPanel = new HeaderPanel();
         headerPanel.setMaximumSize(new Dimension(800, 50));
+
+        headerPanel.setLogoutAction(() -> {
+            if (logoutController != null) {
+                logoutController.execute();
+            } else {
+                JOptionPane.showMessageDialog(this, "Logout is not wired yet.");
+            }
+        });
 
         // Filter
         JPanel filterPanel = buildFilterPanel();
@@ -60,6 +74,10 @@ public class LoggedInView extends JPanel {
         add(Box.createRigidArea(new Dimension(0, 30)));
         add(popularLabel);
         add(scrollPane);
+    }
+
+    public void setLogoutDependencies(LogoutController controller) {
+        this.logoutController = controller;
     }
 
     public void setSearchDependencies(SearchFilmController controller, SearchFilmViewModel viewModel) {
@@ -84,8 +102,6 @@ public class LoggedInView extends JPanel {
                 }
             });
         });
-
-
     }
 
     public void setPopularMoviesDependencies(PopularMoviesController controller, PopularMoviesViewModel viewModel) {
@@ -146,14 +162,20 @@ public class LoggedInView extends JPanel {
 
         JTextField searchField = new JTextField(10);
 
+        // Keep Enter-to-search
         searchField.addActionListener(e -> {
             String query = searchField.getText().trim();
             if (query.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Please enter a film name");
                 return;
             }
+            if (searchFilmController == null) {
+                JOptionPane.showMessageDialog(this, "Search is not wired yet.");
+                return;
+            }
             searchFilmController.execute(query);
         });
+
         JLabel findFilmLabel = new JLabel("Find Film:");
 
         filterPanel.add(browseTitle);
@@ -166,7 +188,6 @@ public class LoggedInView extends JPanel {
 
         return filterPanel;
     }
-
 
     private JScrollPane buildPosterScrollPane() {
 
