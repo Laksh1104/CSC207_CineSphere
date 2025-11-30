@@ -10,8 +10,13 @@ public class MovieDetailsController {
         this.interactor = interactor;
     }
 
+    /**
+     * Shows the movie details for the specified film ID.
+     *
+     * @param filmId the ID of the film to display
+     */
     public void showMovieDetails(int filmId) {
-        MovieDetailsInputData inputData = new MovieDetailsInputData(filmId);
+        final MovieDetailsInputData inputData = new MovieDetailsInputData(filmId);
         interactor.execute(inputData);
     }
 }

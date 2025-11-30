@@ -1,5 +1,13 @@
 package data_access;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.jetbrains.annotations.Nullable;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import entity.MovieDetails;
 import entity.MovieReview;
 import io.github.cdimascio.dotenv.Dotenv;
@@ -7,14 +15,7 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import org.jetbrains.annotations.Nullable;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import use_case.movie_details.MovieDetailsDataAccessInterface;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class MovieDetailsDataAccessObject implements MovieDetailsDataAccessInterface {
 
@@ -24,28 +25,42 @@ public class MovieDetailsDataAccessObject implements MovieDetailsDataAccessInter
     private static final String IMG_BASE = "https://image.tmdb.org/t/p/w500";
     private static final OkHttpClient HTTP = new OkHttpClient.Builder().build();
 
+    /**
+     * Initializes the DAO and validates the API key.
+     */
     public MovieDetailsDataAccessObject() {
         validateApiKey();
     }
 
+    /**
+     * Retrieves movie details from TMDB API.
+     *
+     * @param filmId the film ID to retrieve
+     * @return the movie details
+     * @throws RuntimeException if the API call fails or response is unsuccessful
+     */
     public MovieDetails getMovieDetails(final int filmId) {
         final Request request = buildGetMovieRequest(filmId);
 
-        try (final Response response = HTTP.newCall(request).execute()) {
+        try (Response response = HTTP.newCall(request).execute()) {
             if (!response.isSuccessful()) {
-                throw new RuntimeException("Failed to get movie details. TMDB returned error code: " + response.code());
+                throw new RuntimeException("Failed to get movie details. TMDB returned error code: "
+                        + response.code());
             }
 
             return parseResponse(response);
         }
-        catch (final IOException e) {
-            throw new RuntimeException("Failed to get movie details with error: " + e.getMessage(), e);
+        catch (final IOException exception) {
+            throw new RuntimeException("Failed to get movie details with error: " + exception.getMessage(),
+                exception);
         }
     }
 
     private void validateApiKey() {
         if (API_KEY == null || API_KEY.isBlank()) {
-            throw new IllegalStateException("TMDB_API_KEY is not set in environment variables. Please follow steps in README.");
+            throw new IllegalStateException(
+                    "TMDB_API_KEY is not set in environment variables. Please follow steps in README."
+            );
         }
     }
 
@@ -105,10 +120,13 @@ public class MovieDetailsDataAccessObject implements MovieDetailsDataAccessInter
 
     private double parseRatingOutOf10(final JSONObject json) {
         double voteOutOf10 = json.optDouble("vote_average", 0.0);
+        final double maxRating = 10.0;
+        final double minRating = 0.0;
+        final double scalingFactor = 10.0;
 
         // clamp + round to 1 decimal to keep UI friendly
-        voteOutOf10 = Math.max(0.0, Math.min(10.0, voteOutOf10));
-        return Math.round(voteOutOf10 * 10.0) / 10.0;
+        voteOutOf10 = Math.max(minRating, Math.min(maxRating, voteOutOf10));
+        return Math.round(voteOutOf10 * scalingFactor) / scalingFactor;
     }
 
     private List<String> parseGenres(final JSONObject json) {
@@ -125,9 +143,13 @@ public class MovieDetailsDataAccessObject implements MovieDetailsDataAccessInter
     }
 
     private List<MovieReview> parseReviews(final JSONObject json) {
-        final JSONArray jsonArray = json.has("reviews")
-                ? json.getJSONObject("reviews").getJSONArray("results")
-                : new JSONArray();
+        final JSONArray jsonArray;
+        if (json.has("reviews")) {
+            jsonArray = json.getJSONObject("reviews").getJSONArray("results");
+        }
+        else {
+            jsonArray = new JSONArray();
+        }
 
         final List<MovieReview> reviews = new ArrayList<>();
 
@@ -146,8 +168,9 @@ public class MovieDetailsDataAccessObject implements MovieDetailsDataAccessInter
     }
 
     private @Nullable String parsePosterPath(final JSONObject json) {
-        return json.has("poster_path")
-                ? IMG_BASE + json.getString("poster_path")
-                : null;
+        if (json.has("poster_path")) {
+            return IMG_BASE + json.getString("poster_path");
+        }
+        return null;
     }
 }

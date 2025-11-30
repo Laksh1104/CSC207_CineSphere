@@ -1,7 +1,8 @@
 package interface_adapter.movie_details;
 
-import use_case.movie_details.MovieDetailsOutputData.MovieReviewData;
 import java.util.List;
+
+import use_case.movie_details.MovieDetailsOutputData.MovieReviewData;
 
 public record MovieDetailsState(
     String filmName,
@@ -12,4 +13,5 @@ public record MovieDetailsState(
     String description,
     List<MovieReviewData> reviews,
     String posterUrl
-) {}
+) {
+}

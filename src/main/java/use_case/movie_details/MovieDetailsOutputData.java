@@ -13,5 +13,12 @@ public record MovieDetailsOutputData(
     List<MovieReviewData> reviews,
     String posterUrl
 ) {
-    public record MovieReviewData(String author, String content) {}
+    /**
+     * Inner record for movie review data.
+     *
+     * @param author the author of the review
+     * @param content the content of the review
+     */
+    public record MovieReviewData(String author, String content) {
+    }
 }

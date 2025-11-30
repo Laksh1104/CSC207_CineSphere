@@ -12,7 +12,7 @@ public class MovieDetailsPresenter implements MovieDetailsOutputBoundary {
 
     @Override
     public void presentMovieDetails(MovieDetailsOutputData outputData) {
-        MovieDetailsState newState = new MovieDetailsState(
+        final MovieDetailsState newState = new MovieDetailsState(
             outputData.filmName(),
             outputData.director(),
             outputData.releaseDate(),

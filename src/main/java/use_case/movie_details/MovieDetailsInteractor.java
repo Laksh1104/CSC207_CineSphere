@@ -1,14 +1,14 @@
 package use_case.movie_details;
 
-import entity.MovieDetails;
-
 import java.util.stream.Collectors;
+
+import entity.MovieDetails;
 
 public class MovieDetailsInteractor implements MovieDetailsInputBoundary {
     private final MovieDetailsDataAccessInterface dataAccess;
     private final MovieDetailsOutputBoundary presenter;
 
-    public MovieDetailsInteractor(MovieDetailsDataAccessInterface dataAccess, 
+    public MovieDetailsInteractor(MovieDetailsDataAccessInterface dataAccess,
                                 MovieDetailsOutputBoundary presenter) {
         this.dataAccess = dataAccess;
         this.presenter = presenter;
@@ -17,9 +17,9 @@ public class MovieDetailsInteractor implements MovieDetailsInputBoundary {
     @Override
     public void execute(MovieDetailsInputData inputData) {
         try {
-            MovieDetails movieDetails = dataAccess.getMovieDetails(inputData.getFilmId());
+            final MovieDetails movieDetails = dataAccess.getMovieDetails(inputData.getFilmId());
 
-            MovieDetailsOutputData outputData = new MovieDetailsOutputData(
+            final MovieDetailsOutputData outputData = new MovieDetailsOutputData(
                 movieDetails.filmId(),
                 movieDetails.filmName(),
                 movieDetails.director(),
@@ -28,15 +28,18 @@ public class MovieDetailsInteractor implements MovieDetailsInputBoundary {
                 movieDetails.genres(),
                 movieDetails.description(),
                 movieDetails.reviews().stream()
-                    .map(review -> new MovieDetailsOutputData.MovieReviewData(
-                        review.author(), review.content()))
+                    .map(review -> {
+                        return new MovieDetailsOutputData.MovieReviewData(
+                            review.author(), review.content());
+                    })
                     .collect(Collectors.toList()),
                 movieDetails.posterUrl()
             );
 
             presenter.presentMovieDetails(outputData);
-        } catch (Exception e) {
-            presenter.presentError(e.getMessage());
+        }
+        catch (final Exception exception) {
+            presenter.presentError(exception.getMessage());
         }
     }
 }
