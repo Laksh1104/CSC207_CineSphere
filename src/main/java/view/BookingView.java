@@ -1,6 +1,5 @@
 package view;
 
-import data_access.CinemaDataAccessObject;
 import data_access.BookingMovieDataAccessObject;
 import interface_adapter.BookMovie.*;
 import entity.*;
@@ -15,6 +14,8 @@ import java.util.List;
 
 import com.toedter.calendar.JDateChooser;
 import interface_adapter.BookingQuery;
+import view.components.HeaderPanel;
+import view.components.SeatSelectionPanel;
 
 public class BookingView extends JPanel implements PropertyChangeListener {
 

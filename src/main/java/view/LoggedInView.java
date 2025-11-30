@@ -2,7 +2,6 @@ package view;
 
 import javax.swing.*;
 import java.awt.*;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,8 +15,8 @@ import use_case.movie_details.MovieDetailsDataAccessInterface;
 import use_case.movie_details.MovieDetailsInputBoundary;
 import use_case.movie_details.MovieDetailsInteractor;
 import use_case.movie_details.MovieDetailsOutputBoundary;
-import use_case.search_film.*;
 import interface_adapter.movie_details.MovieDetailsController;
+import view.components.HeaderPanel;
 
 public class LoggedInView extends JPanel {
 

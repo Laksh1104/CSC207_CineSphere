@@ -1,13 +1,17 @@
 package use_case.movie_filter;
 
 import entity.Movie;
+
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class FilterMoviesInteractor implements FilterMoviesInputBoundary {
 
     private final FilterMoviesDataAccessInterface movieDao;
     private final FilterMoviesOutputBoundary presenter;
+
+    private Map<String, Integer> cachedGenres;
 
     public FilterMoviesInteractor(FilterMoviesDataAccessInterface movieDao,
                                   FilterMoviesOutputBoundary presenter) {
@@ -26,22 +30,24 @@ public class FilterMoviesInteractor implements FilterMoviesInputBoundary {
                 inputData.getPage()
         );
 
-        // Convert to poster URLs
         List<String> posters = movieDao.getPosterUrls(movies);
 
-        // Extract film IDs
         List<Integer> filmIds = movies.stream()
                 .map(Movie::getId)
                 .collect(Collectors.toList());
 
-        int totalPages = 10;
+        int totalPages = movieDao.getLastTotalPages();
 
-        // Send to presenter
+        if (cachedGenres == null || cachedGenres.isEmpty()) {
+            cachedGenres = movieDao.getMovieGenres();
+        }
+
         presenter.present(new FilterMoviesOutputData(
                 posters,
                 filmIds,
                 inputData.getPage(),
-                totalPages
+                totalPages,
+                cachedGenres
         ));
     }
 }
