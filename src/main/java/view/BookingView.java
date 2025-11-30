@@ -39,6 +39,7 @@ public class BookingView extends JPanel implements PropertyChangeListener {
     private String selectedShowtimeDisplay;
     private String selectedShowtimeStart;
     private String selectedShowtimeEnd;
+    private ScreenSwitchListener listener;
 
     private final Map<String, ShowTime> showtimeMap = new HashMap<>();
     private String selectedDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
@@ -55,11 +56,21 @@ public class BookingView extends JPanel implements PropertyChangeListener {
         setBackground(COLOR);
 
         add(Box.createVerticalStrut(10));
-        add(new HeaderPanel(), BorderLayout.NORTH);
+        HeaderPanel headerPanel = new HeaderPanel();
+        headerPanel.setHomeAction(() -> {
+            if (listener != null) {
+                listener.onSwitchScreen("Home");
+            }
+        });
+        add(headerPanel, BorderLayout.NORTH);
 
         setupSelectionPanel();
         setupSeatPanelWrapper();
         setupBookButton();
+    }
+
+    public void setScreenSwitchListener(ScreenSwitchListener listener) {
+        this.listener = listener;
     }
 
     public void setBookMovieController(BookMovieController controller) {

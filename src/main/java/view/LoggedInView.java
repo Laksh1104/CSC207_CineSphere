@@ -30,6 +30,7 @@ public class LoggedInView extends JPanel {
     private PopularMoviesViewModel popularMoviesViewModel;
     private MovieDetailsController movieDetailsController;
     private MovieDetailsView movieDetailsView;
+    private ScreenSwitchListener listener;
 
     // UI
     private JPanel moviePanel;
@@ -45,6 +46,12 @@ public class LoggedInView extends JPanel {
 
         // Header
         HeaderPanel headerPanel = new HeaderPanel();
+
+        headerPanel.setHomeAction(() -> {
+            if (listener != null) {
+                listener.onSwitchScreen("Home");
+            }
+        });
         headerPanel.setMaximumSize(new Dimension(800, 50));
 
         // Filter
