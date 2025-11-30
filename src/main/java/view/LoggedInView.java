@@ -2,8 +2,6 @@ package view;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.HashMap;
-import java.util.Map;
 
 import data_access.MovieDetailsDataAccessObject;
 import interface_adapter.movie_details.MovieDetailsPresenter;
@@ -16,6 +14,7 @@ import use_case.movie_details.MovieDetailsInputBoundary;
 import use_case.movie_details.MovieDetailsInteractor;
 import use_case.movie_details.MovieDetailsOutputBoundary;
 import interface_adapter.movie_details.MovieDetailsController;
+import view.components.FilterPanel;
 import view.components.Flyweight.PosterFlyweightFactory;
 import view.components.HeaderPanel;
 
@@ -30,6 +29,7 @@ public class LoggedInView extends JPanel {
 
     // UI
     private JPanel moviePanel;
+    private FilterPanel filterPanel;
 
     public LoggedInView() {
 
@@ -42,7 +42,9 @@ public class LoggedInView extends JPanel {
         headerPanel.setMaximumSize(new Dimension(800, 50));
 
         // Filter
-        JPanel filterPanel = buildFilterPanel();
+        filterPanel = new FilterPanel();
+        filterPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 54));
+
 
         // Popular lavel
         JLabel popularLabel = new JLabel("Popular Movies");
@@ -58,6 +60,27 @@ public class LoggedInView extends JPanel {
         add(Box.createRigidArea(new Dimension(0, 30)));
         add(popularLabel);
         add(scrollPane);
+
+        setupFilterPanelHandlers();
+    }
+
+    private void setupFilterPanelHandlers() {
+
+        // When searching in LoggedInView
+        filterPanel.setOnSearch(query -> {
+            if (query.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please enter a film name.");
+                return;
+            }
+            searchFilmController.execute(query);
+        });
+
+        // Filter button pressed in LoggedInView
+        filterPanel.setOnFilter(() -> {
+            // You can open FilteredView here
+            JOptionPane.showMessageDialog(this,
+                    "Filters applied!");
+        });
     }
 
     public void setSearchDependencies(SearchFilmController controller, SearchFilmViewModel viewModel) {
@@ -121,50 +144,6 @@ public class LoggedInView extends JPanel {
         movieDetailsController = new MovieDetailsController(movieDetailsInteractor);
         movieDetailsView = new MovieDetailsView(movieDetailsViewModel);
     }
-
-    private JPanel buildFilterPanel() {
-        JPanel filterPanel = new JPanel();
-        filterPanel.setPreferredSize(new Dimension(800, 40));
-        filterPanel.setMaximumSize(new Dimension(800, 40));
-        filterPanel.setBackground(Color.WHITE);
-        filterPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JButton filterButton = new JButton("Filter");
-        JLabel browseTitle = new JLabel("Browse Films By:");
-
-        JComboBox<String> yearDropdown = new JComboBox<>(
-                new String[]{"All Years", "2025", "2024", "2023", "2022"}
-        );
-        JComboBox<String> genreDropdown = new JComboBox<>(
-                new String[]{"All Genres", "Action", "Comedy", "Drama", "Sci-Fi", "Horror", "Romance"}
-        );
-        JComboBox<String> ratingDropdown = new JComboBox<>(
-                new String[]{"All ratings", "4.5+", "4.0+", "3.5+", "3.0+", "2.5+", "2.0+", "1.5+", "1.0+"}
-        );
-
-        JTextField searchField = new JTextField(10);
-
-        searchField.addActionListener(e -> {
-            String query = searchField.getText().trim();
-            if (query.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Please enter a film name");
-                return;
-            }
-            searchFilmController.execute(query);
-        });
-        JLabel findFilmLabel = new JLabel("Find Film:");
-
-        filterPanel.add(browseTitle);
-        filterPanel.add(yearDropdown);
-        filterPanel.add(genreDropdown);
-        filterPanel.add(ratingDropdown);
-        filterPanel.add(filterButton);
-        filterPanel.add(findFilmLabel);
-        filterPanel.add(searchField);
-
-        return filterPanel;
-    }
-
 
     private JScrollPane buildPosterScrollPane() {
 
