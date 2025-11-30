@@ -77,7 +77,7 @@ public class BookingView extends JPanel implements PropertyChangeListener {
 
     private void setupSelectionPanel() {
 
-        JPanel selectionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
+        JPanel selectionPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
         selectionPanel.setBackground(COLOR);
 
         // Movie Dropdown
