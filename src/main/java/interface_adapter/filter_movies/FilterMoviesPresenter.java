@@ -3,6 +3,8 @@ package interface_adapter.filter_movies;
 import use_case.movie_filter.FilterMoviesOutputBoundary;
 import use_case.movie_filter.FilterMoviesOutputData;
 
+import java.util.List;
+
 public class FilterMoviesPresenter implements FilterMoviesOutputBoundary {
 
     private final FilterMoviesViewModel viewModel;
@@ -17,6 +19,15 @@ public class FilterMoviesPresenter implements FilterMoviesOutputBoundary {
         viewModel.setFilmIds(data.getFilmIds());
         viewModel.setPage(data.getPage());
         viewModel.setTotalPages(data.getTotalPages());
-        viewModel.setGenres(data.getGenres());   // NEW
+        viewModel.setGenres(data.getGenres());
+
+        List<Integer> ids = data.getFilmIds();
+        boolean noResults = (ids == null || ids.isEmpty());
+
+        if (noResults) {
+            viewModel.setMessage("No movies found for the selected filters.");
+        } else {
+            viewModel.setMessage(null);
+        }
     }
 }

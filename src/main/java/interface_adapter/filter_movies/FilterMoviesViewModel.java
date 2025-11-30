@@ -11,9 +11,9 @@ public class FilterMoviesViewModel {
     private int page;
     private int totalPages;
 
-    // NEW: genres from TMDB
     private Map<String, Integer> genres = new LinkedHashMap<>();
 
+    private String message;
     public void setPosters(List<String> posters) { this.posters = posters; }
     public void setFilmIds(List<Integer> filmIds) { this.filmIds = filmIds; }
     public void setPage(int page) { this.page = page; }
@@ -30,5 +30,11 @@ public class FilterMoviesViewModel {
 
     public Map<String, Integer> getGenres() {
         return genres;
+    }
+    public void setMessage(String message) {
+        this.message = (message == null || message.isBlank()) ? null : message;
+    }
+    public String getMessage() {
+        return message;
     }
 }
