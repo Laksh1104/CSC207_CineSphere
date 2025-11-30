@@ -1,4 +1,5 @@
 
+import data_access.MovieDetailsDataAccessObject;
 import data_access.PopularMoviesDataAccessObject;
 
 import data_access.SearchFilmDataAccessObject;
@@ -7,11 +8,15 @@ import interface_adapter.popular_movies.PopularMoviesController;
 import interface_adapter.popular_movies.PopularMoviesPresenter;
 import interface_adapter.popular_movies.PopularMoviesViewModel;
 
+import use_case.movie_details.MovieDetailsInteractor;
 import use_case.popular_movies.PopularMoviesInputBoundary;
 import use_case.popular_movies.PopularMoviesInteractor;
 import use_case.popular_movies.PopularMoviesOutputBoundary;
 import use_case.search_film.*;
 import view.LoggedInView;
+import use_case.movie_details.MovieDetailsDataAccessInterface;
+import interface_adapter.movie_details.*;
+import view.MovieDetailsView;
 
 import javax.swing.*;
 
@@ -27,7 +32,16 @@ public class TestLoggedInView {
         SearchFilmInputBoundary searchFilmInteractor = new SearchFilmInteractor(api, searchFilmPresenter);
         SearchFilmController searchFilmController = new SearchFilmController(searchFilmInteractor);
 
+        MovieDetailsViewModel movieVM = new MovieDetailsViewModel();
+        MovieDetailsPresenter movieDetailsPresenter = new MovieDetailsPresenter(movieVM);
+        MovieDetailsDataAccessInterface movieDAO = new MovieDetailsDataAccessObject();
+        MovieDetailsInteractor movieInteractor = new MovieDetailsInteractor(movieDAO, movieDetailsPresenter);
+        MovieDetailsController movieDetailsController = new MovieDetailsController(movieInteractor);
+
+        MovieDetailsView movieView = new MovieDetailsView(movieVM);
+
         loggedInView.setSearchDependencies(searchFilmController, searchFilmViewModel);
+        loggedInView.setMovieDetailsDependencies();
 
         // Create popular movies panel
         String bearerToken = "Bearer YOUR_TMDB_TOKEN_HERE";

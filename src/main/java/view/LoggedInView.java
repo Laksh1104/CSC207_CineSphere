@@ -17,6 +17,10 @@ import interface_adapter.movie_details.MovieDetailsController;
 import view.components.FilterPanel;
 import view.components.Flyweight.PosterFlyweightFactory;
 import view.components.HeaderPanel;
+import view.MovieDetailsView;
+import data_access.MovieDetailsDataAccessObject;
+import use_case.movie_details.*;
+import interface_adapter.movie_details.*;
 
 public class LoggedInView extends JPanel {
 
@@ -26,6 +30,7 @@ public class LoggedInView extends JPanel {
     private PopularMoviesViewModel popularMoviesViewModel;
     private MovieDetailsController movieDetailsController;
     private MovieDetailsView movieDetailsView;
+    private ScreenSwitchListener listener;
 
     // UI
     private JPanel moviePanel;
@@ -39,6 +44,12 @@ public class LoggedInView extends JPanel {
 
         // Header
         HeaderPanel headerPanel = new HeaderPanel();
+
+        headerPanel.setHomeAction(() -> {
+            if (listener != null) {
+                listener.onSwitchScreen("Home");
+            }
+        });
         headerPanel.setMaximumSize(new Dimension(800, 50));
 
         // Filter
@@ -98,9 +109,11 @@ public class LoggedInView extends JPanel {
 
                 } else if (state.getFilmId() != -1) {
                     int movieId = state.getFilmId();
-                    JFrame movieFrame = new JFrame("Movie Page - ID: " + movieId);
-                    movieFrame.setSize(500, 300);
-                    movieFrame.add(new JLabel("Movie Page for ID: " + movieId), SwingConstants.CENTER);
+                    movieDetailsController.showMovieDetails(movieId);
+                    JFrame movieFrame = new JFrame("Movie Details");
+                    movieFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                    movieFrame.setSize(800, 900);
+                    movieFrame.add(movieDetailsView);
                     movieFrame.setVisible(true);
                 }
             });
