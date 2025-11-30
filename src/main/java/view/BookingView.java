@@ -1,6 +1,5 @@
 package view;
 
-import data_access.BookingMovieDataAccessObject;
 import interface_adapter.BookMovie.*;
 import entity.*;
 
@@ -77,12 +76,11 @@ public class BookingView extends JPanel implements PropertyChangeListener {
 
     private void setupSelectionPanel() {
 
-        JPanel selectionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
+        JPanel selectionPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
         selectionPanel.setBackground(COLOR);
 
         // Movie Dropdown
         movieDropdown = createDropdown(300);
-        movieDropdown.addItem("Select Movie");
         populateMovies();
 
         movieDropdown.addActionListener(e -> {
@@ -312,14 +310,13 @@ public class BookingView extends JPanel implements PropertyChangeListener {
 
 
     // Data Access Helpers
-    private final BookingMovieDataAccessObject movieDAO =
-            new BookingMovieDataAccessObject(new MovieFactory());   // ★ INLINE DAO
 
     private void populateMovies() {
         List<Movie> movies = bookingQuery.getMovies();
         movies.sort(Comparator.comparing(Movie::getTitle));
 
         movieDropdown.removeAllItems();
+        movieDropdown.addItem("Select Movie");
         for (Movie m : movies) {
             movieDropdown.addItem(m.getTitle());
         }

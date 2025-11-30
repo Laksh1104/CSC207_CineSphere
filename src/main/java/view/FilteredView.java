@@ -6,6 +6,7 @@ import interface_adapter.filter_movies.FilterMoviesViewModel;
 import interface_adapter.movie_details.*;
 import use_case.movie_details.*;
 import view.components.FilterPanel;
+import view.components.Flyweight.PosterFlyweightFactory;
 import view.components.HeaderPanel;
 
 import javax.swing.*;
@@ -226,18 +227,22 @@ public class FilteredView extends JFrame {
         button.setContentAreaFilled(false);
         button.setFocusPainted(false);
 
-        try {
-            ImageIcon cached = iconCache.get(urlString);
-            if (cached == null) {
-                ImageIcon original = new ImageIcon(new java.net.URL(urlString));
-                Image scaled = original.getImage().getScaledInstance(200, 300, Image.SCALE_SMOOTH);
-                cached = new ImageIcon(scaled);
-                iconCache.put(urlString, cached);
-            }
-            button.setIcon(cached);
-        } catch (Exception e) {
-            button.setText("No Image");
-        }
+        // Use the Flyweight Factory
+        ImageIcon icon = PosterFlyweightFactory.getPoster(
+                urlString,
+                200,
+                300,
+                () -> {
+                    // Called when an uncached image finishes loading
+                    button.setIcon(
+                            PosterFlyweightFactory.getPoster(urlString, 200, 300, null)
+                    );
+                    button.revalidate();
+                    button.repaint();
+                }
+        );
+
+        button.setIcon(icon);
 
         button.addActionListener(e -> {
             movieDetailsController.showMovieDetails(filmId);
@@ -252,6 +257,7 @@ public class FilteredView extends JFrame {
         button.setBorder(BorderFactory.createDashedBorder(Color.GRAY));
         return button;
     }
+
 
     public void setMovieDetailsDependencies() {
         movieDetailsViewModel = new MovieDetailsViewModel();
