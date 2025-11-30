@@ -16,6 +16,7 @@ import use_case.movie_details.MovieDetailsInputBoundary;
 import use_case.movie_details.MovieDetailsInteractor;
 import use_case.movie_details.MovieDetailsOutputBoundary;
 import interface_adapter.movie_details.MovieDetailsController;
+import view.components.Flyweight.PosterFlyweightFactory;
 import view.components.HeaderPanel;
 
 public class LoggedInView extends JPanel {
@@ -29,9 +30,6 @@ public class LoggedInView extends JPanel {
 
     // UI
     private JPanel moviePanel;
-
-    // Cache
-    private final Map<String, ImageIcon> iconCache = new HashMap<>();
 
     public LoggedInView() {
 
@@ -216,14 +214,17 @@ public class LoggedInView extends JPanel {
         button.setFocusPainted(false);
 
         try {
-            ImageIcon cached = iconCache.get(url);
-            if (cached == null) {
-                ImageIcon original = new ImageIcon(new java.net.URL(url));
-                Image scaled = original.getImage().getScaledInstance(200, 300, Image.SCALE_SMOOTH);
-                cached = new ImageIcon(scaled);
-                iconCache.put(url, cached);
-            }
-            button.setIcon(cached);
+            ImageIcon icon = PosterFlyweightFactory.getPoster(
+                    url,
+                    200,
+                    300,
+                    () -> {
+                        button.setIcon(PosterFlyweightFactory.getPoster(url, 200, 300, null));
+                        button.revalidate();
+                        button.repaint();
+                    }
+            );
+            button.setIcon(icon);
         } catch (Exception e) {
             button.setText("No Image");
             e.printStackTrace();
