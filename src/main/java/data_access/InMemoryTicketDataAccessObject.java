@@ -2,13 +2,21 @@ package data_access;
 
 import entity.*;
 import use_case.book_movie.BookTicketDataAccessInterface;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import entity.Bookings;
 
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.lang.reflect.Type;
 import java.util.*;
 
 public class InMemoryTicketDataAccessObject implements BookTicketDataAccessInterface {
 
     private final Map<String, Set<String>> bookedSeatsMap = new HashMap<>();
     private final Map<String, List<Seat>> seatLayoutMap = new HashMap<>();
+    private final Gson gson = new Gson();
+    private final String folder = "data/prevbookings/";
 
     private String key(Movie m, Cinema c, String date, ShowTime st) {
         return m.getId() + "|" +
@@ -54,5 +62,28 @@ public class InMemoryTicketDataAccessObject implements BookTicketDataAccessInter
                 s.book();
             }
         }
+        Bookings.getAllBookings().add(movieTicket);
     }
+
+    public Bookings loadBookings(String username) {
+        try {
+            FileReader reader = new FileReader(folder + username + ".json");
+            Type type = new TypeToken<Bookings>() {
+            }.getType();
+            return gson.fromJson(reader, type);
+        } catch (Exception e) {
+            return new Bookings();
+        }
+
+    }
+
+    public void saveBookings(String username, Bookings bookings) {
+        try(FileWriter writer = new FileWriter(folder + username + ".json")) {
+            gson.toJson(bookings, writer);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
 }

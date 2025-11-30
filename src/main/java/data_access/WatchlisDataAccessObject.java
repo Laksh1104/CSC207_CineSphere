@@ -9,7 +9,7 @@ import java.lang.reflect.Type;
 
 public class WatchlisDataAccessObject {
     private final Gson gson = new Gson();
-    private final String folder = "data/watchlists";
+    private final String folder = "data/watchlist/";
 
     public Watchlist loadWatchlist(String username) {
         try {
