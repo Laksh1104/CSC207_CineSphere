@@ -17,6 +17,10 @@ import use_case.movie_details.MovieDetailsInteractor;
 import use_case.movie_details.MovieDetailsOutputBoundary;
 import interface_adapter.movie_details.MovieDetailsController;
 import view.components.HeaderPanel;
+import view.MovieDetailsView;
+import data_access.MovieDetailsDataAccessObject;
+import use_case.movie_details.*;
+import interface_adapter.movie_details.*;
 
 public class LoggedInView extends JPanel {
 
@@ -77,9 +81,11 @@ public class LoggedInView extends JPanel {
 
                 } else if (state.getFilmId() != -1) {
                     int movieId = state.getFilmId();
-                    JFrame movieFrame = new JFrame("Movie Page - ID: " + movieId);
-                    movieFrame.setSize(500, 300);
-                    movieFrame.add(new JLabel("Movie Page for ID: " + movieId), SwingConstants.CENTER);
+                    movieDetailsController.showMovieDetails(movieId);
+                    JFrame movieFrame = new JFrame("Movie Details");
+                    movieFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                    movieFrame.setSize(800, 900);
+                    movieFrame.add(movieDetailsView);
                     movieFrame.setVisible(true);
                 }
             });
