@@ -1,9 +1,7 @@
 package view;
 
-import data_access.CinemaDataAccessObject;
-import data_access.BookingMovieDataAccessObject;
-import entity.*;
 import interface_adapter.BookMovie.*;
+import entity.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,11 +12,16 @@ import java.util.*;
 import java.util.List;
 
 import com.toedter.calendar.JDateChooser;
+import interface_adapter.BookingQuery;
+import view.components.HeaderPanel;
+import view.components.SeatSelectionPanel;
 
 public class BookingView extends JPanel implements PropertyChangeListener {
 
     private final BookMovieViewModel viewModel;
     private BookMovieController controller;
+    private final BookingQuery bookingQuery;
+
 
     // UI Components
     private JComboBox<String> movieDropdown;
@@ -28,10 +31,13 @@ public class BookingView extends JPanel implements PropertyChangeListener {
     private JPanel seatPanelWrapper;
     private SeatSelectionPanel seatPanel;
 
-    // Selected domain objects
-    private Movie selectedMovie;
-    private Cinema selectedCinema;
-    private ShowTime selectedShowtime;
+
+    private String selectedMovieName;
+    private Integer selectedMovieId;
+    private String selectedCinemaName;
+    private String selectedShowtimeDisplay;
+    private String selectedShowtimeStart;
+    private String selectedShowtimeEnd;
 
     private final Map<String, ShowTime> showtimeMap = new HashMap<>();
     private String selectedDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
@@ -39,8 +45,9 @@ public class BookingView extends JPanel implements PropertyChangeListener {
     private static final Color COLOR = new Color(255, 255, 224);
     private static final int HEIGHT = 25;
 
-    public BookingView(BookMovieViewModel vm) {
+    public BookingView(BookMovieViewModel vm, BookingQuery bookingQuery) {
         this.viewModel = vm;
+        this.bookingQuery = bookingQuery;
         vm.addPropertyChangeListener(this);
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -69,12 +76,11 @@ public class BookingView extends JPanel implements PropertyChangeListener {
 
     private void setupSelectionPanel() {
 
-        JPanel selectionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
+        JPanel selectionPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
         selectionPanel.setBackground(COLOR);
 
         // Movie Dropdown
         movieDropdown = createDropdown(300);
-        movieDropdown.addItem("Select Movie");
         populateMovies();
 
         movieDropdown.addActionListener(e -> {
@@ -82,9 +88,11 @@ public class BookingView extends JPanel implements PropertyChangeListener {
 
             String movieName = (String) movieDropdown.getSelectedItem();
             if (isNullOrPlaceholder(movieName, "Select Movie")) return;
+            selectedMovieName = movieName;
 
-            selectedMovie = getMovie(movieName);
-            populateCinemas(selectedMovie.getId(), selectedDate);
+            Movie movie = getMovie(movieName);
+            selectedMovieId = movie.getId();
+            populateCinemas(selectedMovieId, selectedDate);
         });
 
         selectionPanel.add(labeled("Movie:", movieDropdown));
@@ -104,8 +112,8 @@ public class BookingView extends JPanel implements PropertyChangeListener {
             if (date == null) return;
 
             selectedDate = new SimpleDateFormat("yyyy-MM-dd").format(date);
-            if (selectedMovie != null)
-                populateCinemas(selectedMovie.getId(), selectedDate);
+            if (selectedMovieId != null)
+                populateCinemas(selectedMovieId, selectedDate);
         });
 
         selectionPanel.add(labeled("Date:", dateChooser));
@@ -118,14 +126,19 @@ public class BookingView extends JPanel implements PropertyChangeListener {
         cinemaDropdown.addActionListener(e -> {
             clearSeatGrid();
 
-            String name = (String) cinemaDropdown.getSelectedItem();
-            if (isNullOrPlaceholder(name, "Select Cinema")) return;
+            String cinemaName = (String) cinemaDropdown.getSelectedItem();
+            if (isNullOrPlaceholder(cinemaName, "Select Cinema")) return;
 
 
-            if (name.equals("This film is not playing on this date.")) return;
+            if (cinemaName.equals("This film is not playing on this date.")) {
+                populateShowTimes(null);
+                return;
+            }
 
-            selectedCinema = getCinema(name, selectedMovie.getId(), selectedDate);
-            populateShowTimes(selectedCinema);
+            selectedCinemaName = cinemaName;
+            Cinema cinema = getCinema(cinemaName, selectedMovieId, selectedDate);
+
+            populateShowTimes(cinema);
         });
 
         selectionPanel.add(labeled("Cinema:", cinemaDropdown));
@@ -137,6 +150,7 @@ public class BookingView extends JPanel implements PropertyChangeListener {
 
         timeDropdown.addActionListener(e -> {
             clearSeatGrid();
+
         });
 
         selectionPanel.add(labeled("Time:", timeDropdown));
@@ -167,7 +181,6 @@ public class BookingView extends JPanel implements PropertyChangeListener {
 
 
     // Select Handler
-
     private void handleSelect() {
         String movieName = (String) movieDropdown.getSelectedItem();
         String cinemaName = (String) cinemaDropdown.getSelectedItem();
@@ -175,16 +188,24 @@ public class BookingView extends JPanel implements PropertyChangeListener {
 
         if (isInvalidSelection(movieName, cinemaName, timeDisplay)) return;
 
-        selectedMovie = getMovie(movieName);
-        selectedCinema = getCinema(cinemaName, selectedMovie.getId(), selectedDate);
-        selectedShowtime = getShowtime(timeDisplay);
+        ShowTime st = showtimeMap.get(timeDisplay);
+
+        if (st == null) {
+            warn("Invalid showtime selected.");
+            return;
+        }
+
+        selectedShowtimeDisplay = timeDisplay;
+        selectedShowtimeStart = st.getStartTime();
+        selectedShowtimeEnd = st.getEndTime();
 
         // Update state
         BookMovieState state = viewModel.getState();
-        state.setMovie(selectedMovie);
-        state.setCinema(selectedCinema);
+        state.setMovieName(selectedMovieName);
+        state.setCinemaName(selectedCinemaName);
         state.setDate(selectedDate);
-        state.setShowtime(selectedShowtime);
+        state.setStartTime(selectedShowtimeStart);
+        state.setEndTime(selectedShowtimeEnd);
         viewModel.setState(state);
 
         buildSeatGrid();
@@ -200,29 +221,17 @@ public class BookingView extends JPanel implements PropertyChangeListener {
 
         bookBtn.addActionListener(e -> {
 
-            if (controller == null) return;
-
             if (seatPanel == null) {
                 warn("Please click Select to load the seat map before booking.");
                 return;
             }
 
-            if (selectedMovie == null || selectedCinema == null || selectedShowtime == null) {
-                warn("Please select movie, cinema, date, and time.");
-                return;
-            }
-
-            if (seatPanel.getSelectedSeats().isEmpty()) {
-                warn("Please select at least one seat before booking.");
-                return;
-            }
-
             controller.execute(
-                    selectedMovie,
+                    selectedMovieName,
+                    selectedCinemaName,
                     selectedDate,
-                    selectedCinema,
-                    selectedShowtime,
-                    new HashSet<>(seatPanel.getSelectedSeats())
+                    selectedShowtimeStart + " - " + selectedShowtimeEnd,
+                    seatPanel.getSelectedSeats()
             );
         });
 
@@ -256,13 +265,13 @@ public class BookingView extends JPanel implements PropertyChangeListener {
     }
 
     private void buildSeatGrid() {
-        if (selectedMovie == null || selectedCinema == null || selectedShowtime == null) {
+        if (selectedMovieName == null || selectedCinemaName == null || selectedShowtimeDisplay == null) {
             warn("Please choose movie, date, cinema, and showtime first.");
             return;
         }
 
         List<Seat> seats = controller.loadSeatLayout(
-                selectedMovie, selectedCinema, selectedDate, selectedShowtime
+                selectedMovieName, selectedCinemaName, selectedDate, selectedShowtimeStart, selectedShowtimeEnd
         );
 
         Set<String> unavailable = new HashSet<>();
@@ -302,35 +311,33 @@ public class BookingView extends JPanel implements PropertyChangeListener {
 
     // Data Access Helpers
 
-    private final BookingMovieDataAccessObject movieDAO =
-            new BookingMovieDataAccessObject(new MovieFactory());   // ★ INLINE DAO
-
     private void populateMovies() {
-        List<Movie> movies = movieDAO.getNowShowingMovies();
+        List<Movie> movies = bookingQuery.getMovies();
         movies.sort(Comparator.comparing(Movie::getTitle));
 
-        for (Movie movie : movies)
-            movieDropdown.addItem(movie.getTitle());
+        movieDropdown.removeAllItems();
+        movieDropdown.addItem("Select Movie");
+        for (Movie m : movies) {
+            movieDropdown.addItem(m.getTitle());
+        }
     }
 
     private Movie getMovie(String name) {
-        return movieDAO.getNowShowingMovies().stream()
+        return bookingQuery.getMovies().stream()
                 .filter(m -> m.getTitle().equals(name))
                 .findFirst()
                 .orElse(null);
     }
 
     private Cinema getCinema(String name, int filmId, String date) {
-        CinemaDataAccessObject cinemaDAO = new CinemaDataAccessObject(new CinemaFactory());
-        return cinemaDAO.getCinemasForFilm(filmId, date).stream()
+        return bookingQuery.getCinemas(filmId, date).stream()
                 .filter(c -> c.getCinemaName().equals(name))
                 .findFirst()
                 .orElse(null);
     }
 
     private void populateCinemas(int filmId, String date) {
-        CinemaDataAccessObject dao = new CinemaDataAccessObject(new CinemaFactory());
-        List<Cinema> cinemas = dao.getCinemasForFilm(filmId, date);
+        List<Cinema> cinemas = bookingQuery.getCinemas(filmId, date);
 
         cinemaDropdown.removeAllItems();
 
@@ -353,7 +360,7 @@ public class BookingView extends JPanel implements PropertyChangeListener {
             return;
         }
 
-        Map<String, List<ShowTime>> grouped = cinema.getAllShowTimesWithVersion();
+        Map<String, List<ShowTime>> grouped = bookingQuery.getShowtimes(cinema);
 
         for (var entry : grouped.entrySet()) {
             String version = entry.getKey();
@@ -365,15 +372,8 @@ public class BookingView extends JPanel implements PropertyChangeListener {
         }
 
         if (timeDropdown.getItemCount() == 0)
-            timeDropdown.addItem("No showtimes are available.");
+            timeDropdown.addItem("No showtime is available.");
     }
-
-    private ShowTime getShowtime(String display) {
-        if (display == null || !showtimeMap.containsKey(display))
-            return null;
-        return showtimeMap.get(display);
-    }
-
 
     private boolean isNullOrPlaceholder(String s, String placeholder) {
         return s == null || s.equals(placeholder);

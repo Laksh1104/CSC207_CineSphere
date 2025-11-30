@@ -18,26 +18,24 @@ public class InMemoryTicketDataAccessObject implements BookTicketDataAccessInter
     private final Gson gson = new Gson();
     private final String folder = "data/prevbookings/";
 
-    private String key(Movie m, Cinema c, String date, ShowTime st) {
-        return m.getId() + "|" +
-                c.getCinemaId() + "|" +
-                date + "|" +
-                st.getStartTime();
+    private String key(String movieName, String cinemaName, String date, String startTime, String endTime) {
+        return movieName + "|" + cinemaName + "|" + date + "|" + startTime + "|" + endTime;
     }
+
     @Override
-    public Set<String> getBookedSeats(Movie m, Cinema c, String date, ShowTime st) {
-        String k = key(m, c, date, st);
+    public Set<String> getBookedSeats(String movieName, String cinemaName, String date, String startTime, String endTime) {
+        String k = key(movieName, cinemaName, date, startTime, endTime);
         return bookedSeatsMap.getOrDefault(k, new HashSet<>());
     }
 
-    public List<Seat> getSeatLayout(Movie m, Cinema c, String date, ShowTime st) {
-        String k = key(m, c, date, st);
+    public List<Seat> getSeatLayout(String movieName, String cinemaName, String date, String startTime, String endTime) {
+        String k = key(movieName, cinemaName, date, startTime, endTime);
 
         if (!seatLayoutMap.containsKey(k)) {
             List<Seat> seats = new ArrayList<>();
             for (char row = 'A'; row <= 'J'; row++) {
                 for (int col = 1; col <= 20; col++) {
-                    seats.add(new Seat(row + "" + col));  // all empty initially
+                    seats.add(new Seat(row + "" + col));
                 }
             }
             seatLayoutMap.put(k, seats);
@@ -47,22 +45,27 @@ public class InMemoryTicketDataAccessObject implements BookTicketDataAccessInter
     }
 
     @Override
-    public void saveBooking(MovieTicket movieTicket) {
-        String mapKey = key(movieTicket.getMovie(), movieTicket.getCinema(),
-                movieTicket.getDate(), movieTicket.getTime());
+    public void saveBooking(MovieTicket ticket) {
+        String k = key(ticket.getMovieName(), ticket.getCinemaName(), ticket.getDate(), ticket.getStartTime(), ticket.getEndTime()
+        );
 
         // Save booked seat names
-        bookedSeatsMap.putIfAbsent(mapKey, new HashSet<>());
-        bookedSeatsMap.get(mapKey).addAll(movieTicket.getSeats());
+        bookedSeatsMap.putIfAbsent(k, new HashSet<>());
+        bookedSeatsMap.get(k).addAll(ticket.getSeats());
 
         // Update seat entities
-        List<Seat> seats = seatLayoutMap.get(mapKey);
+        List<Seat> seats = getSeatLayout(ticket.getMovieName(), ticket.getCinemaName(), ticket.getDate(), ticket.getStartTime(), ticket.getEndTime());
         for (Seat s : seats) {
-            if (movieTicket.getSeats().contains(s.getSeatName())) {
+            if (ticket.getSeats().contains(s.getSeatName())) {
                 s.book();
             }
         }
-        Bookings.getAllBookings().add(movieTicket);
+        Bookings.getAllBookings().add(ticket);
+    }
+
+    @Override
+    public List<Seat> getSeatLayout(String movieName, String cinemaName, String date, String startTime) {
+        return List.of();
     }
 
     public Bookings loadBookings(String username) {

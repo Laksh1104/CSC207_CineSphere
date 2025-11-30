@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 public class MovieDetailsView extends JPanel {
 
-    private static final Color BACKGROUND_COLOR = new Color(0xF7F7F7);
+    private static final Color BACKGROUND_COLOR = new Color(255, 255, 224);
 
     private static final int POSTER_WIDTH = 300;
     private static final int POSTER_HEIGHT = 420;

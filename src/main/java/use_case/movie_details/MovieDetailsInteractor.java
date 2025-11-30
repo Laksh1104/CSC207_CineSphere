@@ -1,7 +1,7 @@
 package use_case.movie_details;
 
 import entity.MovieDetails;
-import entity.MovieReview;
+
 import java.util.stream.Collectors;
 
 public class MovieDetailsInteractor implements MovieDetailsInputBoundary {
