@@ -3,14 +3,19 @@ package view;
 import data_access.MovieDetailsDataAccessObject;
 import interface_adapter.filter_movies.FilterMoviesController;
 import interface_adapter.filter_movies.FilterMoviesViewModel;
-import interface_adapter.movie_details.*;
-import use_case.movie_details.*;
+import interface_adapter.movie_details.MovieDetailsController;
+import interface_adapter.movie_details.MovieDetailsPresenter;
+import interface_adapter.movie_details.MovieDetailsViewModel;
+import use_case.movie_details.MovieDetailsDataAccessInterface;
+import use_case.movie_details.MovieDetailsInputBoundary;
+import use_case.movie_details.MovieDetailsInteractor;
 import view.components.FilterPanel;
 import view.components.Flyweight.PosterFlyweightFactory;
 import view.components.HeaderPanel;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +24,7 @@ public class FilteredView extends JFrame {
 
     private final FilterMoviesController filterMoviesController;
     private final FilterMoviesViewModel filterMoviesViewModel;
+
     private MovieDetailsController movieDetailsController;
     private MovieDetailsView movieDetailsView;
     private MovieDetailsViewModel movieDetailsViewModel;
@@ -26,11 +32,12 @@ public class FilteredView extends JFrame {
     private final Color COLOR = new Color(255, 255, 224);
 
     private JLabel filteredByLabel;
+    private JLabel noMoviesLabel;
     private JPanel gridPanel;
     private JLabel pageLabel;
 
     private FilterPanel filterPanel;
-
+    private JPanel pagingPanel;
     private final Map<String, ImageIcon> iconCache = new HashMap<>();
 
     private int currentPage = 1;
@@ -87,15 +94,25 @@ public class FilteredView extends JFrame {
 
         backgroundPanel.add(Box.createRigidArea(new Dimension(0, 14)));
 
-        JPanel filteredByPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        filteredByPanel.setBackground(COLOR);
-        filteredByPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
-        filteredByPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JPanel infoPanel = new JPanel();
+        infoPanel.setBackground(COLOR);
+        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+        infoPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+        infoPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         filteredByLabel = new JLabel();
-        filteredByPanel.add(filteredByLabel);
+        filteredByLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        backgroundPanel.add(filteredByPanel);
+        noMoviesLabel = new JLabel("No movies found for the selected filters.");
+        noMoviesLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        noMoviesLabel.setVisible(false);
+
+        infoPanel.add(filteredByLabel);
+        infoPanel.add(Box.createRigidArea(new Dimension(0, 4)));
+        infoPanel.add(noMoviesLabel);
+
+        backgroundPanel.add(infoPanel);
+
         backgroundPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
         gridPanel = new JPanel(new GridLayout(2, 4, 10, 10));
@@ -109,7 +126,7 @@ public class FilteredView extends JFrame {
 
         backgroundPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
-        JPanel pagingPanel = new JPanel(new BorderLayout());
+        pagingPanel = new JPanel(new BorderLayout());
         pagingPanel.setBackground(COLOR);
         pagingPanel.setPreferredSize(new Dimension(900, 40));
         pagingPanel.setMaximumSize(new Dimension(900, 40));
@@ -180,7 +197,29 @@ public class FilteredView extends JFrame {
         filteredByLabel.setText(text);
     }
 
+    /**
+     * Sync genres from ViewModel every time (even when no movies).
+     */
+    private void syncGenresFromViewModel() {
+        Map<String, Integer> genres = filterMoviesViewModel.getGenres();
+        if (genres == null || genres.isEmpty()) return;
+
+        genreNameToId.clear();
+        for (Map.Entry<String, Integer> e : genres.entrySet()) {
+            if (e.getKey() != null && !e.getKey().isBlank() && e.getValue() != null) {
+                genreNameToId.put(e.getKey(), String.valueOf(e.getValue()));
+            }
+        }
+
+        filterPanel.setGenres(new ArrayList<>(genreNameToId.keySet()));
+    }
+
     private void clearGridToEmpty() {
+        noMoviesLabel.setVisible(false);
+
+        if (gridPanel != null) gridPanel.setVisible(true);
+        if (pagingPanel != null) pagingPanel.setVisible(true);
+
         gridPanel.removeAll();
 
         for (int i = 0; i < PAGE_SIZE; i++) {
@@ -195,16 +234,52 @@ public class FilteredView extends JFrame {
         gridPanel.repaint();
     }
 
+    /**
+     * - "No movies" is based on filmIds (not posters)
+     * - If poster URL missing, show a placeholder button
+     * - Hide grid/paging when no results, but show message label
+     */
     private void updateGrid() {
-        gridPanel.removeAll();
+        syncGenresFromViewModel();
 
         List<String> posters = filterMoviesViewModel.getPosters();
         List<Integer> filmIds = filterMoviesViewModel.getFilmIds();
 
-        int count = Math.min(PAGE_SIZE, posters == null ? 0 : posters.size());
+        int resultsCount = (filmIds == null) ? 0 : filmIds.size();
+
+        if (resultsCount == 0) {
+            noMoviesLabel.setVisible(true);
+
+            gridPanel.removeAll();
+            gridPanel.setVisible(false);
+
+            if (pagingPanel != null) pagingPanel.setVisible(false);
+
+            // total pages should usually be 1 here, but keep consistent
+            pageLabel.setText(currentPage + " / " + filterMoviesViewModel.getTotalPages());
+
+            gridPanel.revalidate();
+            gridPanel.repaint();
+            if (pagingPanel != null) {
+                pagingPanel.revalidate();
+                pagingPanel.repaint();
+            }
+            return;
+        }
+
+        noMoviesLabel.setVisible(false);
+
+        gridPanel.setVisible(true);
+        if (pagingPanel != null) pagingPanel.setVisible(true);
+
+        gridPanel.removeAll();
+
+        int count = Math.min(PAGE_SIZE, resultsCount);
 
         for (int i = 0; i < count; i++) {
-            gridPanel.add(createPosterButton(posters.get(i), filmIds.get(i)));
+            String url = (posters != null && i < posters.size()) ? posters.get(i) : null;
+            int filmId = filmIds.get(i);
+            gridPanel.add(createPosterButton(url, filmId));
         }
 
         for (int i = count; i < PAGE_SIZE; i++) {
@@ -227,22 +302,21 @@ public class FilteredView extends JFrame {
         button.setContentAreaFilled(false);
         button.setFocusPainted(false);
 
-        // Use the Flyweight Factory
-        ImageIcon icon = PosterFlyweightFactory.getPoster(
-                urlString,
-                200,
-                300,
-                () -> {
-                    // Called when an uncached image finishes loading
-                    button.setIcon(
-                            PosterFlyweightFactory.getPoster(urlString, 200, 300, null)
-                    );
-                    button.revalidate();
-                    button.repaint();
-                }
-        );
-
-        button.setIcon(icon);
+        if (urlString == null || urlString.isBlank()) {
+            button.setText("No Image");
+        } else {
+            ImageIcon icon = PosterFlyweightFactory.getPoster(
+                    urlString,
+                    200,
+                    300,
+                    () -> {
+                        button.setIcon(PosterFlyweightFactory.getPoster(urlString, 200, 300, null));
+                        button.revalidate();
+                        button.repaint();
+                    }
+            );
+            button.setIcon(icon);
+        }
 
         button.addActionListener(e -> {
             movieDetailsController.showMovieDetails(filmId);
@@ -257,7 +331,6 @@ public class FilteredView extends JFrame {
         button.setBorder(BorderFactory.createDashedBorder(Color.GRAY));
         return button;
     }
-
 
     public void setMovieDetailsDependencies() {
         movieDetailsViewModel = new MovieDetailsViewModel();
