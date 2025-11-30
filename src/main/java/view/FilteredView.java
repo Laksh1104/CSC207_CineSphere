@@ -10,44 +10,33 @@ import view.components.HeaderPanel;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * FilteredView:
- * - Uses HeaderPanel + reusable FilterPanel
- * - Filters by year, rating range (0..10), genre, and search
- * - Shows posters in a 2x4 grid with paging
- * - Shows "No movies available" + popup when no results
- */
 public class FilteredView extends JFrame {
 
     private final FilterMoviesController filterMoviesController;
     private final FilterMoviesViewModel filterMoviesViewModel;
-
     private MovieDetailsController movieDetailsController;
     private MovieDetailsView movieDetailsView;
     private MovieDetailsViewModel movieDetailsViewModel;
 
     private final Color COLOR = new Color(255, 255, 224);
 
-    private FilterPanel filterPanel;
-
     private JLabel filteredByLabel;
     private JPanel gridPanel;
-
-    private JButton prevButton;
-    private JButton nextButton;
     private JLabel pageLabel;
+
+    private FilterPanel filterPanel;
 
     private final Map<String, ImageIcon> iconCache = new HashMap<>();
 
     private int currentPage = 1;
     private static final int PAGE_SIZE = 8;
 
-    private boolean lastResultWasEmpty = false;
+    // Genre name -> id (filled elsewhere in your app; keep as-is)
+    private final Map<String, String> genreNameToId = new HashMap<>();
 
     public FilteredView(FilterMoviesController filterMoviesController,
                         FilterMoviesViewModel filterMoviesViewModel) {
@@ -56,12 +45,13 @@ public class FilteredView extends JFrame {
 
         setTitle("CineSphere - Filtered Results");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1100, 800);
+        setSize(950, 850);
         setLocationRelativeTo(null);
 
         buildUI();
         setMovieDetailsDependencies();
 
+        // initial fetch
         callFilter();
     }
 
@@ -73,49 +63,61 @@ public class FilteredView extends JFrame {
         backgroundPanel.add(Box.createRigidArea(new Dimension(0, 20)));
 
         HeaderPanel headerPanel = new HeaderPanel();
-        headerPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+        headerPanel.setMaximumSize(new Dimension(900, 50));
+        headerPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         backgroundPanel.add(headerPanel);
 
         backgroundPanel.add(Box.createRigidArea(new Dimension(0, 20)));
 
         filterPanel = new FilterPanel();
         filterPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 54));
-        refreshGenresIntoFilterPanel();
+        filterPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         filterPanel.setOnFilter(() -> {
             currentPage = 1;
             callFilter();
         });
 
-        filterPanel.setOnSearch(query -> {
+        // optional: wire search to also do filtering using query
+        filterPanel.setOnSearch(q -> {
             currentPage = 1;
             callFilter();
         });
 
-        JPanel filteredByPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        backgroundPanel.add(filterPanel);
+
+        backgroundPanel.add(Box.createRigidArea(new Dimension(0, 14)));
+
+        JPanel filteredByPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         filteredByPanel.setBackground(COLOR);
-        filteredByPanel.setPreferredSize(new Dimension(860, 30));
-        filteredByPanel.setMaximumSize(new Dimension(860, 30));
+        filteredByPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
         filteredByPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         filteredByLabel = new JLabel();
         filteredByPanel.add(filteredByLabel);
 
+        backgroundPanel.add(filteredByPanel);
+        backgroundPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
         gridPanel = new JPanel(new GridLayout(2, 4, 10, 10));
         gridPanel.setBackground(COLOR);
         gridPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        gridPanel.setPreferredSize(new Dimension(850, 650));
-        gridPanel.setMaximumSize(new Dimension(850, 650));
+        gridPanel.setPreferredSize(new Dimension(900, 650));
+        gridPanel.setMaximumSize(new Dimension(900, 650));
         gridPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        backgroundPanel.add(gridPanel);
+
+        backgroundPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
         JPanel pagingPanel = new JPanel(new BorderLayout());
         pagingPanel.setBackground(COLOR);
-        pagingPanel.setPreferredSize(new Dimension(860, 40));
-        pagingPanel.setMaximumSize(new Dimension(860, 40));
+        pagingPanel.setPreferredSize(new Dimension(900, 40));
+        pagingPanel.setMaximumSize(new Dimension(900, 40));
         pagingPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        prevButton = new JButton("<<");
-        nextButton = new JButton(">>");
+        JButton prevButton = new JButton("<<");
+        JButton nextButton = new JButton(">>");
         pageLabel = new JLabel("", SwingConstants.CENTER);
 
         prevButton.addActionListener(e -> {
@@ -126,8 +128,7 @@ public class FilteredView extends JFrame {
         });
 
         nextButton.addActionListener(e -> {
-            int totalPages = filterMoviesViewModel.getTotalPages();
-            if (currentPage < totalPages) {
+            if (currentPage < filterMoviesViewModel.getTotalPages()) {
                 currentPage++;
                 callFilter();
             }
@@ -137,41 +138,31 @@ public class FilteredView extends JFrame {
         pagingPanel.add(pageLabel, BorderLayout.CENTER);
         pagingPanel.add(nextButton, BorderLayout.EAST);
 
-        backgroundPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        backgroundPanel.add(filterPanel);
-        backgroundPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        backgroundPanel.add(filteredByPanel);
-        backgroundPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        backgroundPanel.add(gridPanel);
-        backgroundPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         backgroundPanel.add(pagingPanel);
 
         add(backgroundPanel);
     }
 
-    private void refreshGenresIntoFilterPanel() {
-        Map<String, Integer> genres = filterMoviesViewModel.getGenres();
-        if (genres == null || genres.isEmpty()) return;
-
-        filterPanel.setGenres(new ArrayList<>(genres.keySet()));
-    }
-
     private void callFilter() {
-        refreshGenresIntoFilterPanel();
+        // ✅ validate year (blocks invalid typed values like letters/out of range)
+        Integer y = filterPanel.getValidatedYearOrShowError();
+        if (y == null) {
+            clearGridToEmpty();
+            return;
+        }
 
-        String year = String.valueOf(filterPanel.getSelectedYear());
-        String rating = filterPanel.getRatingString(); // "All Ratings" or "x.y-a.b"
+        String year = String.valueOf(y);
+        String rating = filterPanel.getRatingString(); // "All Ratings" or "x.y-z.w"
         String genreText = filterPanel.getSelectedGenre();
         String search = filterPanel.getSearchQuery();
 
-        String genreId = null;
-        Map<String, Integer> genreMap = filterMoviesViewModel.getGenres();
-        if (genreMap != null && genreText != null && !"All Genres".equals(genreText)) {
-            Integer id = genreMap.get(genreText);
-            if (id != null) genreId = String.valueOf(id);
-        }
-
         updateFilteredByLabel(year, rating, genreText, search);
+
+        String genreId = null;
+        if (!"All Genres".equalsIgnoreCase(genreText)) {
+            // if you populated mapping elsewhere:
+            genreId = genreNameToId.get(genreText);
+        }
 
         filterMoviesController.execute(
                 year,
@@ -182,42 +173,29 @@ public class FilteredView extends JFrame {
         );
 
         updateGrid();
-        updatePagingControls();
     }
 
     private void updateFilteredByLabel(String year, String rating, String genre, String search) {
-        String ratingText = rating.equalsIgnoreCase("All Ratings")
-                ? "Any"
-                : rating.replace("-", "–");
-
         String text = "Filtered by: Year = " + year +
-                "   Rating = " + ratingText +
+                "   Rating = " + (rating.equals("All Ratings") ? "Any" : rating) +
                 "   Genre = " + genre +
-                (search == null || search.isEmpty() ? "" : "   Search = \"" + search + "\"");
-
+                (search.isEmpty() ? "" : "   Search = \"" + search + "\"");
         filteredByLabel.setText(text);
     }
 
-    private void updatePagingControls() {
-        List<String> posters = filterMoviesViewModel.getPosters();
-        List<Integer> filmIds = filterMoviesViewModel.getFilmIds();
+    private void clearGridToEmpty() {
+        gridPanel.removeAll();
 
-        boolean noResults = posters == null || filmIds == null || posters.isEmpty() || filmIds.isEmpty();
-        int totalPages = filterMoviesViewModel.getTotalPages();
-
-        if (noResults) {
-            pageLabel.setText("0 / 0");
-            prevButton.setEnabled(false);
-            nextButton.setEnabled(false);
-            return;
+        for (int i = 0; i < PAGE_SIZE; i++) {
+            JPanel empty = new JPanel();
+            empty.setBackground(COLOR);
+            empty.setBorder(BorderFactory.createDashedBorder(Color.GRAY));
+            gridPanel.add(empty);
         }
 
-        if (totalPages < 1) totalPages = 1;
-        if (currentPage > totalPages) currentPage = totalPages;
-
-        pageLabel.setText(currentPage + " / " + totalPages);
-        prevButton.setEnabled(currentPage > 1);
-        nextButton.setEnabled(currentPage < totalPages);
+        pageLabel.setText("0 / 0");
+        gridPanel.revalidate();
+        gridPanel.repaint();
     }
 
     private void updateGrid() {
@@ -226,34 +204,8 @@ public class FilteredView extends JFrame {
         List<String> posters = filterMoviesViewModel.getPosters();
         List<Integer> filmIds = filterMoviesViewModel.getFilmIds();
 
-        boolean noResults = posters == null || filmIds == null || posters.isEmpty() || filmIds.isEmpty();
+        int count = Math.min(PAGE_SIZE, posters == null ? 0 : posters.size());
 
-        if (noResults) {
-            gridPanel.setLayout(new BorderLayout());
-            JLabel msg = new JLabel("No movies available", SwingConstants.CENTER);
-            msg.setFont(msg.getFont().deriveFont(Font.BOLD, 22f));
-            gridPanel.add(msg, BorderLayout.CENTER);
-
-            if (!lastResultWasEmpty) {
-                JOptionPane.showMessageDialog(
-                        this,
-                        "No movies available for the selected filters.",
-                        "No Results",
-                        JOptionPane.INFORMATION_MESSAGE
-                );
-            }
-            lastResultWasEmpty = true;
-
-            gridPanel.revalidate();
-            gridPanel.repaint();
-            return;
-        }
-
-        lastResultWasEmpty = false;
-
-        gridPanel.setLayout(new GridLayout(2, 4, 10, 10));
-
-        int count = Math.min(PAGE_SIZE, Math.min(posters.size(), filmIds.size()));
         for (int i = 0; i < count; i++) {
             gridPanel.add(createPosterButton(posters.get(i), filmIds.get(i)));
         }
@@ -264,6 +216,8 @@ public class FilteredView extends JFrame {
             empty.setBorder(BorderFactory.createDashedBorder(Color.GRAY));
             gridPanel.add(empty);
         }
+
+        pageLabel.setText(currentPage + " / " + filterMoviesViewModel.getTotalPages());
 
         gridPanel.revalidate();
         gridPanel.repaint();

@@ -3,7 +3,9 @@ package view.components;
 import com.toedter.calendar.JYearChooser;
 
 import javax.swing.*;
+import javax.swing.text.InternationalFormatter;
 import java.awt.*;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
@@ -31,6 +33,9 @@ public class FilterPanel extends JPanel {
     private static final int SEARCH_FIELD_PREF_W = 260;
     private static final int SEARCH_FIELD_MAX_W  = 360;
 
+    public static final int MIN_YEAR = 1900;
+    public static final int MAX_YEAR = 2026;
+
     public FilterPanel() {
         super(new GridBagLayout());
         setBackground(COLOR);
@@ -38,7 +43,6 @@ public class FilterPanel extends JPanel {
         setPreferredSize(new Dimension(0, 54));
         setMaximumSize(new Dimension(Integer.MAX_VALUE, 54));
 
-        // base constraints for normal components
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridy = 0;
         gbc.insets = new Insets(6, 6, 6, 6);
@@ -53,9 +57,7 @@ public class FilterPanel extends JPanel {
         addAt(new JLabel("Browse by:"), gbc, x++);
 
         yearChooser = new JYearChooser();
-        yearChooser.setStartYear(1900);
-        yearChooser.setEndYear(java.util.Calendar.getInstance().get(java.util.Calendar.YEAR) + 1);
-        lockYearChooserTyping(yearChooser);
+        enforceYearChooser(yearChooser, MIN_YEAR, MAX_YEAR);
         yearChooser.setPreferredSize(new Dimension(62, 28));
         addAt(yearChooser, gbc, x++);
 
@@ -102,25 +104,11 @@ public class FilterPanel extends JPanel {
         addGlue(x);
     }
 
-    private void addGlue(int gridx) {
-        GridBagConstraints glue = new GridBagConstraints();
-        glue.gridx = gridx;
-        glue.gridy = 0;
-        glue.weightx = 1.0;
-        glue.fill = GridBagConstraints.HORIZONTAL;
-        add(Box.createHorizontalGlue(), glue);
-    }
-
-    private void addAt(Component c, GridBagConstraints base, int gridx) {
-        GridBagConstraints copy = (GridBagConstraints) base.clone();
-        copy.gridx = gridx;
-        add(c, copy);
-    }
-
     // ---- wiring
     public void setOnFilter(Runnable onFilter) {
         this.onFilter = (onFilter == null) ? () -> {} : onFilter;
     }
+
     public void setOnSearch(SearchHandler onSearch) {
         this.onSearch = (onSearch == null) ? (q) -> {} : onSearch;
     }
@@ -128,7 +116,8 @@ public class FilterPanel extends JPanel {
     private void triggerSearch() {
         String q = getSearchQuery();
         if (q.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please enter a film name.", "Search", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Please enter a film name.", "Search",
+                    JOptionPane.INFORMATION_MESSAGE);
             return;
         }
         onSearch.onSearch(q);
@@ -136,6 +125,26 @@ public class FilterPanel extends JPanel {
 
     // ---- getters
     public int getSelectedYear() { return yearChooser.getYear(); }
+
+    /**
+     * Use this in FilteredView before calling controller.execute(...)
+     * Returns null if invalid and shows dialog.
+     */
+    public Integer getValidatedYearOrShowError() {
+        int y = yearChooser.getYear();
+        if (y < MIN_YEAR || y > MAX_YEAR) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Please choose a year between " + MIN_YEAR + " and " + MAX_YEAR + ".",
+                    "Invalid Year",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+            // Snap back to bounds
+            yearChooser.setYear(Math.min(Math.max(y, MIN_YEAR), MAX_YEAR));
+            return null;
+        }
+        return y;
+    }
 
     public String getSelectedGenre() {
         Object sel = genreDropdown.getSelectedItem();
@@ -168,6 +177,7 @@ public class FilterPanel extends JPanel {
         genreDropdown.setSelectedItem(list.contains(prev) ? prev : "All Genres");
     }
 
+    // ---- UI helpers
     private void updateRatingLabel() {
         if (ratingSlider.getLowValue() == 0 && ratingSlider.getHighValue() == 100) {
             ratingLabel.setText("Rating: Any");
@@ -194,15 +204,73 @@ public class FilterPanel extends JPanel {
         return t;
     }
 
-    private static void lockYearChooserTyping(JYearChooser chooser) {
-        for (Component c : chooser.getComponents()) {
-            if (c instanceof JSpinner spinner) {
-                JComponent editor = spinner.getEditor();
-                if (editor instanceof JSpinner.DefaultEditor def) {
-                    def.getTextField().setEditable(false);
-                    def.getTextField().setFocusable(false);
+    private void addGlue(int gridx) {
+        GridBagConstraints glue = new GridBagConstraints();
+        glue.gridx = gridx;
+        glue.gridy = 0;
+        glue.weightx = 1.0;
+        glue.fill = GridBagConstraints.HORIZONTAL;
+        add(Box.createHorizontalGlue(), glue);
+    }
+
+    private void addAt(Component c, GridBagConstraints base, int gridx) {
+        GridBagConstraints copy = (GridBagConstraints) base.clone();
+        copy.gridx = gridx;
+        add(c, copy);
+    }
+
+    /**
+     *  HARD enforcement:
+     * - numeric only (no letters)
+     * - bounded to [minYear, maxYear]
+     * - arrows + typing both constrained
+     */
+    private static void enforceYearChooser(JYearChooser chooser, int minYear, int maxYear) {
+        chooser.setStartYear(minYear);
+        chooser.setEndYear(maxYear);
+
+        JSpinner spinner = findSpinner(chooser);
+        if (spinner == null) return;
+
+        int current = chooser.getYear();
+        int clamped = Math.min(Math.max(current, minYear), maxYear);
+
+        SpinnerNumberModel model = new SpinnerNumberModel(clamped, minYear, maxYear, 1);
+        spinner.setModel(model);
+
+        JSpinner.NumberEditor editor = new JSpinner.NumberEditor(spinner, "#");
+        spinner.setEditor(editor);
+
+        JFormattedTextField tf = editor.getTextField();
+        tf.setColumns(4);
+
+        if (tf.getFormatter() instanceof InternationalFormatter fmt) {
+            fmt.setAllowsInvalid(false);
+            fmt.setCommitsOnValidEdit(true);
+            fmt.setMinimum(minYear);
+            fmt.setMaximum(maxYear);
+        }
+
+        tf.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusLost(java.awt.event.FocusEvent e) {
+                try {
+                    spinner.commitEdit();
+                } catch (ParseException ex) {
+                    spinner.setValue(model.getNumber());
                 }
             }
+        });
+    }
+
+    private static JSpinner findSpinner(Container root) {
+        for (Component c : root.getComponents()) {
+            if (c instanceof JSpinner s) return s;
+            if (c instanceof Container child) {
+                JSpinner found = findSpinner(child);
+                if (found != null) return found;
+            }
         }
+        return null;
     }
 }
