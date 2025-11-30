@@ -7,6 +7,7 @@ import java.awt.event.ActionListener;
 public class HeaderPanel extends JPanel {
     private final Color COLOR = new Color(255, 255, 224);
     private final JButton homeButton;
+    private final JButton bookButton;
 
     public HeaderPanel() {
         super(new FlowLayout(FlowLayout.CENTER, 20, 10));
@@ -17,7 +18,7 @@ public class HeaderPanel extends JPanel {
 
         homeButton = new JButton("Home");
         JButton watchlistButton = new JButton("Watchlist");
-        JButton bookButton = new JButton("Booking");
+        bookButton = new JButton("Booking");
         JButton logoutButton = new JButton("Logout");
 
         add(title);
@@ -32,5 +33,11 @@ public class HeaderPanel extends JPanel {
             homeButton.removeActionListener(al);
         }
         homeButton.addActionListener(e -> action.run());
+    }
+    public void setBookAction(Runnable action) {
+        for (ActionListener al : bookButton.getActionListeners()) {
+            bookButton.removeActionListener(al);
+        }
+        bookButton.addActionListener(e -> action.run());
     }
 }
