@@ -35,7 +35,6 @@ public class FilteredView extends JFrame {
     private int currentPage = 1;
     private static final int PAGE_SIZE = 8;
 
-    // Genre name -> id (filled elsewhere in your app; keep as-is)
     private final Map<String, String> genreNameToId = new HashMap<>();
 
     public FilteredView(FilterMoviesController filterMoviesController,
@@ -78,7 +77,6 @@ public class FilteredView extends JFrame {
             callFilter();
         });
 
-        // optional: wire search to also do filtering using query
         filterPanel.setOnSearch(q -> {
             currentPage = 1;
             callFilter();
@@ -144,7 +142,6 @@ public class FilteredView extends JFrame {
     }
 
     private void callFilter() {
-        // ✅ validate year (blocks invalid typed values like letters/out of range)
         Integer y = filterPanel.getValidatedYearOrShowError();
         if (y == null) {
             clearGridToEmpty();
@@ -152,7 +149,7 @@ public class FilteredView extends JFrame {
         }
 
         String year = String.valueOf(y);
-        String rating = filterPanel.getRatingString(); // "All Ratings" or "x.y-z.w"
+        String rating = filterPanel.getRatingString();
         String genreText = filterPanel.getSelectedGenre();
         String search = filterPanel.getSearchQuery();
 
@@ -160,7 +157,6 @@ public class FilteredView extends JFrame {
 
         String genreId = null;
         if (!"All Genres".equalsIgnoreCase(genreText)) {
-            // if you populated mapping elsewhere:
             genreId = genreNameToId.get(genreText);
         }
 
