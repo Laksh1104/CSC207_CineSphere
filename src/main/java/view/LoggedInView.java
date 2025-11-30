@@ -50,6 +50,11 @@ public class LoggedInView extends JPanel {
                 listener.onSwitchScreen("Home");
             }
         });
+        headerPanel.setBookAction(() -> {
+            if (listener != null) {
+                listener.onSwitchScreen("Booking");
+            }
+        });
         headerPanel.setMaximumSize(new Dimension(800, 50));
 
         // Filter
@@ -92,6 +97,10 @@ public class LoggedInView extends JPanel {
             JOptionPane.showMessageDialog(this,
                     "Filters applied!");
         });
+    }
+
+    public void setScreenSwitchListener(ScreenSwitchListener listener) {
+        this.listener = listener;
     }
 
     public void setSearchDependencies(SearchFilmController controller, SearchFilmViewModel viewModel) {

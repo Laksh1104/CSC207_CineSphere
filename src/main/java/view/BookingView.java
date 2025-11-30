@@ -61,6 +61,11 @@ public class BookingView extends JPanel implements PropertyChangeListener {
                 listener.onSwitchScreen("Home");
             }
         });
+        headerPanel.setBookAction(() -> {
+            if (listener != null) {
+                listener.onSwitchScreen("Booking");
+            }
+        });
         add(headerPanel, BorderLayout.NORTH);
 
         setupSelectionPanel();
