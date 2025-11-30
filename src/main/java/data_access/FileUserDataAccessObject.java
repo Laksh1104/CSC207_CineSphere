@@ -3,6 +3,7 @@ package data_access;
 import entity.User;
 import entity.UserFactory;
 import use_case.login.LoginUserDataAccessInterface;
+import use_case.logout.LogoutUserDataAccessInterface;
 import use_case.signup.SignupUserDataAccessInterface;
 
 import java.io.*;
@@ -14,7 +15,7 @@ import java.util.Map;
  * Stores users in CSV format: username,password
  */
 public class FileUserDataAccessObject
-        implements LoginUserDataAccessInterface, SignupUserDataAccessInterface {
+        implements LoginUserDataAccessInterface, SignupUserDataAccessInterface, LogoutUserDataAccessInterface {
 
     private final File file;
     private final UserFactory userFactory;
@@ -59,10 +60,6 @@ public class FileUserDataAccessObject
         }
     }
 
-    // =========================================================
-    //  SignupUserDataAccessInterface
-    // =========================================================
-
     @Override
     public boolean existsByName(String username) {
         return users.containsKey(username);
@@ -79,10 +76,6 @@ public class FileUserDataAccessObject
         this.currentUsername = username;
     }
 
-    // =========================================================
-    //  LoginUserDataAccessInterface
-    // =========================================================
-
     @Override
     public User get(String username) {
         return users.get(username);
@@ -93,9 +86,10 @@ public class FileUserDataAccessObject
         return currentUsername;
     }
 
-    // =========================================================
-    //  File persistence helper
-    // =========================================================
+    @Override
+    public void logout() {
+        this.currentUsername = null;
+    }
 
     private void writeToFile() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
