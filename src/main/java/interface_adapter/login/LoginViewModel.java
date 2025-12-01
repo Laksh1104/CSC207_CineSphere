@@ -15,7 +15,7 @@ public class LoginViewModel {
     public void setState(LoginState newState) {
         LoginState oldState = this.state;
         this.state = newState;
-        support.firePropertyChange("state", oldState, newState); // ✅
+        support.firePropertyChange("state", oldState, newState);
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {

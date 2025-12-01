@@ -8,7 +8,6 @@ public class LoginState {
 
     public LoginState() {}
 
-    // ✅ copy constructor
     public LoginState(LoginState copy) {
         this.username = copy.username;
         this.errorMessage = copy.errorMessage;

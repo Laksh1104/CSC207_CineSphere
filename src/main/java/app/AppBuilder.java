@@ -13,7 +13,6 @@ import interface_adapter.signup.SignupViewModel;
 
 import use_case.login.LoginInputBoundary;
 import use_case.login.LoginInteractor;
-import use_case.login.LoginOutputBoundary;
 import use_case.login.LoginUserDataAccessInterface;
 
 import use_case.signup.SignupInputBoundary;
@@ -39,7 +38,7 @@ public class AppBuilder {
 
         // ==== LOGIN WIRES ====
         LoginViewModel loginViewModel = new LoginViewModel();
-        LoginOutputBoundary loginPresenter = new LoginPresenter(loginViewModel);
+        LoginPresenter loginPresenter = new LoginPresenter(loginViewModel);
         LoginInputBoundary loginInteractor =
                 new LoginInteractor(loginUserDAO, loginPresenter);
         LoginController loginController = new LoginController(loginInteractor);
@@ -52,7 +51,7 @@ public class AppBuilder {
                 new SignupInteractor(userDAO, signupPresenter, userFactory);
         SignupController signupController = new SignupController(signupInteractor);
 
-        // ==== INITIAL VIEW (LOGIN) ====
+        // ==== INITIAL VIEW (LOGIN PANEL) ====
         LoginView loginView = new LoginView(
                 loginController,
                 loginViewModel,
@@ -60,6 +59,10 @@ public class AppBuilder {
                 signupViewModel
         );
 
-        SwingUtilities.invokeLater(() -> loginView.setVisible(true));
+        SwingUtilities.invokeLater(() -> {
+            MainAppFrame app = new MainAppFrame(loginView);
+
+            loginPresenter.setScreenSwitchListener(app);
+        });
     }
 }
