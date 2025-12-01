@@ -1,4 +1,7 @@
 package app;
+import interface_adapter.bookings.BookingsController;
+import use_case.bookings.BookingsDataAccessInterface;
+import view.MyBookingsView;
 
 import data_access.BookingMovieDataAccessObject;
 import data_access.CinemaDataAccessObject;
@@ -63,6 +66,8 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
     public static final String FILTERED_VIEW = "Filtered";
     public static final String BOOKING_VIEW = "Booking";
     public static final String WATCHLIST_VIEW = "Watchlist";
+    public static final String MY_BOOKINGS_VIEW = "MyBookings";
+
 
     private final CardLayout cardLayout;
     private final JPanel cards;
@@ -73,6 +78,9 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
     private final FilteredView filteredView;
     private final BookingView bookingView;
     private final WatchlistView watchlistView;
+    private final MyBookingsView myBookingsView;
+
+
 
     // set later by AppBuilder
     private LogoutController logoutController;
@@ -96,11 +104,19 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
         WatchlistDataAccessInterface watchlistDAO = userProfileDAO;
         WatchlistController watchlistController =
                 new WatchlistController(watchlistDAO, userDAO);
+        // Bookings controller (reads per-user bookings from the same JSON)
+        BookingsDataAccessInterface bookingsDAO = userProfileDAO;
+        BookingsController bookingsController = new BookingsController(bookingsDAO, userDAO);
+
 
         // ===== ViewModels =====
         BookMovieViewModel bookingVM = new BookMovieViewModel();
         PopularMoviesViewModel popularVM = new PopularMoviesViewModel();
         SearchFilmViewModel searchVM = new SearchFilmViewModel();
+
+        // ===== MY BOOKINGS VIEW =====
+        myBookingsView = new MyBookingsView(bookingsController);
+        myBookingsView.setScreenSwitchListener(this);
 
         // ===== Booking DAOs / Query =====
         BookingMovieDataAccessObject movieDAO =
@@ -175,6 +191,7 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
         cards.add(filteredView, FILTERED_VIEW);
         cards.add(bookingView, BOOKING_VIEW);
         cards.add(watchlistView, WATCHLIST_VIEW);
+        cards.add(myBookingsView, MY_BOOKINGS_VIEW);
 
         cardLayout.show(cards, LOGIN_VIEW);
 
@@ -199,6 +216,7 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
         wireLogoutToViewIfMethodExists(filteredView);
         wireLogoutToViewIfMethodExists(bookingView);
         wireLogoutToViewIfMethodExists(watchlistView);
+        wireLogoutToViewIfMethodExists(myBookingsView);
     }
 
     private void wireLogoutToViewIfMethodExists(Object view) {
@@ -236,6 +254,12 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
             // refresh watchlist each time it is opened
             watchlistView.refresh();
         }
+
+        if (MY_BOOKINGS_VIEW.equals(screenName)) {
+            // refresh bookings each time it is opened
+            myBookingsView.refresh();
+        }
+
 
         cardLayout.show(cards, screenName);
         revalidate();
