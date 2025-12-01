@@ -13,6 +13,7 @@ import java.util.List;
 
 import com.toedter.calendar.JDateChooser;
 import interface_adapter.BookingQuery;
+import interface_adapter.logout.LogoutController;
 import view.components.HeaderPanel;
 import view.components.SeatSelectionPanel;
 
@@ -22,6 +23,11 @@ public class BookingView extends JPanel implements PropertyChangeListener {
     private BookMovieController controller;
     private final BookingQuery bookingQuery;
 
+    // LOGOUT
+    private LogoutController logoutController;
+
+    // Header needs to be a field so logout can be wired later
+    private final HeaderPanel headerPanel;
 
     // UI Components
     private JComboBox<String> movieDropdown;
@@ -30,7 +36,6 @@ public class BookingView extends JPanel implements PropertyChangeListener {
 
     private JPanel seatPanelWrapper;
     private SeatSelectionPanel seatPanel;
-
 
     private String selectedMovieName;
     private Integer selectedMovieId;
@@ -55,18 +60,19 @@ public class BookingView extends JPanel implements PropertyChangeListener {
         setBackground(COLOR);
 
         add(Box.createVerticalStrut(10));
-        HeaderPanel headerPanel = new HeaderPanel();
+
+        headerPanel = new HeaderPanel();
         headerPanel.setHomeAction(() -> {
-            if (listener != null) {
-                listener.onSwitchScreen("Home");
-            }
+            if (listener != null) listener.onSwitchScreen("Home");
         });
         headerPanel.setBookAction(() -> {
-            if (listener != null) {
-                listener.onSwitchScreen("Booking");
-            }
+            if (listener != null) listener.onSwitchScreen("Booking");
         });
-        add(headerPanel, BorderLayout.NORTH);
+        headerPanel.setLogoutAction(() -> {
+            if (logoutController != null) logoutController.execute();
+        });
+        headerPanel.setMaximumSize(new Dimension(900, 50));
+        add(headerPanel);
 
         setupSelectionPanel();
         setupSeatPanelWrapper();
@@ -81,8 +87,12 @@ public class BookingView extends JPanel implements PropertyChangeListener {
         this.controller = controller;
     }
 
-
-    // UI Setup
+    public void setLogoutDependencies(LogoutController logoutController) {
+        this.logoutController = logoutController;
+        headerPanel.setLogoutAction(() -> {
+            if (this.logoutController != null) this.logoutController.execute();
+        });
+    }
 
     private void setupSeatPanelWrapper() {
         seatPanelWrapper = new JPanel(new FlowLayout());
@@ -107,12 +117,13 @@ public class BookingView extends JPanel implements PropertyChangeListener {
             selectedMovieName = movieName;
 
             Movie movie = getMovie(movieName);
+            if (movie == null) return;
+
             selectedMovieId = movie.getId();
             populateCinemas(selectedMovieId, selectedDate);
         });
 
         selectionPanel.add(labeled("Movie:", movieDropdown));
-
 
         // Date Picker
         JDateChooser dateChooser = new JDateChooser();
@@ -128,12 +139,10 @@ public class BookingView extends JPanel implements PropertyChangeListener {
             if (date == null) return;
 
             selectedDate = new SimpleDateFormat("yyyy-MM-dd").format(date);
-            if (selectedMovieId != null)
-                populateCinemas(selectedMovieId, selectedDate);
+            if (selectedMovieId != null) populateCinemas(selectedMovieId, selectedDate);
         });
 
         selectionPanel.add(labeled("Date:", dateChooser));
-
 
         // Cinema Dropdown
         cinemaDropdown = createDropdown(300);
@@ -145,32 +154,23 @@ public class BookingView extends JPanel implements PropertyChangeListener {
             String cinemaName = (String) cinemaDropdown.getSelectedItem();
             if (isNullOrPlaceholder(cinemaName, "Select Cinema")) return;
 
-
-            if (cinemaName.equals("This film is not playing on this date.")) {
+            if ("This film is not playing on this date.".equals(cinemaName)) {
                 populateShowTimes(null);
                 return;
             }
 
             selectedCinemaName = cinemaName;
             Cinema cinema = getCinema(cinemaName, selectedMovieId, selectedDate);
-
             populateShowTimes(cinema);
         });
 
         selectionPanel.add(labeled("Cinema:", cinemaDropdown));
 
-
         // Time Dropdown
         timeDropdown = createDropdown(250);
         timeDropdown.addItem("Select Time");
-
-        timeDropdown.addActionListener(e -> {
-            clearSeatGrid();
-
-        });
-
+        timeDropdown.addActionListener(e -> clearSeatGrid());
         selectionPanel.add(labeled("Time:", timeDropdown));
-
 
         // Select Button
         JButton select = new JButton("Select");
@@ -179,7 +179,6 @@ public class BookingView extends JPanel implements PropertyChangeListener {
 
         add(selectionPanel);
     }
-
 
     private JPanel labeled(String text, JComponent component) {
         JPanel panel = new JPanel(new BorderLayout());
@@ -195,8 +194,6 @@ public class BookingView extends JPanel implements PropertyChangeListener {
         return cb;
     }
 
-
-    // Select Handler
     private void handleSelect() {
         String movieName = (String) movieDropdown.getSelectedItem();
         String cinemaName = (String) cinemaDropdown.getSelectedItem();
@@ -205,7 +202,6 @@ public class BookingView extends JPanel implements PropertyChangeListener {
         if (isInvalidSelection(movieName, cinemaName, timeDisplay)) return;
 
         ShowTime st = showtimeMap.get(timeDisplay);
-
         if (st == null) {
             warn("Invalid showtime selected.");
             return;
@@ -215,7 +211,6 @@ public class BookingView extends JPanel implements PropertyChangeListener {
         selectedShowtimeStart = st.getStartTime();
         selectedShowtimeEnd = st.getEndTime();
 
-        // Update state
         BookMovieState state = viewModel.getState();
         state.setMovieName(selectedMovieName);
         state.setCinemaName(selectedCinemaName);
@@ -227,21 +222,16 @@ public class BookingView extends JPanel implements PropertyChangeListener {
         buildSeatGrid();
     }
 
-
-    // Book Button
-
     private void setupBookButton() {
         JButton bookBtn = new JButton("Book Movie");
         bookBtn.setFont(new Font("Arial", Font.BOLD, 18));
         bookBtn.setBackground(Color.WHITE);
 
         bookBtn.addActionListener(e -> {
-
             if (seatPanel == null) {
                 warn("Please click Select to load the seat map before booking.");
                 return;
             }
-
             controller.execute(
                     selectedMovieName,
                     selectedCinemaName,
@@ -257,13 +247,9 @@ public class BookingView extends JPanel implements PropertyChangeListener {
         add(wrapper);
     }
 
-
     private void warn(String msg) {
         JOptionPane.showMessageDialog(this, msg, "Warning", JOptionPane.WARNING_MESSAGE);
     }
-
-
-    // Seat Grid Methods
 
     private void clearSeatGrid() {
         seatPanelWrapper.removeAll();
@@ -291,12 +277,10 @@ public class BookingView extends JPanel implements PropertyChangeListener {
         );
 
         Set<String> unavailable = new HashSet<>();
-        for (Seat s : seats)
-            if (s.isBooked()) unavailable.add(s.getSeatName());
+        for (Seat s : seats) if (s.isBooked()) unavailable.add(s.getSeatName());
 
         refreshSeatPanel(new SeatSelectionPanel(unavailable));
     }
-
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
@@ -314,7 +298,6 @@ public class BookingView extends JPanel implements PropertyChangeListener {
             JOptionPane.showMessageDialog(this,
                     state.getBookingSuccessMessage(),
                     "Booking Confirmed", JOptionPane.INFORMATION_MESSAGE);
-
             state.setBookingSuccessMessage(null);
         }
 
@@ -324,18 +307,13 @@ public class BookingView extends JPanel implements PropertyChangeListener {
         }
     }
 
-
-    // Data Access Helpers
-
     private void populateMovies() {
         List<Movie> movies = bookingQuery.getMovies();
         movies.sort(Comparator.comparing(Movie::getTitle));
 
         movieDropdown.removeAllItems();
         movieDropdown.addItem("Select Movie");
-        for (Movie m : movies) {
-            movieDropdown.addItem(m.getTitle());
-        }
+        for (Movie m : movies) movieDropdown.addItem(m.getTitle());
     }
 
     private Movie getMovie(String name) {
@@ -362,9 +340,9 @@ public class BookingView extends JPanel implements PropertyChangeListener {
             return;
         }
 
+        cinemaDropdown.addItem("Select Cinema");
         cinemas.sort(Comparator.comparing(Cinema::getCinemaName));
-        for (Cinema c : cinemas)
-            cinemaDropdown.addItem(c.getCinemaName());
+        for (Cinema c : cinemas) cinemaDropdown.addItem(c.getCinemaName());
     }
 
     private void populateShowTimes(Cinema cinema) {
@@ -378,6 +356,7 @@ public class BookingView extends JPanel implements PropertyChangeListener {
 
         Map<String, List<ShowTime>> grouped = bookingQuery.getShowtimes(cinema);
 
+        timeDropdown.addItem("Select Time");
         for (var entry : grouped.entrySet()) {
             String version = entry.getKey();
             for (ShowTime st : entry.getValue()) {
@@ -387,8 +366,10 @@ public class BookingView extends JPanel implements PropertyChangeListener {
             }
         }
 
-        if (timeDropdown.getItemCount() == 0)
+        if (timeDropdown.getItemCount() == 1) {
+            timeDropdown.removeAllItems();
             timeDropdown.addItem("No showtime is available.");
+        }
     }
 
     private boolean isNullOrPlaceholder(String s, String placeholder) {
@@ -401,12 +382,12 @@ public class BookingView extends JPanel implements PropertyChangeListener {
             return true;
         }
         if (isNullOrPlaceholder(cinemaName, "Select Cinema") ||
-                cinemaName.equals("This film is not playing on this date.")) {
+                "This film is not playing on this date.".equals(cinemaName)) {
             warn("Please select a valid cinema.");
             return true;
         }
         if (isNullOrPlaceholder(timeDisplay, "Select Time") ||
-                timeDisplay.equals("No showtime is available.")) {
+                "No showtime is available.".equals(timeDisplay)) {
             warn("Please select a valid showtime.");
             return true;
         }

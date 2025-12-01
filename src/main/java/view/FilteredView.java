@@ -2,7 +2,9 @@ package view;
 
 import data_access.MovieDetailsDataAccessObject;
 import interface_adapter.filter_movies.FilterMoviesController;
+import interface_adapter.filter_movies.FilterMoviesPresenter;
 import interface_adapter.filter_movies.FilterMoviesViewModel;
+import interface_adapter.logout.LogoutController;
 import interface_adapter.movie_details.MovieDetailsController;
 import interface_adapter.movie_details.MovieDetailsPresenter;
 import interface_adapter.movie_details.MovieDetailsViewModel;
@@ -30,6 +32,7 @@ public class FilteredView extends JPanel {
     private MovieDetailsViewModel movieDetailsViewModel;
 
     private ScreenSwitchListener listener;
+    private LogoutController logoutController;
 
     private final Color COLOR = new Color(255, 255, 224);
 
@@ -55,12 +58,15 @@ public class FilteredView extends JPanel {
         buildUI();
         setMovieDetailsDependencies();
 
-        // initial fetch
         callFilter();
     }
 
     public void setScreenSwitchListener(ScreenSwitchListener listener) {
         this.listener = listener;
+    }
+
+    public void setLogoutDependencies(LogoutController controller) {
+        this.logoutController = controller;
     }
 
     private void buildUI() {
@@ -77,6 +83,10 @@ public class FilteredView extends JPanel {
         });
         headerPanel.setBookAction(() -> {
             if (listener != null) listener.onSwitchScreen("Booking");
+        });
+        headerPanel.setLogoutAction(() -> {
+            if (logoutController != null) logoutController.execute();
+            else JOptionPane.showMessageDialog(this, "Logout is not wired yet.");
         });
 
         headerPanel.setMaximumSize(new Dimension(900, 50));
@@ -187,14 +197,7 @@ public class FilteredView extends JPanel {
             genreId = genreNameToId.get(genreText);
         }
 
-        filterMoviesController.execute(
-                year,
-                rating,
-                genreId,
-                search,
-                currentPage
-        );
-
+        filterMoviesController.execute(year, rating, genreId, search, currentPage);
         updateGrid();
     }
 

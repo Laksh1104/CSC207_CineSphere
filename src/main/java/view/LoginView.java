@@ -110,6 +110,14 @@ public class LoginView extends JPanel {
         }
     }
 
+    public void clearFields() {
+        usernameField.setText("");
+        passwordField.setText("");
+        errorLabel.setText(" ");
+        statusLabel.setText(" ");
+    }
+
+
     private void bindListeners() {
         loginButton.addActionListener(e -> handleLogin());
         signupButton.addActionListener(e -> handleSignup());

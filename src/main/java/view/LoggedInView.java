@@ -1,22 +1,20 @@
 package view;
 
 import data_access.MovieDetailsDataAccessObject;
+import interface_adapter.SearchFilm.*;
+import interface_adapter.logout.LogoutController;
+import interface_adapter.movie_details.MovieDetailsController;
 import interface_adapter.movie_details.MovieDetailsPresenter;
 import interface_adapter.movie_details.MovieDetailsViewModel;
-import interface_adapter.SearchFilm.*;
 import interface_adapter.popular_movies.PopularMoviesController;
 import interface_adapter.popular_movies.PopularMoviesViewModel;
 import use_case.movie_details.MovieDetailsDataAccessInterface;
 import use_case.movie_details.MovieDetailsInputBoundary;
 import use_case.movie_details.MovieDetailsInteractor;
 import use_case.movie_details.MovieDetailsOutputBoundary;
-import interface_adapter.movie_details.MovieDetailsController;
 import view.components.FilterPanel;
 import view.components.Flyweight.PosterFlyweightFactory;
 import view.components.HeaderPanel;
-import view.MovieDetailsView;
-import use_case.movie_details.*;
-import interface_adapter.movie_details.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,10 +23,15 @@ public class LoggedInView extends JPanel {
 
     private SearchFilmController searchFilmController;
     private SearchFilmViewModel searchFilmViewModel;
+
     private PopularMoviesController popularMoviesController;
     private PopularMoviesViewModel popularMoviesViewModel;
+
     private MovieDetailsController movieDetailsController;
     private MovieDetailsView movieDetailsView;
+
+    private LogoutController logoutController;
+
     private ScreenSwitchListener listener;
 
     private JPanel moviePanel;
@@ -46,6 +49,15 @@ public class LoggedInView extends JPanel {
         headerPanel.setBookAction(() -> {
             if (listener != null) listener.onSwitchScreen("Booking");
         });
+
+        headerPanel.setLogoutAction(() -> {
+            if (logoutController != null) {
+                logoutController.execute();
+            } else {
+                JOptionPane.showMessageDialog(this, "Logout is not wired yet.");
+            }
+        });
+
         headerPanel.setMaximumSize(new Dimension(800, 50));
 
         filterPanel = new FilterPanel();
@@ -68,24 +80,29 @@ public class LoggedInView extends JPanel {
     }
 
     private void setupFilterPanelHandlers() {
-
         filterPanel.setOnSearch(query -> {
-            if (query.isEmpty()) {
+            if (query == null || query.trim().isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Please enter a film name.");
                 return;
             }
-            searchFilmController.execute(query);
+            if (searchFilmController == null) {
+                JOptionPane.showMessageDialog(this, "Search is not wired yet.");
+                return;
+            }
+            searchFilmController.execute(query.trim());
         });
 
         filterPanel.setOnFilter(() -> {
-            if (listener != null) {
-                listener.onSwitchScreen("Filtered");
-            }
+            if (listener != null) listener.onSwitchScreen("Filtered");
         });
     }
 
     public void setScreenSwitchListener(ScreenSwitchListener listener) {
         this.listener = listener;
+    }
+
+    public void setLogoutDependencies(LogoutController controller) {
+        this.logoutController = controller;
     }
 
     public void setSearchDependencies(SearchFilmController controller, SearchFilmViewModel viewModel) {
@@ -98,12 +115,16 @@ public class LoggedInView extends JPanel {
 
             SwingUtilities.invokeLater(() -> {
                 if (state.getErrorMessage() != null) {
-                    JOptionPane.showMessageDialog(this, state.getErrorMessage(), "Search Error",
-                            JOptionPane.ERROR_MESSAGE);
-
+                    JOptionPane.showMessageDialog(
+                            this,
+                            state.getErrorMessage(),
+                            "Search Error",
+                            JOptionPane.ERROR_MESSAGE
+                    );
                 } else if (state.getFilmId() != -1) {
                     int movieId = state.getFilmId();
                     movieDetailsController.showMovieDetails(movieId);
+
                     JFrame movieFrame = new JFrame("Movie Details");
                     movieFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                     movieFrame.setSize(800, 900);
@@ -127,7 +148,10 @@ public class LoggedInView extends JPanel {
                 String msg = popularMoviesViewModel.getErrorMessage();
                 if (msg != null) {
                     SwingUtilities.invokeLater(() ->
-                            JOptionPane.showMessageDialog(this, msg, "Popular Movies Error",
+                            JOptionPane.showMessageDialog(
+                                    this,
+                                    msg,
+                                    "Popular Movies Error",
                                     JOptionPane.ERROR_MESSAGE
                             )
                     );
@@ -145,6 +169,7 @@ public class LoggedInView extends JPanel {
         MovieDetailsOutputBoundary movieDetailsPresenter = new MovieDetailsPresenter(movieDetailsViewModel);
         MovieDetailsDataAccessInterface api = new MovieDetailsDataAccessObject();
         MovieDetailsInputBoundary movieDetailsInteractor = new MovieDetailsInteractor(api, movieDetailsPresenter);
+
         movieDetailsController = new MovieDetailsController(movieDetailsInteractor);
         movieDetailsView = new MovieDetailsView(movieDetailsViewModel);
     }
