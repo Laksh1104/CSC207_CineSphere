@@ -16,6 +16,7 @@ import interface_adapter.logout.LogoutPresenter;
 
 import use_case.login.LoginInputBoundary;
 import use_case.login.LoginInteractor;
+import use_case.login.LoginUserDataAccessInterface;
 
 import use_case.signup.SignupInputBoundary;
 import use_case.signup.SignupInteractor;
@@ -41,11 +42,13 @@ public class AppBuilder {
         FileUserDataAccessObject userDAO =
                 new FileUserDataAccessObject("users.txt", userFactory);
 
+        // For clarity on the type
+        LoginUserDataAccessInterface loginGateway = userDAO;
+
         // ==== LOGIN WIRES ====
         LoginViewModel loginViewModel = new LoginViewModel();
-        // IMPORTANT: order is (LoginViewModel, LoginUserDataAccessInterface)
         LoginPresenter loginPresenter = new LoginPresenter(loginViewModel);
-        LoginInputBoundary loginInteractor = new LoginInteractor(userDAO, loginPresenter);
+        LoginInputBoundary loginInteractor = new LoginInteractor(loginGateway, loginPresenter);
         LoginController loginController = new LoginController(loginInteractor);
 
         // ==== SIGNUP WIRES ====
@@ -64,16 +67,13 @@ public class AppBuilder {
         );
 
         SwingUtilities.invokeLater(() -> {
-            MainAppFrame app = new MainAppFrame(loginView);
+            MainAppFrame app = new MainAppFrame(loginView, loginGateway);
 
             // allow login presenter to switch cards (Login -> Home)
             loginPresenter.setScreenSwitchListener(app);
 
-            // ==== LOGOUT WIRES (switch back to Login card) ====
-            // If IntelliJ complains here, your import is wrong OR you have a duplicate interface.
-            // This explicit cast forces the correct interface type.
-            LogoutUserDataAccessInterface logoutGateway = (LogoutUserDataAccessInterface) userDAO;
-
+            // ==== LOGOUT WIRES ====
+            LogoutUserDataAccessInterface logoutGateway = userDAO;
             LogoutOutputBoundary logoutPresenter = new LogoutPresenter(app);
             LogoutInputBoundary logoutInteractor = new LogoutInteractor(logoutGateway, logoutPresenter);
             LogoutController logoutController = new LogoutController(logoutInteractor);

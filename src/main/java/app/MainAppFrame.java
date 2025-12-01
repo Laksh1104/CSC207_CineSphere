@@ -3,9 +3,11 @@ package app;
 import data_access.BookingMovieDataAccessObject;
 import data_access.CinemaDataAccessObject;
 import data_access.InMemoryTicketDataAccessObject;
+import data_access.PersistentTicketDataAccessObject;
 import data_access.PopularMoviesDataAccessObject;
 import data_access.SearchFilmDataAccessObject;
 import data_access.TmdbMovieDataAccessObject;
+import data_access.UserProfileJsonDataAccessObject;
 import entity.CinemaFactory;
 import entity.MovieFactory;
 import interface_adapter.BookMovie.BookMovieController;
@@ -22,6 +24,7 @@ import interface_adapter.logout.LogoutController;
 import interface_adapter.popular_movies.PopularMoviesController;
 import interface_adapter.popular_movies.PopularMoviesPresenter;
 import interface_adapter.popular_movies.PopularMoviesViewModel;
+import interface_adapter.watchlist.WatchlistController;
 import use_case.book_movie.BookMovieInputBoundary;
 import use_case.book_movie.BookMovieInteractor;
 import use_case.book_movie.BookMovieOutputBoundary;
@@ -38,20 +41,20 @@ import use_case.search_film.SearchFilmDataAccessInterface;
 import use_case.search_film.SearchFilmInputBoundary;
 import use_case.search_film.SearchFilmInteractor;
 import use_case.search_film.SearchFilmOutputBoundary;
+import use_case.login.LoginUserDataAccessInterface;
+import use_case.watchlist.WatchlistDataAccessInterface;
 import view.BookingView;
 import view.FilteredView;
 import view.LoggedInView;
 import view.LoginView;
 import view.ScreenSwitchListener;
+import view.WatchlistView;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class MainAppFrame extends JFrame implements ScreenSwitchListener {
 
-    // Use the correct credential for each DAO:
-    // - Filter (discover/search) uses v3 api_key query param
-    // - Popular uses Bearer auth (your PopularMovies DAO expects it)
     private static final String TMDB_V3_API_KEY = "6289d1f5d1b8e2d2a78614fc9e48742b";
     private static final String TMDB_BEARER_TOKEN =  "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJmYjQ3NTdjZWNmMTdjNDQyMDcyM2M0NTdhYWNkNjFlNiIsIm5iZiI6MTc2Mjc5NDA2My4xNjMsInN1YiI6IjY5MTIxYTRmMGZmMTVkYTY4NDlhYzQ3YyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.bUPbgDcky9nR63moe3ftxhKkuEQPJ-bB0F5qmL2AUfo";
 
@@ -69,12 +72,12 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
     private final LoggedInView loggedInView;
     private final FilteredView filteredView;
     private final BookingView bookingView;
-    private final JPanel watchlistView;
+    private final WatchlistView watchlistView;
 
     // set later by AppBuilder
     private LogoutController logoutController;
 
-    public MainAppFrame(LoginView loginView) {
+    public MainAppFrame(LoginView loginView, LoginUserDataAccessInterface userDAO) {
         super("CineSphere Application");
 
         this.loginView = loginView;
@@ -87,6 +90,13 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
         this.cards = new JPanel(cardLayout);
         setContentPane(cards);
 
+        // Shared JSON profile DAO for watchlist + bookings
+        UserProfileJsonDataAccessObject userProfileDAO =
+                new UserProfileJsonDataAccessObject("user_profiles.json");
+        WatchlistDataAccessInterface watchlistDAO = userProfileDAO;
+        WatchlistController watchlistController =
+                new WatchlistController(watchlistDAO, userDAO);
+
         // ===== ViewModels =====
         BookMovieViewModel bookingVM = new BookMovieViewModel();
         PopularMoviesViewModel popularVM = new PopularMoviesViewModel();
@@ -98,7 +108,13 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
         CinemaDataAccessObject cinemaDAO =
                 new CinemaDataAccessObject(new CinemaFactory());
         BookingQuery query = new BookingQuery(movieDAO, cinemaDAO);
-        BookTicketDataAccessInterface ticketDAO = new InMemoryTicketDataAccessObject();
+
+        BookTicketDataAccessInterface ticketDAO =
+                new PersistentTicketDataAccessObject(
+                        new InMemoryTicketDataAccessObject(),
+                        userDAO,
+                        userProfileDAO
+                );
 
         // ===== HOME VIEW (LoggedInView) =====
         loggedInView = new LoggedInView();
@@ -123,7 +139,7 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
         loggedInView.setSearchDependencies(searchController, searchVM);
 
         // Movie details wiring (used when clicking posters / search results)
-        loggedInView.setMovieDetailsDependencies();
+        loggedInView.setMovieDetailsDependencies(watchlistController);
 
         // ===== BOOKING VIEW =====
         bookingView = new BookingView(bookingVM, query);
@@ -146,12 +162,12 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
         FilterMoviesController filterController =
                 new FilterMoviesController(filterInteractor);
 
-        filteredView = new FilteredView(filterController, filterVM);
+        filteredView = new FilteredView(filterController, filterVM, watchlistController);
         filteredView.setScreenSwitchListener(this);
 
-        // ===== WATCHLIST (placeholder) =====
-        watchlistView = new JPanel();
-        watchlistView.add(new JLabel("Watchlist View Placeholder"));
+        // ===== WATCHLIST VIEW =====
+        watchlistView = new WatchlistView(watchlistController);
+        watchlistView.setScreenSwitchListener(this);
 
         // ===== Cards =====
         cards.add(loginView, LOGIN_VIEW);
@@ -170,7 +186,6 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
 
     /**
      * AppBuilder calls this after constructing the frame.
-     * We then pass it into whichever views support logout wiring.
      */
     public void setLogoutController(LogoutController logoutController) {
         this.logoutController = logoutController;
@@ -180,7 +195,6 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
     private void wireLogoutIfAvailable() {
         if (logoutController == null) return;
 
-        // Use reflection so this file compiles even if a view doesn’t have the method yet.
         wireLogoutToViewIfMethodExists(loggedInView);
         wireLogoutToViewIfMethodExists(filteredView);
         wireLogoutToViewIfMethodExists(bookingView);
@@ -203,7 +217,7 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
                     .getMethod("setLogoutController", LogoutController.class)
                     .invoke(view, logoutController);
         } catch (Exception ignored) {
-            // no-op: that view simply doesn't support logout wiring
+            // no-op
         }
     }
 
@@ -212,12 +226,15 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
         if (screenName == null) return;
 
         if (LOGIN_VIEW.equals(screenName)) {
-            // Clear fields when returning to login (so username/password are empty after logout)
             try {
                 loginView.clearFields();
             } catch (Exception ignored) {
-                // If you haven’t added clearFields() yet, add it to LoginView.
             }
+        }
+
+        if (WATCHLIST_VIEW.equals(screenName)) {
+            // refresh watchlist each time it is opened
+            watchlistView.refresh();
         }
 
         cardLayout.show(cards, screenName);
