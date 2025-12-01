@@ -22,7 +22,7 @@ public class SearchFilmDataAccessObject implements SearchFilmDataAccessInterface
             }
 
             Request request = (new Request.Builder()).url(url).addHeader("accept", "application/json").addHeader("Authorization", API_TOKEN).build();
-            try (Response response = this.client.newCall(request).execute();) {
+            try (Response response = this.client.newCall(request).execute()) {
                 ResponseBody body = response.body();
                 if (body == null) return -1;
                 String responseBody = body.string();
@@ -34,7 +34,7 @@ public class SearchFilmDataAccessObject implements SearchFilmDataAccessInterface
 
                     JSONObject json = new JSONObject(responseBody);
                     JSONArray results = json.getJSONArray("results");
-                    if (results.length() == 0) {
+                    if (results.isEmpty()) {
                         return -1;
                     }
 

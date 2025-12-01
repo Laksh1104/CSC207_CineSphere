@@ -19,38 +19,39 @@ public class WatchlistController {
         this.userDAO = userDAO;
     }
 
-    public boolean isInWatchlist(String posterUrl) {
+    // ----------- Helpers -----------
+
+    /** Returns username if valid, otherwise null */
+    private String validUsername() {
         String username = userDAO.getCurrentUsername();
-        if (username == null || username.isBlank()
-                || posterUrl == null || posterUrl.isBlank()) {
-            return false;
-        }
-        return watchlistDAO.isInWatchlist(username, posterUrl);
+        return (username == null || username.isBlank()) ? null : username;
+    }
+
+    /** Checks if username or poster URL is invalid */
+    private boolean invalidInput(String posterUrl) {
+        return validUsername() == null ||
+                posterUrl == null || posterUrl.isBlank();
+    }
+
+    // ----------- Controller Actions -----------
+
+    public boolean isInWatchlist(String posterUrl) {
+        if (invalidInput(posterUrl)) return false;
+        return watchlistDAO.isInWatchlist(validUsername(), posterUrl);
     }
 
     public void addToWatchlist(String posterUrl) {
-        String username = userDAO.getCurrentUsername();
-        if (username == null || username.isBlank()
-                || posterUrl == null || posterUrl.isBlank()) {
-            return;
-        }
-        watchlistDAO.addToWatchlist(username, posterUrl);
+        if (invalidInput(posterUrl)) return;
+        watchlistDAO.addToWatchlist(validUsername(), posterUrl);
     }
 
     public void removeFromWatchlist(String posterUrl) {
-        String username = userDAO.getCurrentUsername();
-        if (username == null || username.isBlank()
-                || posterUrl == null || posterUrl.isBlank()) {
-            return;
-        }
-        watchlistDAO.removeFromWatchlist(username, posterUrl);
+        if (invalidInput(posterUrl)) return;
+        watchlistDAO.removeFromWatchlist(validUsername(), posterUrl);
     }
 
     public List<String> getWatchlistForCurrentUser() {
-        String username = userDAO.getCurrentUsername();
-        if (username == null || username.isBlank()) {
-            return List.of();
-        }
-        return watchlistDAO.getWatchlist(username);
+        String username = validUsername();
+        return (username == null) ? List.of() : watchlistDAO.getWatchlist(username);
     }
 }

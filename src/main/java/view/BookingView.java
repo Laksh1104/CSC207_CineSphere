@@ -14,6 +14,7 @@ import java.util.List;
 import com.toedter.calendar.JDateChooser;
 import interface_adapter.BookingQuery;
 import interface_adapter.logout.LogoutController;
+import org.jetbrains.annotations.NotNull;
 import view.components.HeaderPanel;
 import view.components.SeatSelectionPanel;
 
@@ -132,21 +133,7 @@ public class BookingView extends JPanel implements PropertyChangeListener {
         selectionPanel.add(labeled("Movie:", movieDropdown));
 
         // Date Picker
-        JDateChooser dateChooser = new JDateChooser();
-        dateChooser.setPreferredSize(new Dimension(150, HEIGHT));
-        dateChooser.setDateFormatString("yyyy-MM-dd");
-        dateChooser.setMinSelectableDate(new Date());
-        dateChooser.setDate(new Date());
-
-        dateChooser.addPropertyChangeListener("date", evt -> {
-            clearSeatGrid();
-
-            Date date = dateChooser.getDate();
-            if (date == null) return;
-
-            selectedDate = new SimpleDateFormat("yyyy-MM-dd").format(date);
-            if (selectedMovieId != null) populateCinemas(selectedMovieId, selectedDate);
-        });
+        JDateChooser dateChooser = getJDateChooser();
 
         selectionPanel.add(labeled("Date:", dateChooser));
 
@@ -184,6 +171,26 @@ public class BookingView extends JPanel implements PropertyChangeListener {
         selectionPanel.add(select);
 
         add(selectionPanel);
+    }
+
+    @NotNull
+    private JDateChooser getJDateChooser() {
+        JDateChooser dateChooser = new JDateChooser();
+        dateChooser.setPreferredSize(new Dimension(150, HEIGHT));
+        dateChooser.setDateFormatString("yyyy-MM-dd");
+        dateChooser.setMinSelectableDate(new Date());
+        dateChooser.setDate(new Date());
+
+        dateChooser.addPropertyChangeListener("date", evt -> {
+            clearSeatGrid();
+
+            Date date = dateChooser.getDate();
+            if (date == null) return;
+
+            selectedDate = new SimpleDateFormat("yyyy-MM-dd").format(date);
+            if (selectedMovieId != null) populateCinemas(selectedMovieId, selectedDate);
+        });
+        return dateChooser;
     }
 
     private JPanel labeled(String text, JComponent component) {

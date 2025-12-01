@@ -1,9 +1,6 @@
 package interface_adapter.BookMovie;
 
-import entity.Cinema;
-import entity.Movie;
 import entity.Seat;
-import entity.ShowTime;
 import use_case.book_movie.BookMovieInputBoundary;
 import use_case.book_movie.BookMovieInputData;
 

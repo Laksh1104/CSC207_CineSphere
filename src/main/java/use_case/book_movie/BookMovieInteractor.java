@@ -1,91 +1,107 @@
 package use_case.book_movie;
 
 import entity.*;
-
 import java.util.List;
 import java.util.Set;
 
-/**
- * Interactor for the Book Movie use case.
- *
- * <p>This class implements the application-specific business rules for booking a movie.
- * It validates input, checks seat availability, calculates cost, creates a MovieTicket,
- * persists the booking, and passes formatted output to the presenter.
- */
-
 public class BookMovieInteractor implements BookMovieInputBoundary {
 
-    private final BookTicketDataAccessInterface ticketDataAccessObject;
-    private final BookMovieOutputBoundary bookingPresenter;
+    private final BookTicketDataAccessInterface ticketDAO;
+    private final BookMovieOutputBoundary presenter;
 
     private static final int COST_PER_SEAT = 20;
 
-    public BookMovieInteractor(BookTicketDataAccessInterface ticketDAO, BookMovieOutputBoundary presenter) {
-        this.ticketDataAccessObject = ticketDAO;
-        this.bookingPresenter = presenter;
+    public BookMovieInteractor(BookTicketDataAccessInterface ticketDAO,
+                               BookMovieOutputBoundary presenter) {
+        this.ticketDAO = ticketDAO;
+        this.presenter = presenter;
     }
 
     @Override
-    public void execute(BookMovieInputData inputData) {
+    public void execute(BookMovieInputData in) {
 
-       String movieName = inputData.getMovieName();
-       String cinemaName = inputData.getCinemaName();
-        String date = inputData.getDate();
-        String startTime = inputData.getStartTime();
-        String endTime = inputData.getEndTime();
-        Set<String> seats = inputData.getSeats();
+        // Extract fields
+        String movie = in.getMovieName();
+        String cinema = in.getCinemaName();
+        String date = in.getDate();
+        String start = in.getStartTime();
+        String end = in.getEndTime();
+        Set<String> seats = in.getSeats();
 
-        // Missing fields
-        if (isNullOrBlank(movieName) || isNullOrBlank(cinemaName) || isNullOrBlank(date) || isNullOrBlank(startTime) || isNullOrBlank(endTime)) {
-            bookingPresenter.prepareFailView("Some booking details are missing.");
+        // Validate basic input
+        String error = validateInputs(movie, cinema, date, start, end, seats);
+        if (error != null) {
+            presenter.prepareFailView(error);
             return;
         }
 
-        // No seats selected
-        if (seats.isEmpty()) {
-            bookingPresenter.prepareFailView("No seats were selected.");
+        // Validate seat availability
+        error = validateSeatAvailability(movie, cinema, date, start, end, seats);
+        if (error != null) {
+            presenter.prepareFailView(error);
             return;
         }
 
-        // Check if seats are already booked
-        Set<String> alreadyBooked = ticketDataAccessObject.getBookedSeats(
-                movieName, cinemaName, date, startTime, endTime
+        // Calculate cost
+        int totalCost = seats.size() * COST_PER_SEAT;
+
+        // Create and save ticket
+        MovieTicket ticket = new MovieTicket(movie, cinema, date, start, end, seats, totalCost);
+        ticketDAO.saveBooking(ticket);
+
+        // Send success response
+        BookMovieOutputData out = new BookMovieOutputData(
+                movie, cinema, date, start, end, seats, totalCost
         );
+        presenter.prepareSuccessView(out);
+    }
+
+    // ------------------ Validation Helpers ------------------
+
+    private String validateInputs(String movie, String cinema, String date,
+                                  String start, String end, Set<String> seats) {
+
+        if (isBlank(movie) || isBlank(cinema) || isBlank(date)
+                || isBlank(start) || isBlank(end)) {
+            return "Some booking details are missing.";
+        }
+
+        if (seats == null || seats.isEmpty()) {
+            return "No seats were selected.";
+        }
+
+        return null;
+    }
+
+    private String validateSeatAvailability(String movie, String cinema, String date,
+                                            String start, String end, Set<String> seats) {
+
+        Set<String> booked = ticketDAO.getBookedSeats(movie, cinema, date, start, end);
 
         for (String seat : seats) {
-            if (alreadyBooked.contains(seat)) {
-                bookingPresenter.prepareFailView("Seat " + seat + " is already booked.");
-                return;
+            if (booked.contains(seat)) {
+                return "Seat " + seat + " is already booked.";
             }
         }
 
-        int seatsCount = seats.size();
-        // Compute cost
-        int totalCost = seatsCount * COST_PER_SEAT;
-
-        // Create a movie ticket
-        MovieTicket movieTicket = new MovieTicket(movieName, cinemaName, date, startTime, endTime, seats, totalCost);
-
-        // Save booking
-        ticketDataAccessObject.saveBooking(movieTicket);
-
-        // Build Output Data
-        BookMovieOutputData outputData = new BookMovieOutputData(movieName, cinemaName, date, startTime, endTime, seats, totalCost);
-
-        bookingPresenter.prepareSuccessView(outputData);
+        return null;
     }
 
-    @Override
-    public Set<String> getBookedSeats(String movieName, String cinemaName, String date, String startTime, String endTime) {
-        return ticketDataAccessObject.getBookedSeats(movieName, cinemaName, date, startTime, endTime);
-    }
-
-    @Override
-    public List<Seat> loadSeatLayout(String movieName, String cinemaName, String date, String startTime, String endTime) {
-        return ticketDataAccessObject.getSeatLayout(movieName, cinemaName, date, startTime, endTime);
-    }
-
-    private boolean isNullOrBlank(String s) {
+    private boolean isBlank(String s) {
         return s == null || s.isBlank();
+    }
+
+    // ------------------ Passthrough Methods ------------------
+
+    @Override
+    public Set<String> getBookedSeats(String movie, String cinema, String date,
+                                      String start, String end) {
+        return ticketDAO.getBookedSeats(movie, cinema, date, start, end);
+    }
+
+    @Override
+    public List<Seat> loadSeatLayout(String movie, String cinema, String date,
+                                     String start, String end) {
+        return ticketDAO.getSeatLayout(movie, cinema, date, start, end);
     }
 }
