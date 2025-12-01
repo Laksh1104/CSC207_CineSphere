@@ -8,6 +8,7 @@ import interface_adapter.movie_details.MovieDetailsPresenter;
 import interface_adapter.movie_details.MovieDetailsViewModel;
 import interface_adapter.popular_movies.PopularMoviesController;
 import interface_adapter.popular_movies.PopularMoviesViewModel;
+import interface_adapter.watchlist.WatchlistController;
 import use_case.movie_details.MovieDetailsDataAccessInterface;
 import use_case.movie_details.MovieDetailsInputBoundary;
 import use_case.movie_details.MovieDetailsInteractor;
@@ -46,10 +47,12 @@ public class LoggedInView extends JPanel {
         headerPanel.setHomeAction(() -> {
             if (listener != null) listener.onSwitchScreen("Home");
         });
+        headerPanel.setWatchlistAction(() -> {
+            if (listener != null) listener.onSwitchScreen("Watchlist");
+        });
         headerPanel.setBookAction(() -> {
             if (listener != null) listener.onSwitchScreen("Booking");
         });
-
         headerPanel.setLogoutAction(() -> {
             if (logoutController != null) {
                 logoutController.execute();
@@ -164,14 +167,14 @@ public class LoggedInView extends JPanel {
         }
     }
 
-    public void setMovieDetailsDependencies() {
+    public void setMovieDetailsDependencies(WatchlistController watchlistController) {
         MovieDetailsViewModel movieDetailsViewModel = new MovieDetailsViewModel();
         MovieDetailsOutputBoundary movieDetailsPresenter = new MovieDetailsPresenter(movieDetailsViewModel);
         MovieDetailsDataAccessInterface api = new MovieDetailsDataAccessObject();
         MovieDetailsInputBoundary movieDetailsInteractor = new MovieDetailsInteractor(api, movieDetailsPresenter);
 
         movieDetailsController = new MovieDetailsController(movieDetailsInteractor);
-        movieDetailsView = new MovieDetailsView(movieDetailsViewModel);
+        movieDetailsView = new MovieDetailsView(movieDetailsViewModel, watchlistController);
     }
 
     private JScrollPane buildPosterScrollPane() {

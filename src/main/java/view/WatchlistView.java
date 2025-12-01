@@ -1,124 +1,182 @@
 package view;
 
+import interface_adapter.logout.LogoutController;
+import interface_adapter.movie_details.MovieDetailsState;
+import interface_adapter.movie_details.MovieDetailsViewModel;
+import interface_adapter.watchlist.WatchlistController;
+import view.components.Flyweight.PosterFlyweightFactory;
+import view.components.HeaderPanel;
+
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.net.URL;
+import java.util.Collections;
+import java.util.List;
 
+public class WatchlistView extends JPanel {
 
-import interface_adapter.watchlist.watchlistController;
-import use_case.watchlist.WatchlistInteractor;
-import entity.Watchlist;
-import use_case.watchlist.WatchlistOutputBoundary;
+    private final WatchlistController watchlistController;
 
-import javax.swing.*;
+    private ScreenSwitchListener listener;
+    private LogoutController logoutController;
 
-public class WatchlistView {
-    private final watchlistController controller = new watchlistController();
-    private final WatchlistInteractor interactor = new WatchlistInteractor();
+    private static final Color COLOR = new Color(255, 255, 224);
 
-    private void refresh(JPanel panel) {
-        panel.removeAll();
+    private JPanel gridPanel;
+    private JLabel emptyLabel;
 
-        for (String movieUrl : controller.loadPage()) {
-            try {
-                ImageIcon icon = new ImageIcon(new URL(movieUrl));
-                JLabel label = new JLabel(icon);
-                panel.add(label);
-            } catch (Exception ignored) {}
-        }
+    public WatchlistView(WatchlistController watchlistController) {
+        this.watchlistController = watchlistController;
 
+        setBackground(COLOR);
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+
+        add(Box.createRigidArea(new Dimension(0, 20)));
+
+        HeaderPanel headerPanel = new HeaderPanel();
+        headerPanel.setHomeAction(() -> {
+            if (listener != null) listener.onSwitchScreen("Home");
+        });
+        headerPanel.setWatchlistAction(() -> {
+            if (listener != null) listener.onSwitchScreen("Watchlist");
+        });
+        headerPanel.setBookAction(() -> {
+            if (listener != null) listener.onSwitchScreen("Booking");
+        });
+        headerPanel.setLogoutAction(() -> {
+            if (logoutController != null) logoutController.execute();
+        });
+        headerPanel.setMaximumSize(new Dimension(900, 50));
+        add(headerPanel);
+
+        add(Box.createRigidArea(new Dimension(0, 20)));
+
+        JLabel title = new JLabel("Your Watchlist");
+        title.setFont(new Font("Open Sans", Font.BOLD, 16));
+        title.setAlignmentX(Component.CENTER_ALIGNMENT);
+        add(title);
+
+        add(Box.createRigidArea(new Dimension(0, 20)));
+
+        gridPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+        gridPanel.setBackground(COLOR);
+
+        emptyLabel = new JLabel("You have no movies in your watchlist yet.");
+        emptyLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+        JScrollPane scrollPane = new JScrollPane(
+                gridPanel,
+                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
+        );
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setPreferredSize(new Dimension(900, 500));
+        scrollPane.setMaximumSize(new Dimension(900, 500));
+
+        add(scrollPane);
     }
 
-    public WatchlistView() {
+    public void setScreenSwitchListener(ScreenSwitchListener listener) {
+        this.listener = listener;
+    }
 
-        JFrame frame = new JFrame("Watchlist");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(900, 800);
+    public void setLogoutDependencies(LogoutController logoutController) {
+        this.logoutController = logoutController;
+    }
 
-            JPanel backgroundPanel = new JPanel();
-            backgroundPanel.setBackground(new Color(255, 255, 224));
-            backgroundPanel.setLayout(new BoxLayout(backgroundPanel, BoxLayout.Y_AXIS));
+    /**
+     * Reloads the current user's watchlist posters from storage.
+     */
+    public void refresh() {
+        gridPanel.removeAll();
 
-            JLabel title = new JLabel("CineSphere", SwingConstants.CENTER);
-            title.setForeground(Color.BLACK);
-            title.setFont(new Font("Arial", Font.BOLD, 20));
-
-            JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
-            buttonPanel.setBackground(Color.WHITE);
-            buttonPanel.setPreferredSize(new Dimension(800, 50));
-            buttonPanel.setMaximumSize(new Dimension(800, 50));
-            buttonPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-            JLabel watchlistlabel = new JLabel("Watchlist");
-            JButton bookButton = new JButton("Book");
-            JButton logoutButton = new JButton("Logout");
-            JButton homeButton = new JButton("Home");
-            buttonPanel.add(title);
-            buttonPanel.add(homeButton);
-            buttonPanel.add(watchlistlabel);
-            buttonPanel.add(bookButton);
-            buttonPanel.add(logoutButton);
-
-            JPanel watchlistedfilms = new JPanel(new FlowLayout(FlowLayout.CENTER));
-            watchlistedfilms.setLayout(new GridLayout(10, 4, 10, 10));
-            watchlistedfilms.setBackground(new Color(255, 255, 224));
-            watchlistedfilms.setPreferredSize(new Dimension(300, 30));
-            watchlistedfilms.setMaximumSize(new Dimension(300, 30));
-            watchlistedfilms.setAlignmentX(Component.CENTER_ALIGNMENT);
-            JLabel watchlistFilmTitle = new JLabel("Your Watchlist: ");
-            watchlistFilmTitle.setFont(new Font("Open Sans", Font.BOLD, 15));
-            watchlistedfilms.add(watchlistFilmTitle);
-
-            JPanel moviePanel = new JPanel();
-            moviePanel.setLayout(new FlowLayout(FlowLayout.LEFT, 15, 10));
-            moviePanel.setBackground(new Color(255, 255, 224));
-
-            for (String movie : interactor.loadPage())
-                try {
-                    ImageIcon icon = new ImageIcon(new URL(movie));
-                    Image scaled = icon.getImage().getScaledInstance(200, 300, Image.SCALE_SMOOTH);
-                    JLabel movieLabel = new JLabel(new ImageIcon(scaled));
-                    moviePanel.add(movieLabel);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-        JPanel forwardbackbuttons = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
-        JButton forwardButton = new JButton("Forward");
-        JButton backButton = new JButton("Back");
-
-        forwardButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                    controller.next();
-                    refresh(moviePanel);
-                }
-        });
-
-        backButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                controller.previous();
-                refresh(moviePanel);
+        List<String> urls = watchlistController.getWatchlistForCurrentUser();
+        if (urls == null || urls.isEmpty()) {
+            gridPanel.add(emptyLabel);
+        } else {
+            for (String url : urls) {
+                gridPanel.add(createPosterButton(url));
             }
-        });
-
-
-        forwardbackbuttons.setLayout(new BoxLayout(forwardbackbuttons, BoxLayout.X_AXIS));
-        forwardbackbuttons.add(backButton);
-        forwardbackbuttons.add(forwardButton);
-
-
-        backgroundPanel.add(Box.createRigidArea(new Dimension(0, 20)));
-            backgroundPanel.add(buttonPanel);
-            backgroundPanel.add(Box.createRigidArea(new Dimension(0, 20)));
-            backgroundPanel.add(Box.createRigidArea(new Dimension(0, 30)));
-            backgroundPanel.add(watchlistedfilms);
-            backgroundPanel.add(moviePanel);
-            backgroundPanel.add(forwardbackbuttons);
-            frame.add(backgroundPanel);
-
-            frame.setVisible(true);
         }
+
+        gridPanel.revalidate();
+        gridPanel.repaint();
     }
+
+    /**
+     * Creates a clickable poster button for a watchlist item.
+     */
+    private JButton createPosterButton(String url) {
+        JButton button = new JButton();
+        button.setPreferredSize(new Dimension(200, 300));
+        button.setHorizontalAlignment(SwingConstants.CENTER);
+        button.setBorder(BorderFactory.createDashedBorder(Color.GRAY));
+        button.setContentAreaFilled(false);
+        button.setFocusPainted(false);
+
+        try {
+            ImageIcon icon = PosterFlyweightFactory.getPoster(
+                    url,
+                    200,
+                    300,
+                    () -> {
+                        button.setIcon(PosterFlyweightFactory.getPoster(url, 200, 300, null));
+                        button.revalidate();
+                        button.repaint();
+                    }
+            );
+            button.setIcon(icon);
+        } catch (Exception e) {
+            button.setText("No Image");
+        }
+
+        // On click, open the movie details popup for this poster URL.
+        button.addActionListener(e -> openDetailsForPoster(url));
+
+        return button;
+    }
+
+    /**
+     * Opens a MovieDetailsView for a poster that came from the watchlist.
+     * It uses the cached MovieDetailsState (with real title, rating, etc.)
+     * when available; otherwise it falls back to a minimal placeholder.
+     */
+    private void openDetailsForPoster(String posterUrl) {
+        MovieDetailsViewModel viewModel = new MovieDetailsViewModel();
+        MovieDetailsView detailsView = new MovieDetailsView(viewModel, watchlistController);
+
+        // When the user adds/removes this from their watchlist inside the details view,
+        // refresh this WatchlistView automatically.
+        detailsView.setOnWatchlistChanged(this::refresh);
+
+        MovieDetailsState cached = MovieDetailsView.getCachedState(posterUrl);
+
+        MovieDetailsState stateToShow;
+        if (cached != null) {
+            stateToShow = cached;
+        } else {
+            // Fallback: we never loaded this movie in this session,
+            // so show minimal info plus the poster.
+            stateToShow = new MovieDetailsState(
+                    "Watchlisted Movie",
+                    "",
+                    "",
+                    0.0,
+                    Collections.emptyList(),
+                    "",
+                    Collections.emptyList(),
+                    posterUrl
+            );
+        }
+
+        // Push the state into the view model – the MovieDetailsView is already
+        // listening for "state" changes and will render it.
+        viewModel.setState(stateToShow);
+
+        JFrame frame = new JFrame("Movie Details");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setSize(800, 900);
+        frame.setContentPane(detailsView);
+        frame.setLocationRelativeTo(this);
+        frame.setVisible(true);
+    }
+}

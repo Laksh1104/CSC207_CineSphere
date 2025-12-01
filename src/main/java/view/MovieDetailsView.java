@@ -10,7 +10,9 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
@@ -32,7 +34,7 @@ import javax.swing.border.EmptyBorder;
 
 import interface_adapter.movie_details.MovieDetailsState;
 import interface_adapter.movie_details.MovieDetailsViewModel;
-import interface_adapter.watchlist.watchlistController;
+import interface_adapter.watchlist.WatchlistController;
 import use_case.movie_details.MovieDetailsOutputData.MovieReviewData;
 
 /**
@@ -57,12 +59,25 @@ public class MovieDetailsView extends JPanel {
 
     private static final int MAX_REVIEWS = 2;
 
+    // Cache of full details keyed by poster URL so the watchlist can reopen
+    // the same movie with all its data.
+    private static final Map<String, MovieDetailsState> STATE_CACHE =
+            new ConcurrentHashMap<>();
+
+    private final WatchlistController watchlistController;
+
+    // Callback that WatchlistView can use to auto-refresh after add/remove
+    private Runnable onWatchlistChanged = () -> {};
+
     /**
      * Constructs a MovieDetailsView.
      *
-     * @param viewModel the view model for this view
+     * @param viewModel          the view model for this view
+     * @param watchlistController controller handling watchlist actions
      */
-    public MovieDetailsView(MovieDetailsViewModel viewModel) {
+    public MovieDetailsView(MovieDetailsViewModel viewModel,
+                            WatchlistController watchlistController) {
+        this.watchlistController = watchlistController;
         initializePanel();
 
         viewModel.addPropertyChangeListener(evt -> {
@@ -75,11 +90,32 @@ public class MovieDetailsView extends JPanel {
     }
 
     /**
+     * Allows callers (e.g., WatchlistView) to be notified when the watchlist
+     * changes from inside this view (add/remove).
+     */
+    public void setOnWatchlistChanged(Runnable callback) {
+        this.onWatchlistChanged = (callback == null) ? () -> {} : callback;
+    }
+
+    /**
+     * Returns a cached MovieDetailsState for the given poster URL, or null
+     * if we have never shown that movie's details in this session.
+     */
+    public static MovieDetailsState getCachedState(String posterUrl) {
+        if (posterUrl == null) return null;
+        return STATE_CACHE.get(posterUrl);
+    }
+
+    /**
      * Displays the movie details.
      *
      * @param state the movie details state
      */
     public void displayMovieDetails(MovieDetailsState state) {
+        if (state != null && state.posterUrl() != null && !state.posterUrl().isBlank()) {
+            STATE_CACHE.put(state.posterUrl(), state);
+        }
+
         buildUi(state);
         revalidate();
         repaint();
@@ -156,22 +192,34 @@ public class MovieDetailsView extends JPanel {
     }
 
     private JButton createWatchlistButton(MovieDetailsState state) {
-        boolean isWatchlisted = watchlistController.isInWatchlist(state.posterUrl());
-        final JButton watchlistBtn = new JButton("Add To Watchlist");
-        if (isWatchlisted) {
-            watchlistBtn.setText("Already Watchlisted");
-        }
-        watchlistBtn.addActionListener(Ae -> {
-            if (isWatchlisted) {
-                watchlistBtn.setText("Add to Watchlist");
-                watchlistController.removeFromWatchlist(state.posterUrl());
+        final String posterUrl = state.posterUrl();
+
+        // Mutable wrapper so we can flip inside the lambda
+        final boolean[] isWatchlisted = { watchlistController.isInWatchlist(posterUrl) };
+
+        final JButton watchlistBtn = new JButton();
+        updateWatchlistButtonText(watchlistBtn, isWatchlisted[0]);
+
+        watchlistBtn.addActionListener(e -> {
+            if (isWatchlisted[0]) {
+                // Currently in watchlist -> remove it
+                watchlistController.removeFromWatchlist(posterUrl);
+                isWatchlisted[0] = false;
+            } else {
+                // Not in watchlist -> add it
+                watchlistController.addToWatchlist(posterUrl);
+                isWatchlisted[0] = true;
             }
-            else {
-                watchlistBtn.setText("Already Watchlisted");
-                watchlistController.addToWatchlist(state.posterUrl());
-            }
+
+            updateWatchlistButtonText(watchlistBtn, isWatchlisted[0]);
+            onWatchlistChanged.run();
         });
+
         return watchlistBtn;
+    }
+
+    private void updateWatchlistButtonText(JButton button, boolean isWatchlisted) {
+        button.setText(isWatchlisted ? "Remove from Watchlist" : "Add to Watchlist");
     }
 
     private JComponent createBottomPanel(MovieDetailsState state) {
@@ -193,8 +241,8 @@ public class MovieDetailsView extends JPanel {
         desc.setBorder(BorderFactory.createEmptyBorder(GAP_SMALL, GAP_SMALL, GAP_SMALL, GAP_SMALL));
 
         final JScrollPane descScroll = new JScrollPane(desc,
-            ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
-            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
         descScroll.setBorder(BorderFactory.createTitledBorder("Description"));
         descScroll.setPreferredSize(new Dimension(DESCRIPTION_WIDTH, DESCRIPTION_HEIGHT));
@@ -212,8 +260,8 @@ public class MovieDetailsView extends JPanel {
         reviews.setBorder(BorderFactory.createEmptyBorder(GAP_SMALL, GAP_SMALL, GAP_SMALL, GAP_SMALL));
 
         final JScrollPane reviewsScroll = new JScrollPane(reviews,
-            ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
-            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
         reviewsScroll.setBorder(BorderFactory.createTitledBorder("Popular Reviews"));
         reviewsScroll.setPreferredSize(new Dimension(REVIEWS_WIDTH, REVIEWS_HEIGHT));
@@ -256,16 +304,13 @@ public class MovieDetailsView extends JPanel {
                     if (originalImage != null) {
                         final Image scaledImage = scaleImage(originalImage);
                         updatePosterLabel(posterLabel, scaledImage);
-                    }
-                    else {
+                    } else {
                         updatePosterLabelText(posterLabel, "Image not available");
                     }
-                }
-                else {
+                } else {
                     updatePosterLabelText(posterLabel, "No poster available");
                 }
-            }
-            catch (final IOException exception) {
+            } catch (final IOException exception) {
                 updatePosterLabelText(posterLabel, "Failed to load image");
             }
         });

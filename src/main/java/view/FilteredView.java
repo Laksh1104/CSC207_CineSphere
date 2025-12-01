@@ -8,6 +8,7 @@ import interface_adapter.logout.LogoutController;
 import interface_adapter.movie_details.MovieDetailsController;
 import interface_adapter.movie_details.MovieDetailsPresenter;
 import interface_adapter.movie_details.MovieDetailsViewModel;
+import interface_adapter.watchlist.WatchlistController;
 import use_case.movie_details.MovieDetailsDataAccessInterface;
 import use_case.movie_details.MovieDetailsInputBoundary;
 import use_case.movie_details.MovieDetailsInteractor;
@@ -50,13 +51,14 @@ public class FilteredView extends JPanel {
     private final Map<String, String> genreNameToId = new HashMap<>();
 
     public FilteredView(FilterMoviesController filterMoviesController,
-                        FilterMoviesViewModel filterMoviesViewModel) {
+                        FilterMoviesViewModel filterMoviesViewModel,
+                        WatchlistController watchlistController) {
         this.filterMoviesController = filterMoviesController;
         this.filterMoviesViewModel = filterMoviesViewModel;
 
         setLayout(new BorderLayout());
         buildUI();
-        setMovieDetailsDependencies();
+        setMovieDetailsDependencies(watchlistController);
 
         callFilter();
     }
@@ -80,6 +82,9 @@ public class FilteredView extends JPanel {
 
         headerPanel.setHomeAction(() -> {
             if (listener != null) listener.onSwitchScreen("Home");
+        });
+        headerPanel.setWatchlistAction(() -> {
+            if (listener != null) listener.onSwitchScreen("Watchlist");
         });
         headerPanel.setBookAction(() -> {
             if (listener != null) listener.onSwitchScreen("Booking");
@@ -335,12 +340,12 @@ public class FilteredView extends JPanel {
         return button;
     }
 
-    public void setMovieDetailsDependencies() {
+    public void setMovieDetailsDependencies(WatchlistController watchlistController) {
         movieDetailsViewModel = new MovieDetailsViewModel();
         MovieDetailsPresenter presenter = new MovieDetailsPresenter(movieDetailsViewModel);
         MovieDetailsDataAccessInterface api = new MovieDetailsDataAccessObject();
         MovieDetailsInputBoundary interactor = new MovieDetailsInteractor(api, presenter);
         movieDetailsController = new MovieDetailsController(interactor);
-        movieDetailsView = new MovieDetailsView(movieDetailsViewModel);
+        movieDetailsView = new MovieDetailsView(movieDetailsViewModel, watchlistController);
     }
 }
