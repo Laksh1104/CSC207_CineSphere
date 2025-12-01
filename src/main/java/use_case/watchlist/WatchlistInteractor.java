@@ -30,9 +30,7 @@ public class WatchlistInteractor implements WatchlistInputBoundary{
         int start = currentPage * moviesPerPage;
         int end = Math.min(start + moviesPerPage, all.size());
 
-        List<String> sublist = all.subList(start, end);
-
-        return sublist;
+        return all.subList(start, end);
     }
 
     public void forward() {

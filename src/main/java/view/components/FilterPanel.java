@@ -16,16 +16,12 @@ public class FilterPanel extends JPanel {
 
     public interface SearchHandler { void onSearch(String query); }
 
-    private final Color COLOR = new Color(255, 255, 224);
-
     private final JYearChooser yearChooser;
     private final RangeSlider ratingSlider; // 0..10 stored as 0..100
     private final JLabel ratingLabel;
     private final JComboBox<String> genreDropdown;
-    private final JButton filterButton;
 
     private final JTextField searchField;
-    private final JButton searchButton;
 
     private Runnable onFilter = () -> {};
     private SearchHandler onSearch = q -> {};
@@ -37,7 +33,9 @@ public class FilterPanel extends JPanel {
     public static final int MAX_YEAR = 2026;
 
     public FilterPanel() {
+        //CONVERTED COLOUR, FILTERBUTTON,SEARCH BUTTON TO LOCAL VARIABLES CAN CHANGE BACK IF NEEDED
         super(new GridBagLayout());
+        Color COLOR = new Color(255, 255, 224);
         setBackground(COLOR);
 
         setPreferredSize(new Dimension(0, 54));
@@ -82,7 +80,7 @@ public class FilterPanel extends JPanel {
         genreDropdown.setPreferredSize(new Dimension(130, 28));
         addAt(genreDropdown, gbc, x++);
 
-        filterButton = new JButton("Filter");
+        JButton filterButton = new JButton("Filter");
         filterButton.setPreferredSize(new Dimension(72, 28));
         filterButton.addActionListener(e -> onFilter.run());
         addAt(filterButton, gbc, x++);
@@ -96,7 +94,7 @@ public class FilterPanel extends JPanel {
         searchField.addActionListener(e -> triggerSearch());
         addAt(searchField, gbc, x++);
 
-        searchButton = new JButton("Search");
+        JButton searchButton = new JButton("Search");
         searchButton.setPreferredSize(new Dimension(82, 28));
         searchButton.addActionListener(e -> triggerSearch());
         addAt(searchButton, gbc, x++);

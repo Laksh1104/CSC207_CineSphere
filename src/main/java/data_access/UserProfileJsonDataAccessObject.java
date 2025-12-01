@@ -1,6 +1,7 @@
 package data_access;
 
 import entity.MovieTicket;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import use_case.bookings.BookingsDataAccessInterface;
@@ -11,7 +12,6 @@ import java.util.*;
 
 /**
  * Stores per-user watchlists and bookings in a JSON file.
- *
  * Structure:
  * {
  *   "username": {
@@ -165,13 +165,7 @@ public class UserProfileJsonDataAccessObject
             userObj.put("bookings", bookings);
         }
 
-        JSONObject bookingJson = new JSONObject();
-        bookingJson.put("movieName", ticket.getMovieName());
-        bookingJson.put("cinemaName", ticket.getCinemaName());
-        bookingJson.put("date", ticket.getDate());
-        bookingJson.put("startTime", ticket.getStartTime());
-        bookingJson.put("endTime", ticket.getEndTime());
-        bookingJson.put("cost", ticket.getCost());
+        JSONObject bookingJson = getJsonObject(ticket);
 
         JSONArray seatsArray = new JSONArray();
         for (String seat : ticket.getSeats()) {
@@ -183,6 +177,18 @@ public class UserProfileJsonDataAccessObject
         userObj.put("bookings", bookings);
         root.put(username, userObj);
         writeRoot(root);
+    }
+
+    @NotNull
+    private static JSONObject getJsonObject(MovieTicket ticket) {
+        JSONObject bookingJson = new JSONObject();
+        bookingJson.put("movieName", ticket.getMovieName());
+        bookingJson.put("cinemaName", ticket.getCinemaName());
+        bookingJson.put("date", ticket.getDate());
+        bookingJson.put("startTime", ticket.getStartTime());
+        bookingJson.put("endTime", ticket.getEndTime());
+        bookingJson.put("cost", ticket.getCost());
+        return bookingJson;
     }
 
     // ===== BookingsDataAccessInterface implementation =====

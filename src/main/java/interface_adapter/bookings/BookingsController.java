@@ -9,7 +9,6 @@ import java.util.List;
 
 /**
  * Simple controller to fetch bookings for the currently logged-in user.
- *
  * Mirrors the pattern used in WatchlistController.
  */
 public class BookingsController {

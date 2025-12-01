@@ -28,10 +28,8 @@ public class MovieDetailsInteractor implements MovieDetailsInputBoundary {
                 movieDetails.genres(),
                 movieDetails.description(),
                 movieDetails.reviews().stream()
-                    .map(review -> {
-                        return new MovieDetailsOutputData.MovieReviewData(
-                            review.author(), review.content());
-                    })
+                    .map(review -> new MovieDetailsOutputData.MovieReviewData(
+                        review.author(), review.content()))
                     .collect(Collectors.toList()),
                 movieDetails.posterUrl()
             );

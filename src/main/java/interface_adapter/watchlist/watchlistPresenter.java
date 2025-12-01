@@ -1,5 +1,4 @@
 package interface_adapter.watchlist;
-import use_case.watchlist.WatchlistInputBoundary;
 import use_case.watchlist.WatchlistOutputBoundary;
 import use_case.watchlist.WatchlistOutputData;
 

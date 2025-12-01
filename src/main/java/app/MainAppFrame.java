@@ -55,6 +55,8 @@ import view.WatchlistView;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Map;
 
 public class MainAppFrame extends JFrame implements ScreenSwitchListener {
 
@@ -166,12 +168,16 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
         BookMovieController bookMovieController = new BookMovieController(bookMovieInteractor);
         bookingView.setBookMovieController(bookMovieController);
 
-        // ===== FILTERED VIEW =====
+        // ===== FILTERED VIEW / FILTER USE CASE =====
         FilterMoviesViewModel filterVM = new FilterMoviesViewModel();
         FilterMoviesOutputBoundary filterPresenter = new FilterMoviesPresenter(filterVM);
 
         FilterMoviesDataAccessInterface filterDAO =
                 new TmdbMovieDataAccessObject(TMDB_V3_API_KEY);
+
+        // >>> NEW: preload genres into the Home screen's FilterPanel <<<
+        Map<String, Integer> initialGenres = filterDAO.getMovieGenres();
+        loggedInView.setGenres(new ArrayList<>(initialGenres.keySet()));
 
         FilterMoviesInputBoundary filterInteractor =
                 new FilterMoviesInteractor(filterDAO, filterPresenter);

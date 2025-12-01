@@ -11,6 +11,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class WatchlistView extends JPanel {
 
@@ -155,22 +156,18 @@ public class WatchlistView extends JPanel {
         MovieDetailsState cached = MovieDetailsView.getCachedState(posterUrl);
 
         MovieDetailsState stateToShow;
-        if (cached != null) {
-            stateToShow = cached;
-        } else {
-            // Fallback: we never loaded this movie in this session,
-            // so show minimal info plus the poster.
-            stateToShow = new MovieDetailsState(
-                    "Watchlisted Movie",
-                    "",
-                    "",
-                    0.0,
-                    Collections.emptyList(),
-                    "",
-                    Collections.emptyList(),
-                    posterUrl
-            );
-        }
+        // Fallback: we never loaded this movie in this session,
+        // so show minimal info plus the poster.
+        stateToShow = Objects.requireNonNullElseGet(cached, () -> new MovieDetailsState(
+                "Watchlisted Movie",
+                "",
+                "",
+                0.0,
+                Collections.emptyList(),
+                "",
+                Collections.emptyList(),
+                posterUrl
+        ));
 
         // Push the state into the view model – the MovieDetailsView is already
         // listening for "state" changes and will render it.

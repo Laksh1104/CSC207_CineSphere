@@ -13,7 +13,6 @@ public class SeatSelectionPanel extends JPanel {
     private static final Color UNAVAILABLE_COLOR = new Color(0xBDBDBD);
     private static final Color SELECTED_COLOR = new Color(0x2F7ED8);
     private static final Color BORDER_COLOR = new Color(0x999999);
-    private final Color COLOR = new Color(255, 255, 224);
 
     private final Set<String> selectedSeats = new HashSet<>();
     private final Map<String, JToggleButton> seatButtons = new HashMap<>();
@@ -21,6 +20,7 @@ public class SeatSelectionPanel extends JPanel {
 
     public SeatSelectionPanel(Set<String> unavailableSeats) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        Color COLOR = new Color(255, 255, 224);
         setBackground(COLOR);
 
         JPanel grid = createSeatGrid(unavailableSeats);
