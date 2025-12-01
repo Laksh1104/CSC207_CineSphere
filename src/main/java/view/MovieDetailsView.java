@@ -32,6 +32,7 @@ import javax.swing.border.EmptyBorder;
 
 import interface_adapter.movie_details.MovieDetailsState;
 import interface_adapter.movie_details.MovieDetailsViewModel;
+import interface_adapter.watchlist.watchlistController;
 import use_case.movie_details.MovieDetailsOutputData.MovieReviewData;
 
 /**
@@ -149,15 +150,26 @@ public class MovieDetailsView extends JPanel {
         facts.add(Box.createVerticalStrut(GAP_SMALL));
         facts.add(new JLabel("Genres: %s".formatted(String.join(", ", state.genres()))));
         facts.add(Box.createVerticalStrut(GAP_MEDIUM));
-        facts.add(createWatchlistButton());
+        facts.add(createWatchlistButton(state));
 
         return facts;
     }
 
-    private JButton createWatchlistButton() {
+    private JButton createWatchlistButton(MovieDetailsState state) {
+        boolean isWatchlisted = watchlistController.isInWatchlist(state.posterUrl());
         final JButton watchlistBtn = new JButton("Add To Watchlist");
-        watchlistBtn.addActionListener(actionEvent -> {
+        if (isWatchlisted) {
             watchlistBtn.setText("Already Watchlisted");
+        }
+        watchlistBtn.addActionListener(Ae -> {
+            if (isWatchlisted) {
+                watchlistBtn.setText("Add to Watchlist");
+                watchlistController.removeFromWatchlist(state.posterUrl());
+            }
+            else {
+                watchlistBtn.setText("Already Watchlisted");
+                watchlistController.addToWatchlist(state.posterUrl());
+            }
         });
         return watchlistBtn;
     }
