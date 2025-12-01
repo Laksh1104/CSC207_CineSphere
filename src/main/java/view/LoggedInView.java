@@ -53,6 +53,9 @@ public class LoggedInView extends JPanel {
         headerPanel.setBookAction(() -> {
             if (listener != null) listener.onSwitchScreen("Booking");
         });
+        headerPanel.setMyBookingsAction(() -> {
+            if (listener != null) listener.onSwitchScreen("MyBookings");
+        });
         headerPanel.setLogoutAction(() -> {
             if (logoutController != null) {
                 logoutController.execute();
@@ -60,6 +63,7 @@ public class LoggedInView extends JPanel {
                 JOptionPane.showMessageDialog(this, "Logout is not wired yet.");
             }
         });
+
 
         headerPanel.setMaximumSize(new Dimension(800, 50));
 

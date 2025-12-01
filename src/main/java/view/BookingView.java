@@ -71,10 +71,12 @@ public class BookingView extends JPanel implements PropertyChangeListener {
         headerPanel.setBookAction(() -> {
             if (listener != null) listener.onSwitchScreen("Booking");
         });
+        headerPanel.setMyBookingsAction(() -> {
+            if (listener != null) listener.onSwitchScreen("MyBookings");
+        });
         headerPanel.setLogoutAction(() -> {
             if (logoutController != null) logoutController.execute();
         });
-
         headerPanel.setMaximumSize(new Dimension(900, 50));
         add(headerPanel);
 
