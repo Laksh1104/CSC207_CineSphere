@@ -2,12 +2,14 @@ package view.components;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionListener;
 
 public class HeaderPanel extends JPanel {
     private final Color COLOR = new Color(255, 255, 224);
-    private final JButton homeButton;
-    private final JButton bookButton;
+
+    private Runnable onHome = () -> {};
+    private Runnable onWatchlist = () -> {};
+    private Runnable onBook = () -> {};
+    private Runnable onLogout = () -> {};
 
     public HeaderPanel() {
         super(new FlowLayout(FlowLayout.CENTER, 20, 10));
@@ -16,10 +18,15 @@ public class HeaderPanel extends JPanel {
         JLabel title = new JLabel("CineSphere");
         title.setFont(new Font("Arial", Font.BOLD, 20));
 
-        homeButton = new JButton("Home");
+        JButton homeButton = new JButton("Home");
         JButton watchlistButton = new JButton("Watchlist");
-        bookButton = new JButton("Booking");
+        JButton bookButton = new JButton("Booking");
         JButton logoutButton = new JButton("Logout");
+
+        homeButton.addActionListener(e -> onHome.run());
+        watchlistButton.addActionListener(e -> onWatchlist.run());
+        bookButton.addActionListener(e -> onBook.run());
+        logoutButton.addActionListener(e -> onLogout.run());
 
         add(title);
         add(homeButton);
@@ -28,16 +35,8 @@ public class HeaderPanel extends JPanel {
         add(logoutButton);
     }
 
-    public void setHomeAction(Runnable action) {
-        for (ActionListener al : homeButton.getActionListeners()) {
-            homeButton.removeActionListener(al);
-        }
-        homeButton.addActionListener(e -> action.run());
-    }
-    public void setBookAction(Runnable action) {
-        for (ActionListener al : bookButton.getActionListeners()) {
-            bookButton.removeActionListener(al);
-        }
-        bookButton.addActionListener(e -> action.run());
-    }
+    public void setHomeAction(Runnable action) { this.onHome = (action == null) ? () -> {} : action; }
+    public void setWatchlistAction(Runnable action) { this.onWatchlist = (action == null) ? () -> {} : action; }
+    public void setBookAction(Runnable action) { this.onBook = (action == null) ? () -> {} : action; }
+    public void setLogoutAction(Runnable action) { this.onLogout = (action == null) ? () -> {} : action; }
 }
