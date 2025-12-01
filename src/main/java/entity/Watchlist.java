@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Watchlist {
-    //private final
     private final List<String> movies = new ArrayList<>();
 
     public void add(String movieUrl) {

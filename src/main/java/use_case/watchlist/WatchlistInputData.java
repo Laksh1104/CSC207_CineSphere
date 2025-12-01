@@ -1,9 +1,12 @@
 package use_case.watchlist;
-import java.util.List;
 
 public class WatchlistInputData {
-    public String movieUrl;
+    private final String movieUrl;
     public WatchlistInputData(String movieUrl) {
         this.movieUrl = movieUrl;
+    }
+
+    public String getMovieUrl() {
+        return movieUrl;
     }
 }

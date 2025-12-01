@@ -6,20 +6,26 @@ import java.util.List;
 
 public class WatchlistInteractor implements WatchlistInputBoundary{
 
-    private final Watchlist watchlist = new Watchlist();
+    private final WatchlistOutputBoundary presenter;
+    private final Watchlist watchlist;
 
-    private static int currentPage = 0;
-    private static final int moviesPerPage = 12;
+    private int currentPage = 0;
+    private final int moviesPerPage = 12;
+
+    public WatchlistInteractor(WatchlistOutputBoundary presenter,  Watchlist watchlist) {
+        this.presenter = presenter;
+        this.watchlist = watchlist;
+    }
 
     @Override
     public void addMovie(WatchlistInputData data) {
-        watchlist.add(data.movieUrl);
+        watchlist.add(data.getMovieUrl());
         loadPage();
     }
 
     @Override
     public void removeMovie(WatchlistInputData data) {
-        watchlist.remove(data.movieUrl);
+        watchlist.remove(data.getMovieUrl());
         loadPage();
     }
 
@@ -31,8 +37,13 @@ public class WatchlistInteractor implements WatchlistInputBoundary{
         int end = Math.min(start + moviesPerPage, all.size());
 
         List<String> sublist = all.subList(start, end);
-
+        presenter.presentWatchlistPage(new WatchlistOutputData(sublist));
         return sublist;
+    }
+
+    @Override
+    public boolean isInWatchlist(String posterUrl) {
+        return watchlist.getMovies().contains(posterUrl);
     }
 
     public void forward() {
@@ -45,10 +56,6 @@ public class WatchlistInteractor implements WatchlistInputBoundary{
     public void back() {
         if (currentPage > 0) currentPage--;
         loadPage();
-    }
-
-    public boolean isInWatchlist(String posterUrl) {
-        return watchlist.getMovies().contains(posterUrl);
     }
 
 
