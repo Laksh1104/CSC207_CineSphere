@@ -8,7 +8,6 @@ import java.awt.event.MouseEvent;
 public class RangeSliderUI extends BasicSliderUI {
 
     private final Rectangle upperThumbRect = new Rectangle();
-    private boolean upperThumbSelected;
     private boolean lowerDragging;
     private boolean upperDragging;
 
@@ -79,6 +78,7 @@ public class RangeSliderUI extends BasicSliderUI {
             boolean lowerHit = thumbRect.contains(currentMouseX, currentMouseY);
             boolean upperHit = upperThumbRect.contains(currentMouseX, currentMouseY);
 
+            boolean upperThumbSelected;
             if (upperHit && lowerHit) {
                 int lowerCenter = thumbRect.x + thumbRect.width / 2;
                 int upperCenter = upperThumbRect.x + upperThumbRect.width / 2;

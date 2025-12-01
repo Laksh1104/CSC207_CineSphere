@@ -2,7 +2,6 @@ package view;
 
 import data_access.MovieDetailsDataAccessObject;
 import interface_adapter.filter_movies.FilterMoviesController;
-import interface_adapter.filter_movies.FilterMoviesPresenter;
 import interface_adapter.filter_movies.FilterMoviesViewModel;
 import interface_adapter.logout.LogoutController;
 import interface_adapter.movie_details.MovieDetailsController;
@@ -236,9 +235,13 @@ public class FilteredView extends JPanel {
         noMoviesLabel.setVisible(false);
 
         if (gridPanel != null) gridPanel.setVisible(true);
-        if (pagingPanel != null) pagingPanel.setVisible(true);
-
-        gridPanel.removeAll();
+        if (pagingPanel != null) {
+            pagingPanel.setVisible(true);
+            gridPanel.removeAll();
+        } else {
+            assert gridPanel != null;
+            gridPanel.removeAll();
+        }
 
         for (int i = 0; i < PAGE_SIZE; i++) {
             JPanel empty = new JPanel();

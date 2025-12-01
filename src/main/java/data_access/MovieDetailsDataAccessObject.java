@@ -23,154 +23,127 @@ public class MovieDetailsDataAccessObject implements MovieDetailsDataAccessInter
     private static final String API_KEY = DOTENV.get("TMDB_API_KEY");
     private static final String BASE = "https://api.themoviedb.org/3";
     private static final String IMG_BASE = "https://image.tmdb.org/t/p/w500";
+
     private static final OkHttpClient HTTP = new OkHttpClient.Builder().build();
 
-    /**
-     * Initializes the DAO and validates the API key.
-     */
+    private static final double MAX_RATING = 10.0;
+    private static final double MIN_RATING = 0.0;
+
     public MovieDetailsDataAccessObject() {
         validateApiKey();
     }
 
-    /**
-     * Retrieves movie details from TMDB API.
-     *
-     * @param filmId the film ID to retrieve
-     * @return the movie details
-     * @throws RuntimeException if the API call fails or response is unsuccessful
-     */
+    @Override
     public MovieDetails getMovieDetails(final int filmId) {
-        final Request request = buildGetMovieRequest(filmId);
+        Request request = buildMovieRequest(filmId);
 
         try (Response response = HTTP.newCall(request).execute()) {
             if (!response.isSuccessful()) {
-                throw new RuntimeException("Failed to get movie details. TMDB returned error code: "
-                        + response.code());
+                throw new RuntimeException("TMDB error code: " + response.code());
             }
 
-            return parseResponse(response);
+            return parseMovieDetails(response);
         }
-        catch (final IOException exception) {
-            throw new RuntimeException("Failed to get movie details with error: " + exception.getMessage(),
-                exception);
+        catch (IOException e) {
+            throw new RuntimeException("Failed to fetch movie details: " + e.getMessage(), e);
         }
     }
 
     private void validateApiKey() {
         if (API_KEY == null || API_KEY.isBlank()) {
-            throw new IllegalStateException(
-                    "TMDB_API_KEY is not set in environment variables. Please follow steps in README."
-            );
+            throw new IllegalStateException("TMDB_API_KEY missing. See README.");
         }
     }
 
-    private Request buildGetMovieRequest(final int filmId) {
-        final HttpUrl url = HttpUrl
-                .parse(BASE + "/movie/" + filmId)
+    private Request buildMovieRequest(final int filmId) {
+        HttpUrl url = HttpUrl.parse(BASE + "/movie/" + filmId)
                 .newBuilder()
                 .addQueryParameter("api_key", API_KEY)
                 .addQueryParameter("language", "en-US")
                 .addQueryParameter("append_to_response", "credits,reviews")
                 .build();
 
-        return new Request
-                .Builder()
+        return new Request.Builder()
                 .url(url)
                 .get()
                 .build();
     }
 
-    private MovieDetails parseResponse(final Response response) throws IOException {
-        final JSONObject json = new JSONObject(response.body().string());
+    // -----------------------------
+    // Parsing
+    // -----------------------------
+
+    private MovieDetails parseMovieDetails(final Response response) throws IOException {
+        assert response.body() != null;
+        JSONObject json = new JSONObject(response.body().string());
 
         return new MovieDetails(
                 json.getInt("id"),
-                json.getString("title"),
+                json.optString("title", ""),
                 parseDirector(json),
-                json.getString("release_date"),
-                parseRatingOutOf10(json),
+                json.optString("release_date", ""),
+                parseRating(json),
                 parseGenres(json),
-                json.getString("overview"),
+                json.optString("overview", ""),
                 parseReviews(json),
                 parsePosterPath(json)
         );
     }
 
-    private String parseDirector(final JSONObject json) {
-        final JSONObject credits = json.optJSONObject("credits");
+    private @Nullable String parseDirector(JSONObject json) {
+        JSONArray crew = json.optJSONObject("credits")
+                .optJSONArray("crew");
 
-        if (credits == null) {
-            return null;
-        }
-
-        final JSONArray crew = credits.optJSONArray("crew");
-        if (crew == null) {
-            return null;
-        }
+        if (crew == null) return null;
 
         for (int i = 0; i < crew.length(); i++) {
-            final JSONObject member = crew.getJSONObject(i);
+            JSONObject member = crew.getJSONObject(i);
             if ("Director".equalsIgnoreCase(member.optString("job"))) {
                 return member.optString("name", "");
             }
         }
-
         return null;
     }
 
-    private double parseRatingOutOf10(final JSONObject json) {
-        double voteOutOf10 = json.optDouble("vote_average", 0.0);
-        final double maxRating = 10.0;
-        final double minRating = 0.0;
-        final double scalingFactor = 10.0;
-
-        // clamp + round to 1 decimal to keep UI friendly
-        voteOutOf10 = Math.max(minRating, Math.min(maxRating, voteOutOf10));
-        return Math.round(voteOutOf10 * scalingFactor) / scalingFactor;
+    private double parseRating(JSONObject json) {
+        double value = json.optDouble("vote_average", 0.0);
+        value = Math.min(MAX_RATING, Math.max(MIN_RATING, value));
+        return Math.round(value * 10.0) / 10.0;
     }
 
-    private List<String> parseGenres(final JSONObject json) {
-        final JSONArray jsonArray = json.optJSONArray("genres");
-        final List<String> genres = new ArrayList<>();
+    private List<String> parseGenres(JSONObject json) {
+        JSONArray arr = json.optJSONArray("genres");
+        List<String> list = new ArrayList<>();
 
-        if (jsonArray != null) {
-            for (int i = 0; i < jsonArray.length(); i++) {
-                genres.add(jsonArray.getJSONObject(i).optString("name", ""));
+        if (arr != null) {
+            for (int i = 0; i < arr.length(); i++) {
+                list.add(arr.getJSONObject(i).optString("name", ""));
             }
         }
-
-        return genres;
+        return list;
     }
 
-    private List<MovieReview> parseReviews(final JSONObject json) {
-        final JSONArray jsonArray;
-        if (json.has("reviews")) {
-            jsonArray = json.getJSONObject("reviews").getJSONArray("results");
+    private List<MovieReview> parseReviews(JSONObject json) {
+        JSONArray arr = json
+                .optJSONObject("reviews")
+                .optJSONArray("results");
+
+        List<MovieReview> reviews = new ArrayList<>();
+        if (arr == null) return reviews;
+
+        for (int i = 0; i < arr.length(); i++) {
+            JSONObject r = arr.getJSONObject(i);
+            reviews.add(new MovieReview(
+                    r.optString("author", "Anonymous"),
+                    r.optString("content", "No content")
+            ));
         }
-        else {
-            jsonArray = new JSONArray();
-        }
-
-        final List<MovieReview> reviews = new ArrayList<>();
-
-        if (jsonArray != null) {
-            for (int i = 0; i < jsonArray.length(); i++) {
-                final JSONObject review = jsonArray.getJSONObject(i);
-
-                reviews.add(new MovieReview(
-                        review.optString("author", "Anonymous"),
-                        review.optString("content", "No content")
-                ));
-            }
-        }
-
         return reviews;
     }
 
-    private @Nullable String parsePosterPath(final JSONObject json) {
-        if (json.has("poster_path")) {
-            return IMG_BASE + json.getString("poster_path");
-        }
-        return null;
+    private @Nullable String parsePosterPath(JSONObject json) {
+        return json.has("poster_path")
+                ? IMG_BASE + json.optString("poster_path")
+                : null;
     }
 }

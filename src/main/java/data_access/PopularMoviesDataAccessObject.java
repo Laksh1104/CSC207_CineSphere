@@ -19,8 +19,8 @@ public class PopularMoviesDataAccessObject implements PopularMoviesDataAccessInt
 
     private static final String TMDB_POSTER_BASE_URL = "https://image.tmdb.org/t/p/w500";
 
-    private HttpClient client;
-    private String bearerToken;
+    private final HttpClient client;
+    private final String bearerToken;
 
     public PopularMoviesDataAccessObject(String bearerToken) {
         this.bearerToken = bearerToken;

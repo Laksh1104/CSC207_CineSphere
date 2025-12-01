@@ -12,7 +12,7 @@ import java.util.Set;
  * Decorates another BookTicketDataAccessInterface (e.g., InMemoryTicketDataAccessObject)
  * to also persist each confirmed booking into the current user's profile in
  * UserProfileJsonDataAccessObject.
- *
+ * <p>
  * Responsibilities:
  *  - delegate getBookedSeats / getSeatLayout to the underlying DAO
  *  - on saveBooking:

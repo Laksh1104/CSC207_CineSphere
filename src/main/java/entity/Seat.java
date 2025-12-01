@@ -1,7 +1,7 @@
 package entity;
 
 public class Seat {
-    private String seatName;
+    private final String seatName;
     private boolean isbooked;
 
     public Seat(String seatName) {

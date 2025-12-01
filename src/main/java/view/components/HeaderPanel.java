@@ -4,7 +4,6 @@ import javax.swing.*;
 import java.awt.*;
 
 public class HeaderPanel extends JPanel {
-    private final Color COLOR = new Color(255, 255, 224);
 
     private Runnable onHome = () -> {};
     private Runnable onWatchlist = () -> {};
@@ -14,6 +13,7 @@ public class HeaderPanel extends JPanel {
 
     public HeaderPanel() {
         super(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        Color COLOR = new Color(255, 255, 224);
         setBackground(COLOR);
 
         JLabel title = new JLabel("CineSphere");
