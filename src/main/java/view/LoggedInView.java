@@ -1,8 +1,5 @@
 package view;
 
-import javax.swing.*;
-import java.awt.*;
-
 import data_access.MovieDetailsDataAccessObject;
 import interface_adapter.movie_details.MovieDetailsPresenter;
 import interface_adapter.movie_details.MovieDetailsViewModel;
@@ -18,9 +15,11 @@ import view.components.FilterPanel;
 import view.components.Flyweight.PosterFlyweightFactory;
 import view.components.HeaderPanel;
 import view.MovieDetailsView;
-import data_access.MovieDetailsDataAccessObject;
 import use_case.movie_details.*;
 import interface_adapter.movie_details.*;
+
+import javax.swing.*;
+import java.awt.*;
 
 public class LoggedInView extends JPanel {
 
@@ -32,41 +31,29 @@ public class LoggedInView extends JPanel {
     private MovieDetailsView movieDetailsView;
     private ScreenSwitchListener listener;
 
-    // UI
     private JPanel moviePanel;
     private FilterPanel filterPanel;
 
     public LoggedInView() {
-
-
         setBackground(new Color(255, 255, 224));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        // Header
         HeaderPanel headerPanel = new HeaderPanel();
 
         headerPanel.setHomeAction(() -> {
-            if (listener != null) {
-                listener.onSwitchScreen("Home");
-            }
+            if (listener != null) listener.onSwitchScreen("Home");
         });
         headerPanel.setBookAction(() -> {
-            if (listener != null) {
-                listener.onSwitchScreen("Booking");
-            }
+            if (listener != null) listener.onSwitchScreen("Booking");
         });
         headerPanel.setMaximumSize(new Dimension(800, 50));
 
-        // Filter
         filterPanel = new FilterPanel();
         filterPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 54));
 
-
-        // Popular lavel
         JLabel popularLabel = new JLabel("Popular Movies");
         popularLabel.setFont(new Font("Open Sans", Font.BOLD, 15));
 
-        // Posters
         JScrollPane scrollPane = buildPosterScrollPane();
 
         add(Box.createRigidArea(new Dimension(0, 20)));
@@ -82,7 +69,6 @@ public class LoggedInView extends JPanel {
 
     private void setupFilterPanelHandlers() {
 
-        // When searching in LoggedInView
         filterPanel.setOnSearch(query -> {
             if (query.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Please enter a film name.");
@@ -91,11 +77,10 @@ public class LoggedInView extends JPanel {
             searchFilmController.execute(query);
         });
 
-        // Filter button pressed in LoggedInView
         filterPanel.setOnFilter(() -> {
-            // You can open FilteredView here
-            JOptionPane.showMessageDialog(this,
-                    "Filters applied!");
+            if (listener != null) {
+                listener.onSwitchScreen("Filtered");
+            }
         });
     }
 
@@ -127,8 +112,6 @@ public class LoggedInView extends JPanel {
                 }
             });
         });
-
-
     }
 
     public void setPopularMoviesDependencies(PopularMoviesController controller, PopularMoviesViewModel viewModel) {
@@ -158,7 +141,6 @@ public class LoggedInView extends JPanel {
     }
 
     public void setMovieDetailsDependencies() {
-
         MovieDetailsViewModel movieDetailsViewModel = new MovieDetailsViewModel();
         MovieDetailsOutputBoundary movieDetailsPresenter = new MovieDetailsPresenter(movieDetailsViewModel);
         MovieDetailsDataAccessInterface api = new MovieDetailsDataAccessObject();
@@ -168,7 +150,6 @@ public class LoggedInView extends JPanel {
     }
 
     private JScrollPane buildPosterScrollPane() {
-
         moviePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
         moviePanel.setBackground(new Color(255, 255, 224));
 
@@ -187,7 +168,7 @@ public class LoggedInView extends JPanel {
     }
 
     private void refreshPopularMovies() {
-        if (moviePanel == null) {return;}
+        if (moviePanel == null) return;
 
         moviePanel.removeAll();
 
@@ -199,7 +180,6 @@ public class LoggedInView extends JPanel {
         for (int i = 0; i < count; i++) {
             String url = posterUrls.get(i);
             int filmId = filmIds.get(i);
-
             moviePanel.add(createPosterButton(url, filmId));
         }
 
@@ -242,7 +222,6 @@ public class LoggedInView extends JPanel {
         });
 
         button.setBorder(BorderFactory.createDashedBorder(Color.GRAY));
-
         return button;
     }
 }

@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class FilteredView extends JFrame {
+public class FilteredView extends JPanel {
 
     private final FilterMoviesController filterMoviesController;
     private final FilterMoviesViewModel filterMoviesViewModel;
@@ -28,6 +28,8 @@ public class FilteredView extends JFrame {
     private MovieDetailsController movieDetailsController;
     private MovieDetailsView movieDetailsView;
     private MovieDetailsViewModel movieDetailsViewModel;
+
+    private ScreenSwitchListener listener;
 
     private final Color COLOR = new Color(255, 255, 224);
 
@@ -38,7 +40,6 @@ public class FilteredView extends JFrame {
 
     private FilterPanel filterPanel;
     private JPanel pagingPanel;
-    private final Map<String, ImageIcon> iconCache = new HashMap<>();
 
     private int currentPage = 1;
     private static final int PAGE_SIZE = 8;
@@ -50,16 +51,16 @@ public class FilteredView extends JFrame {
         this.filterMoviesController = filterMoviesController;
         this.filterMoviesViewModel = filterMoviesViewModel;
 
-        setTitle("CineSphere - Filtered Results");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(950, 850);
-        setLocationRelativeTo(null);
-
+        setLayout(new BorderLayout());
         buildUI();
         setMovieDetailsDependencies();
 
         // initial fetch
         callFilter();
+    }
+
+    public void setScreenSwitchListener(ScreenSwitchListener listener) {
+        this.listener = listener;
     }
 
     private void buildUI() {
@@ -70,6 +71,14 @@ public class FilteredView extends JFrame {
         backgroundPanel.add(Box.createRigidArea(new Dimension(0, 20)));
 
         HeaderPanel headerPanel = new HeaderPanel();
+
+        headerPanel.setHomeAction(() -> {
+            if (listener != null) listener.onSwitchScreen("Home");
+        });
+        headerPanel.setBookAction(() -> {
+            if (listener != null) listener.onSwitchScreen("Booking");
+        });
+
         headerPanel.setMaximumSize(new Dimension(900, 50));
         headerPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         backgroundPanel.add(headerPanel);
@@ -156,7 +165,7 @@ public class FilteredView extends JFrame {
 
         backgroundPanel.add(pagingPanel);
 
-        add(backgroundPanel);
+        add(backgroundPanel, BorderLayout.CENTER);
     }
 
     private void callFilter() {
@@ -197,9 +206,6 @@ public class FilteredView extends JFrame {
         filteredByLabel.setText(text);
     }
 
-    /**
-     * Sync genres from ViewModel every time (even when no movies).
-     */
     private void syncGenresFromViewModel() {
         Map<String, Integer> genres = filterMoviesViewModel.getGenres();
         if (genres == null || genres.isEmpty()) return;
@@ -234,11 +240,6 @@ public class FilteredView extends JFrame {
         gridPanel.repaint();
     }
 
-    /**
-     * - "No movies" is based on filmIds (not posters)
-     * - If poster URL missing, show a placeholder button
-     * - Hide grid/paging when no results, but show message label
-     */
     private void updateGrid() {
         syncGenresFromViewModel();
 
@@ -255,7 +256,6 @@ public class FilteredView extends JFrame {
 
             if (pagingPanel != null) pagingPanel.setVisible(false);
 
-            // total pages should usually be 1 here, but keep consistent
             pageLabel.setText(currentPage + " / " + filterMoviesViewModel.getTotalPages());
 
             gridPanel.revalidate();

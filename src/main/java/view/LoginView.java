@@ -1,17 +1,17 @@
 package view;
 
 import interface_adapter.login.LoginController;
-import interface_adapter.login.LoginViewModel;
 import interface_adapter.login.LoginState;
+import interface_adapter.login.LoginViewModel;
 
 import interface_adapter.signup.SignupController;
-import interface_adapter.signup.SignupViewModel;
 import interface_adapter.signup.SignupState;
+import interface_adapter.signup.SignupViewModel;
 
 import javax.swing.*;
 import java.awt.*;
 
-public class LoginView extends JFrame {
+public class LoginView extends JPanel {
 
     private final LoginController loginController;
     private final LoginViewModel loginViewModel;
@@ -26,7 +26,7 @@ public class LoginView extends JFrame {
     private JButton cancelButton;
 
     private JLabel errorLabel;
-    private JLabel statusLabel; // shows logged-in info
+    private JLabel statusLabel;
 
     public LoginView(LoginController loginController,
                      LoginViewModel loginViewModel,
@@ -37,12 +37,6 @@ public class LoginView extends JFrame {
         this.loginViewModel = loginViewModel;
         this.signupController = signupController;
         this.signupViewModel = signupViewModel;
-
-        setTitle("log in");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(340, 200);
-        setLocationRelativeTo(null);
-        setResizable(false);
 
         buildUI();
         bindListeners();
@@ -76,7 +70,6 @@ public class LoginView extends JFrame {
         formPanel.add(passwordField, gbc);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
-
         loginButton = new JButton("log in");
         signupButton = new JButton("sign up");
         cancelButton = new JButton("cancel");
@@ -104,58 +97,69 @@ public class LoginView extends JFrame {
         root.add(formPanel, BorderLayout.CENTER);
         root.add(southPanel, BorderLayout.SOUTH);
 
-        getRootPane().setDefaultButton(loginButton);
-        setContentPane(root);
+        setLayout(new BorderLayout());
+        add(root, BorderLayout.CENTER);
+    }
+
+    @Override
+    public void addNotify() {
+        super.addNotify();
+        JRootPane rootPane = SwingUtilities.getRootPane(this);
+        if (rootPane != null) {
+            rootPane.setDefaultButton(loginButton);
+        }
     }
 
     private void bindListeners() {
-        // login button
         loginButton.addActionListener(e -> handleLogin());
-
-        // sign up button (reuse fields)
         signupButton.addActionListener(e -> handleSignup());
 
-        // cancel button: close app
-        cancelButton.addActionListener(e -> dispose());
+        cancelButton.addActionListener(e -> {
+            Window w = SwingUtilities.getWindowAncestor(this);
+            if (w != null) w.dispose();
+            else System.exit(0);
+        });
 
         // Listen for login state changes
         loginViewModel.addPropertyChangeListener(evt -> {
-            if ("state".equals(evt.getPropertyName())) {
-                LoginState state = (LoginState) evt.getNewValue();
+            if (!"state".equals(evt.getPropertyName())) return;
 
-                String message = state.getErrorMessage();
-                if (message != null && !message.isEmpty()) {
-                    errorLabel.setText(message);
-                } else {
-                    errorLabel.setText(" ");
-                }
+            LoginState state = (LoginState) evt.getNewValue();
 
-                if (state.isLoggedIn()) {
-                    statusLabel.setText("Logged in as: " + state.getUsername());
-                }
+            String message = state.getErrorMessage();
+            if (message != null && !message.isEmpty()) {
+                errorLabel.setText(message);
+            } else {
+                errorLabel.setText(" ");
+            }
+
+            if (state.isLoggedIn()) {
+                statusLabel.setText("Logged in as: " + state.getUsername());
+            } else {
+                statusLabel.setText(" ");
             }
         });
 
-        // Listen for signup state changes (show dialogs here, not in presenter)
+        // Listen for signup state changes (dialogs OK here)
         signupViewModel.addPropertyChangeListener(evt -> {
-            if ("state".equals(evt.getPropertyName())) {
-                SignupState state = (SignupState) evt.getNewValue();
+            if (!"state".equals(evt.getPropertyName())) return;
 
-                if (state.getErrorMessage() != null && !state.getErrorMessage().isEmpty()) {
-                    JOptionPane.showMessageDialog(
-                            this,
-                            state.getErrorMessage(),
-                            "Sign up failed",
-                            JOptionPane.ERROR_MESSAGE
-                    );
-                } else if (state.isSignupSuccess()) {
-                    JOptionPane.showMessageDialog(
-                            this,
-                            "Account created for " + state.getUsername(),
-                            "Sign up successful",
-                            JOptionPane.INFORMATION_MESSAGE
-                    );
-                }
+            SignupState state = (SignupState) evt.getNewValue();
+
+            if (state.getErrorMessage() != null && !state.getErrorMessage().isEmpty()) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        state.getErrorMessage(),
+                        "Sign up failed",
+                        JOptionPane.ERROR_MESSAGE
+                );
+            } else if (state.isSignupSuccess()) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Account created for " + state.getUsername(),
+                        "Sign up successful",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
             }
         });
     }
