@@ -42,9 +42,13 @@ public class WatchlistView extends JPanel {
         headerPanel.setBookAction(() -> {
             if (listener != null) listener.onSwitchScreen("Booking");
         });
+        headerPanel.setMyBookingsAction(() -> {
+            if (listener != null) listener.onSwitchScreen("MyBookings");
+        });
         headerPanel.setLogoutAction(() -> {
             if (logoutController != null) logoutController.execute();
         });
+
         headerPanel.setMaximumSize(new Dimension(900, 50));
         add(headerPanel);
 

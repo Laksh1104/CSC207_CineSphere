@@ -3,13 +3,11 @@ package data_access;
 import entity.MovieTicket;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import use_case.bookings.BookingsDataAccessInterface;
 import use_case.watchlist.WatchlistDataAccessInterface;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Stores per-user watchlists and bookings in a JSON file.
@@ -34,7 +32,8 @@ import java.util.Set;
  *   ...
  * }
  */
-public class UserProfileJsonDataAccessObject implements WatchlistDataAccessInterface {
+public class UserProfileJsonDataAccessObject
+        implements WatchlistDataAccessInterface, BookingsDataAccessInterface {
 
     private final File file;
 
@@ -184,6 +183,59 @@ public class UserProfileJsonDataAccessObject implements WatchlistDataAccessInter
         userObj.put("bookings", bookings);
         root.put(username, userObj);
         writeRoot(root);
+    }
+
+    // ===== BookingsDataAccessInterface implementation =====
+
+    @Override
+    public synchronized List<MovieTicket> getBookings(String username) {
+        List<MovieTicket> result = new ArrayList<>();
+        if (username == null || username.isBlank()) {
+            return result;
+        }
+
+        JSONObject root = readRoot();
+        JSONObject userObj = getOrCreateUserObject(root, username);
+        JSONArray bookings = userObj.optJSONArray("bookings");
+        if (bookings == null) {
+            return result;
+        }
+
+        for (int i = 0; i < bookings.length(); i++) {
+            JSONObject b = bookings.optJSONObject(i);
+            if (b == null) continue;
+
+            String movieName = b.optString("movieName", "");
+            String cinemaName = b.optString("cinemaName", "");
+            String date = b.optString("date", "");
+            String startTime = b.optString("startTime", "");
+            String endTime = b.optString("endTime", "");
+            int cost = b.optInt("cost", 0);
+
+            Set<String> seats = new HashSet<>();
+            JSONArray seatsArray = b.optJSONArray("seats");
+            if (seatsArray != null) {
+                for (int j = 0; j < seatsArray.length(); j++) {
+                    String s = seatsArray.optString(j, null);
+                    if (s != null && !s.isBlank()) {
+                        seats.add(s);
+                    }
+                }
+            }
+
+            MovieTicket ticket = new MovieTicket(
+                    movieName,
+                    cinemaName,
+                    date,
+                    startTime,
+                    endTime,
+                    seats,
+                    cost
+            );
+            result.add(ticket);
+        }
+
+        return result;
     }
 
     // ===== Internal helpers =====

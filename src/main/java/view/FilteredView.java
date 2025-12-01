@@ -89,10 +89,14 @@ public class FilteredView extends JPanel {
         headerPanel.setBookAction(() -> {
             if (listener != null) listener.onSwitchScreen("Booking");
         });
+        headerPanel.setMyBookingsAction(() -> {
+            if (listener != null) listener.onSwitchScreen("MyBookings");
+        });
         headerPanel.setLogoutAction(() -> {
             if (logoutController != null) logoutController.execute();
             else JOptionPane.showMessageDialog(this, "Logout is not wired yet.");
         });
+
 
         headerPanel.setMaximumSize(new Dimension(900, 50));
         headerPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
