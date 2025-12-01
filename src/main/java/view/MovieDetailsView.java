@@ -32,8 +32,9 @@ import javax.swing.border.EmptyBorder;
 
 import interface_adapter.movie_details.MovieDetailsState;
 import interface_adapter.movie_details.MovieDetailsViewModel;
-import interface_adapter.watchlist.watchlistController;
 import use_case.movie_details.MovieDetailsOutputData.MovieReviewData;
+import use_case.watchlist.WatchlistInputData;
+import use_case.watchlist.WatchlistInteractor;
 
 /**
  * View for displaying movie details.
@@ -56,6 +57,10 @@ public class MovieDetailsView extends JPanel {
     private static final int REVIEWS_WIDTH = 400;
 
     private static final int MAX_REVIEWS = 2;
+
+    WatchlistInteractor interactor;
+
+
 
     /**
      * Constructs a MovieDetailsView.
@@ -156,7 +161,7 @@ public class MovieDetailsView extends JPanel {
     }
 
     private JButton createWatchlistButton(MovieDetailsState state) {
-        boolean isWatchlisted = watchlistController.isInWatchlist(state.posterUrl());
+        boolean isWatchlisted = interactor.isInWatchlist(state.posterUrl());
         final JButton watchlistBtn = new JButton("Add To Watchlist");
         if (isWatchlisted) {
             watchlistBtn.setText("Already Watchlisted");
@@ -164,11 +169,11 @@ public class MovieDetailsView extends JPanel {
         watchlistBtn.addActionListener(Ae -> {
             if (isWatchlisted) {
                 watchlistBtn.setText("Add to Watchlist");
-                watchlistController.removeFromWatchlist(state.posterUrl());
+                interactor.removeMovie(new WatchlistInputData(state.posterUrl()));
             }
             else {
                 watchlistBtn.setText("Already Watchlisted");
-                watchlistController.addToWatchlist(state.posterUrl());
+                interactor.addMovie(new WatchlistInputData(state.posterUrl()));
             }
         });
         return watchlistBtn;

@@ -4,5 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class watchlistViewModel {
-    public List<String> movies = new ArrayList<>();
+    private List<String> movies;
+    public watchlistViewModel() {
+        this.movies = new ArrayList<>();
+    }
+
+    public List<String> getMovies() {
+        return movies;
+    }
+
+    public void setMovies(List<String> movies) {
+        this.movies = movies;
+    }
 }

@@ -1,5 +1,4 @@
 package interface_adapter.watchlist;
-import use_case.watchlist.WatchlistInputBoundary;
 import use_case.watchlist.WatchlistOutputBoundary;
 import use_case.watchlist.WatchlistOutputData;
 
@@ -13,9 +12,8 @@ public class watchlistPresenter implements WatchlistOutputBoundary {
     }
 
     @Override
-    public void present(WatchlistOutputData data) {
-        viewModel.movies = data.moviesOnPage;
+    public void presentWatchlistPage(WatchlistOutputData data) {
+        viewModel.setMovies(data.getMovieUrls());
     }
-
 
 }
