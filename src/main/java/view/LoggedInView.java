@@ -64,7 +64,6 @@ public class LoggedInView extends JPanel {
             }
         });
 
-
         headerPanel.setMaximumSize(new Dimension(800, 50));
 
         filterPanel = new FilterPanel();
@@ -179,6 +178,15 @@ public class LoggedInView extends JPanel {
 
         movieDetailsController = new MovieDetailsController(movieDetailsInteractor);
         movieDetailsView = new MovieDetailsView(movieDetailsViewModel, watchlistController);
+    }
+
+    /**
+     * NEW: allow MainAppFrame to push the genre list into this view's FilterPanel.
+     */
+    public void setGenres(java.util.List<String> genres) {
+        if (filterPanel != null) {
+            filterPanel.setGenres(genres);
+        }
     }
 
     private JScrollPane buildPosterScrollPane() {
