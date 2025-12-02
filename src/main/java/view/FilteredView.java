@@ -246,7 +246,6 @@ public class FilteredView extends JPanel {
         for (int i = 0; i < PAGE_SIZE; i++) {
             JPanel empty = new JPanel();
             empty.setBackground(COLOR);
-            empty.setBorder(BorderFactory.createDashedBorder(Color.GRAY));
             gridPanel.add(empty);
         }
 
@@ -300,7 +299,6 @@ public class FilteredView extends JPanel {
         for (int i = count; i < PAGE_SIZE; i++) {
             JPanel empty = new JPanel();
             empty.setBackground(COLOR);
-            empty.setBorder(BorderFactory.createDashedBorder(Color.GRAY));
             gridPanel.add(empty);
         }
 
