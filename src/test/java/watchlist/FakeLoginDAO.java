@@ -1,4 +1,4 @@
-package use_case.watchlist;
+package watchlist;
 
 import entity.User;
 import use_case.login.LoginUserDataAccessInterface;

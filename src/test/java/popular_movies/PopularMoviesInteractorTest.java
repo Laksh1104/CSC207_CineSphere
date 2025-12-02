@@ -1,7 +1,8 @@
-package use_case.popular_movies;
+package popular_movies;
 
 import entity.Movie;
 import org.junit.jupiter.api.Test;
+import use_case.popular_movies.*;
 
 import java.util.List;
 

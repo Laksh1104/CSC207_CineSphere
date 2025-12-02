@@ -1,8 +1,9 @@
-package use_case.movie_details;
+package movie_details;
 
 import entity.MovieDetails;
 import entity.MovieReview;
 import org.junit.jupiter.api.Test;
+import use_case.movie_details.*;
 
 import java.util.List;
 
