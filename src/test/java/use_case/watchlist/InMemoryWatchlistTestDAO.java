@@ -7,15 +7,17 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class InMemoryWatchlistTestDAO implements WatchlistDataAccessInterface {
-
+    //Dummy database storing a username and a set of poster urls
     public Map<String, Set<String>> storage = new HashMap<>();
 
+    //Adds poster url to watchlist or creates new set if it doesnt exist
     @Override
     public void addToWatchlist(String username, String posterUrl) {
         storage.putIfAbsent(username, new HashSet<>());
         storage.get(username).add(posterUrl);
     }
 
+    //Same as above
     @Override
     public void removeFromWatchlist(String username, String posterUrl) {
         storage.putIfAbsent(username, new HashSet<>());
@@ -36,6 +38,7 @@ class InMemoryWatchlistTestDAO implements WatchlistDataAccessInterface {
 class WatchlistInteractorTest {
 
     private WatchlistOutputBoundary successPresenter(List<String> expected) {
+        //Check if code runs successfully, if so makes sure the output matches the expected value
         return new WatchlistOutputBoundary() {
             @Override
             public void present(WatchlistOutputData data) {
@@ -49,6 +52,7 @@ class WatchlistInteractorTest {
         };
     }
 
+    //Used when error is expected
     private WatchlistOutputBoundary failPresenter(String expectedError) {
         return new WatchlistOutputBoundary() {
             @Override
@@ -67,6 +71,7 @@ class WatchlistInteractorTest {
     // TESTS
     // -------------------------------------------------------------------------
 
+    //
     @Test
     void addMovieSuccess() {
         InMemoryWatchlistTestDAO dao = new InMemoryWatchlistTestDAO();
