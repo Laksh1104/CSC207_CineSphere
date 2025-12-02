@@ -1,7 +1,9 @@
 package view;
 
 import data_access.MovieDetailsDataAccessObject;
+import interface_adapter.filter_movies.FilterCriteria;
 import interface_adapter.filter_movies.FilterMoviesController;
+import interface_adapter.filter_movies.FilterMoviesPresenter;
 import interface_adapter.filter_movies.FilterMoviesViewModel;
 import interface_adapter.logout.LogoutController;
 import interface_adapter.movie_details.MovieDetailsController;
@@ -22,6 +24,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Screen that shows the filtered movies grid.
+ */
 public class FilteredView extends JPanel {
 
     private final FilterMoviesController filterMoviesController;
@@ -59,6 +64,7 @@ public class FilteredView extends JPanel {
         buildUI();
         setMovieDetailsDependencies(watchlistController);
 
+        // Default call so the grid isn't empty if the user lands here directly
         callFilter();
     }
 
@@ -95,7 +101,6 @@ public class FilteredView extends JPanel {
             if (logoutController != null) logoutController.execute();
             else JOptionPane.showMessageDialog(this, "Logout is not wired yet.");
         });
-
 
         headerPanel.setMaximumSize(new Dimension(900, 50));
         headerPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -186,6 +191,35 @@ public class FilteredView extends JPanel {
         add(backgroundPanel, BorderLayout.CENTER);
     }
 
+    /**
+     * Used when the user clicks "Filter" on LoggedInView.
+     * MainAppFrame builds a FilterCriteria from the home screen and passes it here,
+     * so we immediately run the filter when this view is shown.
+     */
+    public void applyFilterCriteria(FilterCriteria criteria) {
+        if (criteria == null) {
+            return;
+        }
+
+        currentPage = 1;
+
+        String year = criteria.getYear();
+        String rating = criteria.getRating();
+        String genreText = criteria.getGenreName();
+        String search = criteria.getSearch();
+
+        updateFilteredByLabel(year, rating, genreText, search);
+
+        String genreId = null;
+        if (genreText != null && !"All Genres".equalsIgnoreCase(genreText)) {
+            syncGenresFromViewModel();
+            genreId = genreNameToId.get(genreText);
+        }
+
+        filterMoviesController.execute(year, rating, genreId, search, currentPage);
+        updateGrid();
+    }
+
     private void callFilter() {
         Integer y = filterPanel.getValidatedYearOrShowError();
         if (y == null) {
@@ -213,7 +247,7 @@ public class FilteredView extends JPanel {
         String text = "Filtered by: Year = " + year +
                 "   Rating = " + (rating.equals("All Ratings") ? "Any" : rating) +
                 "   Genre = " + genre +
-                (search.isEmpty() ? "" : "   Search = \"" + search + "\"");
+                (search == null || search.isEmpty() ? "" : "   Search = \"" + search + "\"");
         filteredByLabel.setText(text);
     }
 
@@ -235,13 +269,9 @@ public class FilteredView extends JPanel {
         noMoviesLabel.setVisible(false);
 
         if (gridPanel != null) gridPanel.setVisible(true);
-        if (pagingPanel != null) {
-            pagingPanel.setVisible(true);
-            gridPanel.removeAll();
-        } else {
-            assert gridPanel != null;
-            gridPanel.removeAll();
-        }
+        if (pagingPanel != null) pagingPanel.setVisible(true);
+
+        gridPanel.removeAll();
 
         for (int i = 0; i < PAGE_SIZE; i++) {
             JPanel empty = new JPanel();

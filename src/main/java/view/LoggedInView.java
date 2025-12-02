@@ -2,6 +2,7 @@ package view;
 
 import data_access.MovieDetailsDataAccessObject;
 import interface_adapter.SearchFilm.*;
+import interface_adapter.filter_movies.FilterCriteria;
 import interface_adapter.logout.LogoutController;
 import interface_adapter.movie_details.MovieDetailsController;
 import interface_adapter.movie_details.MovieDetailsPresenter;
@@ -20,6 +21,9 @@ import view.components.HeaderPanel;
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * Home screen shown after login. Shows popular movies, search bar and filters.
+ */
 public class LoggedInView extends JPanel {
 
     private SearchFilmController searchFilmController;
@@ -86,6 +90,7 @@ public class LoggedInView extends JPanel {
     }
 
     private void setupFilterPanelHandlers() {
+        // Search bar at the top of LoggedInView
         filterPanel.setOnSearch(query -> {
             if (query == null || query.trim().isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Please enter a film name.");
@@ -98,6 +103,8 @@ public class LoggedInView extends JPanel {
             searchFilmController.execute(query.trim());
         });
 
+        // "Filter" button – just tells the ScreenSwitchListener to show FilteredView.
+        // The actual filter criteria are pulled by MainAppFrame from this view.
         filterPanel.setOnFilter(() -> {
             if (listener != null) listener.onSwitchScreen("Filtered");
         });
@@ -181,7 +188,7 @@ public class LoggedInView extends JPanel {
     }
 
     /**
-     * NEW: allow MainAppFrame to push the genre list into this view's FilterPanel.
+     * Allow MainAppFrame to push the genre list into this view's FilterPanel.
      */
     public void setGenres(java.util.List<String> genres) {
         if (filterPanel != null) {
@@ -263,5 +270,31 @@ public class LoggedInView extends JPanel {
 
         button.setBorder(BorderFactory.createDashedBorder(Color.GRAY));
         return button;
+    }
+
+    /**
+     * Build a FilterCriteria object from the current controls of this view.
+     * Used by MainAppFrame when switching to the FilteredView.
+     *
+     * If the year is invalid, this shows the same error dialog as the
+     * normal filter flow and returns null.
+     */
+    public FilterCriteria buildFilterCriteriaOrNull() {
+        if (filterPanel == null) {
+            return null;
+        }
+
+        Integer yearValue = filterPanel.getValidatedYearOrShowError();
+        if (yearValue == null) {
+            // Error shown by FilterPanel; stay on this screen.
+            return null;
+        }
+
+        String year = String.valueOf(yearValue);
+        String rating = filterPanel.getRatingString();
+        String genre = filterPanel.getSelectedGenre();
+        String search = filterPanel.getSearchQuery();
+
+        return new FilterCriteria(year, rating, genre, search);
     }
 }
