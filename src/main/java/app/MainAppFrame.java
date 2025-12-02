@@ -275,6 +275,20 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
             myBookingsView.refresh();
         }
 
+        if (FILTERED_VIEW.equals(screenName)) {
+            Integer yearValue = loggedInView.getValidatedYearOrShowError();
+            if (yearValue == null) {
+
+                return;
+            }
+            String year = String.valueOf(yearValue);
+            String rating = loggedInView.getRatingString();
+            String genre = loggedInView.getSelectedGenre();
+            String search = loggedInView.getSearchQuery();
+
+            filteredView.applyFilterFromHome(year, rating, genre, search);
+        }
+
         cardLayout.show(cards, screenName);
         revalidate();
         repaint();
