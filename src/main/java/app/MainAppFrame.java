@@ -1,4 +1,5 @@
 package app;
+
 import interface_adapter.bookings.BookingsController;
 import use_case.bookings.BookingsDataAccessInterface;
 import view.MyBookingsView;
@@ -20,7 +21,6 @@ import interface_adapter.BookingQuery;
 import interface_adapter.SearchFilm.SearchFilmController;
 import interface_adapter.SearchFilm.SearchFilmPresenter;
 import interface_adapter.SearchFilm.SearchFilmViewModel;
-import interface_adapter.filter_movies.FilterCriteria;
 import interface_adapter.filter_movies.FilterMoviesController;
 import interface_adapter.filter_movies.FilterMoviesPresenter;
 import interface_adapter.filter_movies.FilterMoviesViewModel;
@@ -76,7 +76,6 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
     public static final String WATCHLIST_VIEW = "Watchlist";
     public static final String MY_BOOKINGS_VIEW = "MyBookings";
 
-
     private final CardLayout cardLayout;
     private final JPanel cards;
 
@@ -87,8 +86,6 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
     private final BookingView bookingView;
     private final WatchlistView watchlistView;
     private final MyBookingsView myBookingsView;
-
-
 
     // set later by AppBuilder
     private LogoutController logoutController;
@@ -122,7 +119,6 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
         // ===== Bookings controller (reads per-user bookings from the same JSON) =====
         BookingsDataAccessInterface bookingsDAO = userProfileDAO;
         BookingsController bookingsController = new BookingsController(bookingsDAO, userDAO);
-
 
         // ===== ViewModels =====
         BookMovieViewModel bookingVM = new BookMovieViewModel();
@@ -280,14 +276,17 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
         }
 
         if (FILTERED_VIEW.equals(screenName)) {
-            // Build criteria from LoggedInView's FilterPanel
-            FilterCriteria criteria = loggedInView.buildFilterCriteriaOrNull();
-            if (criteria == null) {
-                // Invalid input (e.g. year) – stay on current screen.
+            Integer yearValue = loggedInView.getValidatedYearOrShowError();
+            if (yearValue == null) {
+
                 return;
             }
-            // Apply immediately so the user sees filtered results as soon as they arrive.
-            filteredView.applyFilterCriteria(criteria);
+            String year = String.valueOf(yearValue);
+            String rating = loggedInView.getRatingString();
+            String genre = loggedInView.getSelectedGenre();
+            String search = loggedInView.getSearchQuery();
+
+            filteredView.applyFilterFromHome(year, rating, genre, search);
         }
 
         cardLayout.show(cards, screenName);
