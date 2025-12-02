@@ -180,9 +180,6 @@ public class LoggedInView extends JPanel {
         movieDetailsView = new MovieDetailsView(movieDetailsViewModel, watchlistController);
     }
 
-    /**
-     * NEW: allow MainAppFrame to push the genre list into this view's FilterPanel.
-     */
     public void setGenres(java.util.List<String> genres) {
         if (filterPanel != null) {
             filterPanel.setGenres(genres);
