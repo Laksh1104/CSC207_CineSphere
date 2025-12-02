@@ -4,6 +4,7 @@ import data_access.BookingMovieDataAccessObject;
 import data_access.CinemaDataAccessObject;
 import data_access.FileUserDataAccessObject;
 import data_access.InMemoryTicketDataAccessObject;
+import data_access.MovieDetailsDataAccessObject;
 import data_access.PersistentTicketDataAccessObject;
 import data_access.PopularMoviesDataAccessObject;
 import data_access.SearchFilmDataAccessObject;
@@ -30,6 +31,9 @@ import interface_adapter.login.LoginPresenter;
 import interface_adapter.login.LoginViewModel;
 import interface_adapter.logout.LogoutController;
 import interface_adapter.logout.LogoutPresenter;
+import interface_adapter.movie_details.MovieDetailsController;
+import interface_adapter.movie_details.MovieDetailsPresenter;
+import interface_adapter.movie_details.MovieDetailsViewModel;
 import interface_adapter.popular_movies.PopularMoviesController;
 import interface_adapter.popular_movies.PopularMoviesPresenter;
 import interface_adapter.popular_movies.PopularMoviesViewModel;
@@ -37,27 +41,39 @@ import interface_adapter.signup.SignupController;
 import interface_adapter.signup.SignupPresenter;
 import interface_adapter.signup.SignupViewModel;
 import interface_adapter.watchlist.WatchlistController;
-
 import interface_adapter.watchlist.WatchlistPresenter;
 import interface_adapter.watchlist.WatchlistViewModel;
+
 import io.github.cdimascio.dotenv.Dotenv;
+
 import use_case.book_movie.BookMovieInputBoundary;
 import use_case.book_movie.BookMovieInteractor;
 import use_case.book_movie.BookMovieOutputBoundary;
 import use_case.book_movie.BookTicketDataAccessInterface;
+
 import use_case.login.LoginInputBoundary;
 import use_case.login.LoginInteractor;
+
 import use_case.logout.LogoutInputBoundary;
 import use_case.logout.LogoutInteractor;
+
 import use_case.movie_filter.FilterMoviesInputBoundary;
 import use_case.movie_filter.FilterMoviesInteractor;
 import use_case.movie_filter.FilterMoviesOutputBoundary;
+
+import use_case.movie_details.MovieDetailsDataAccessInterface;
+import use_case.movie_details.MovieDetailsInputBoundary;
+import use_case.movie_details.MovieDetailsInteractor;
+import use_case.movie_details.MovieDetailsOutputBoundary;
+
 import use_case.popular_movies.PopularMoviesInputBoundary;
 import use_case.popular_movies.PopularMoviesInteractor;
 import use_case.popular_movies.PopularMoviesOutputBoundary;
+
 import use_case.search_film.SearchFilmInputBoundary;
 import use_case.search_film.SearchFilmInteractor;
 import use_case.search_film.SearchFilmOutputBoundary;
+
 import use_case.signup.SignupInputBoundary;
 import use_case.signup.SignupInteractor;
 import use_case.signup.SignupOutputBoundary;
@@ -65,10 +81,12 @@ import use_case.signup.SignupOutputBoundary;
 import use_case.watchlist.WatchlistInputBoundary;
 import use_case.watchlist.WatchlistInteractor;
 import use_case.watchlist.WatchlistOutputBoundary;
+
 import view.BookingView;
 import view.FilteredView;
 import view.LoggedInView;
 import view.LoginView;
+import view.MovieDetailsView;
 import view.MyBookingsView;
 import view.WatchlistView;
 
@@ -115,6 +133,7 @@ public class AppBuilder {
     private final TmdbMovieDataAccessObject filterMoviesDataAccessObject;
     private final BookingMovieDataAccessObject bookingMovieDataAccessObject;
     private final CinemaDataAccessObject cinemaDataAccessObject;
+    private final MovieDetailsDataAccessObject movieDetailsDataAccessObject;
     private BookTicketDataAccessInterface ticketDataAccessObject;
 
     // View Models
@@ -125,6 +144,7 @@ public class AppBuilder {
     private FilterMoviesViewModel filterMoviesViewModel;
     private BookMovieViewModel bookMovieViewModel;
     private WatchlistViewModel watchlistViewModel;
+    private MovieDetailsViewModel movieDetailsViewModel;
 
     // Views
     private LoginView loginView;
@@ -133,6 +153,7 @@ public class AppBuilder {
     private BookingView bookingView;
     private WatchlistView watchlistView;
     private MyBookingsView myBookingsView;
+    private MovieDetailsView movieDetailsView;
 
     // Controllers
     private LoginController loginController;
@@ -144,6 +165,7 @@ public class AppBuilder {
     private BookMovieController bookMovieController;
     private WatchlistController watchlistController;
     private BookingsController bookingsController;
+    private MovieDetailsController movieDetailsController;
 
     // Presenters
     private LoginPresenter loginPresenter;
@@ -166,6 +188,7 @@ public class AppBuilder {
         this.filterMoviesDataAccessObject = new TmdbMovieDataAccessObject(TMDB_V3_API_KEY);
         this.bookingMovieDataAccessObject = new BookingMovieDataAccessObject(movieFactory);
         this.cinemaDataAccessObject = new CinemaDataAccessObject(cinemaFactory);
+        this.movieDetailsDataAccessObject = new MovieDetailsDataAccessObject();
 
         // Initialize ticket DAO with persistence
         this.ticketDataAccessObject = new PersistentTicketDataAccessObject(
@@ -198,8 +221,7 @@ public class AppBuilder {
     public AppBuilder addLoggedInView() {
         popularMoviesViewModel = new PopularMoviesViewModel();
         searchFilmViewModel = new SearchFilmViewModel();
-        loggedInView = new LoggedInView();
-        cardPanel.add(loggedInView, HOME_VIEW);
+        // LoggedInView will be constructed in build() once controllers are ready
         return this;
     }
 
@@ -242,7 +264,7 @@ public class AppBuilder {
         return this;
     }
 
-    // Wiring use cases
+    // ===== WIRING USE CASES =====
 
     /**
      * Adds the Login Use Case to the application.
@@ -287,10 +309,6 @@ public class AppBuilder {
         final PopularMoviesInputBoundary popularInteractor =
                 new PopularMoviesInteractor(popularMoviesDataAccessObject, popularPresenter);
         popularMoviesController = new PopularMoviesController(popularInteractor);
-
-        if (loggedInView != null) {
-            loggedInView.setPopularMoviesDependencies(popularMoviesController, popularMoviesViewModel);
-        }
         return this;
     }
 
@@ -304,10 +322,6 @@ public class AppBuilder {
         final SearchFilmInputBoundary searchInteractor =
                 new SearchFilmInteractor(searchFilmDataAccessObject, searchPresenter);
         searchFilmController = new SearchFilmController(searchInteractor);
-
-        if (loggedInView != null) {
-            loggedInView.setSearchDependencies(searchFilmController, searchFilmViewModel);
-        }
         return this;
     }
 
@@ -321,13 +335,6 @@ public class AppBuilder {
         final FilterMoviesInputBoundary filterInteractor =
                 new FilterMoviesInteractor(filterMoviesDataAccessObject, filterPresenter);
         filterMoviesController = new FilterMoviesController(filterInteractor);
-
-        // Preload genres into the home screen
-        if (loggedInView != null) {
-            Map<String, Integer> initialGenres = filterMoviesDataAccessObject.getMovieGenres();
-            loggedInView.setGenres(new ArrayList<>(initialGenres.keySet()));
-        }
-
         return this;
     }
 
@@ -362,10 +369,30 @@ public class AppBuilder {
                 new WatchlistInteractor(userProfileDataAccessObject, userDataAccessObject, watchlistPresenter);
 
         watchlistController = new WatchlistController(watchlistInteractor, watchlistViewModel);
+        return this;
+    }
 
-        if (loggedInView != null) {
-            loggedInView.setMovieDetailsDependencies(watchlistController);
-        }
+    /**
+     * Adds the Movie Details Use Case to the application.
+     * This centralizes movie-details wiring away from any view.
+     * @return this builder
+     */
+    public AppBuilder addMovieDetailsUseCase() {
+        movieDetailsViewModel = new MovieDetailsViewModel();
+
+        final MovieDetailsOutputBoundary movieDetailsPresenter =
+                new MovieDetailsPresenter(movieDetailsViewModel);
+
+        final MovieDetailsDataAccessInterface movieDetailsDao = movieDetailsDataAccessObject;
+
+        final MovieDetailsInputBoundary movieDetailsInteractor =
+                new MovieDetailsInteractor(movieDetailsDao, movieDetailsPresenter);
+
+        movieDetailsController = new MovieDetailsController(movieDetailsInteractor);
+
+        // MovieDetailsView needs watchlistController for "add to watchlist"
+        movieDetailsView = new MovieDetailsView(movieDetailsViewModel, watchlistController);
+
         return this;
     }
 
@@ -398,8 +425,30 @@ public class AppBuilder {
         );
         cardPanel.add(loginView, LOGIN_VIEW);
 
+        // Create LoggedInView now that its controllers & view models are ready
+        loggedInView = new LoggedInView(
+                searchFilmController,
+                searchFilmViewModel,
+                popularMoviesController,
+                popularMoviesViewModel,
+                movieDetailsController,
+                movieDetailsView,
+                movieDetailsViewModel
+        );
+        cardPanel.add(loggedInView, HOME_VIEW);
+
+        // Preload genres into the home screen using the filter DAO
+        Map<String, Integer> initialGenres = filterMoviesDataAccessObject.getMovieGenres();
+        loggedInView.setGenres(new ArrayList<>(initialGenres.keySet()));
+
         // Create FilteredView now that controllers are ready
-        filteredView = new FilteredView(filterMoviesController, filterMoviesViewModel, watchlistController);
+        filteredView = new FilteredView(
+                filterMoviesController,
+                filterMoviesViewModel,
+                movieDetailsController,
+                movieDetailsView,
+                movieDetailsViewModel
+        );
         cardPanel.add(filteredView, FILTERED_VIEW);
 
         // Create WatchlistView now that controller is ready

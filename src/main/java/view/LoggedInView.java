@@ -1,18 +1,11 @@
 package view;
 
-import data_access.MovieDetailsDataAccessObject;
 import interface_adapter.SearchFilm.*;
 import interface_adapter.logout.LogoutController;
 import interface_adapter.movie_details.MovieDetailsController;
-import interface_adapter.movie_details.MovieDetailsPresenter;
 import interface_adapter.movie_details.MovieDetailsViewModel;
 import interface_adapter.popular_movies.PopularMoviesController;
 import interface_adapter.popular_movies.PopularMoviesViewModel;
-import interface_adapter.watchlist.WatchlistController;
-import use_case.movie_details.MovieDetailsDataAccessInterface;
-import use_case.movie_details.MovieDetailsInputBoundary;
-import use_case.movie_details.MovieDetailsInteractor;
-import use_case.movie_details.MovieDetailsOutputBoundary;
 import view.components.FilterPanel;
 import view.components.Flyweight.PosterFlyweightFactory;
 import view.components.HeaderPanel;
@@ -23,15 +16,17 @@ import java.awt.*;
 
 public class LoggedInView extends JPanel {
 
-    private SearchFilmController searchFilmController;
-    private SearchFilmViewModel searchFilmViewModel;
+    private final SearchFilmController searchFilmController;
+    private final SearchFilmViewModel searchFilmViewModel;
 
-    private PopularMoviesController popularMoviesController;
-    private PopularMoviesViewModel popularMoviesViewModel;
+    private final PopularMoviesController popularMoviesController;
+    private final PopularMoviesViewModel popularMoviesViewModel;
 
-    private MovieDetailsController movieDetailsController;
-    private MovieDetailsView movieDetailsView;
+    private final MovieDetailsController movieDetailsController;
+    private final MovieDetailsView movieDetailsView;
+    private final MovieDetailsViewModel movieDetailsViewModel;
 
+    // Logout is still injected via setter
     private LogoutController logoutController;
 
     private ScreenSwitchListener listener;
@@ -39,7 +34,22 @@ public class LoggedInView extends JPanel {
     private JPanel moviePanel;
     private FilterPanel filterPanel;
 
-    public LoggedInView() {
+    public LoggedInView(SearchFilmController searchFilmController,
+                        SearchFilmViewModel searchFilmViewModel,
+                        PopularMoviesController popularMoviesController,
+                        PopularMoviesViewModel popularMoviesViewModel,
+                        MovieDetailsController movieDetailsController,
+                        MovieDetailsView movieDetailsView,
+                        MovieDetailsViewModel movieDetailsViewModel) {
+
+        this.searchFilmController = searchFilmController;
+        this.searchFilmViewModel = searchFilmViewModel;
+        this.popularMoviesController = popularMoviesController;
+        this.popularMoviesViewModel = popularMoviesViewModel;
+        this.movieDetailsController = movieDetailsController;
+        this.movieDetailsView = movieDetailsView;
+        this.movieDetailsViewModel = movieDetailsViewModel;
+
         setBackground(new Color(255, 255, 224));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
@@ -84,6 +94,12 @@ public class LoggedInView extends JPanel {
         add(scrollPane);
 
         setupFilterPanelHandlers();
+        setupSearchFilmListeners();
+        setupPopularMoviesListeners();
+
+        if (popularMoviesController != null) {
+            popularMoviesController.loadPopularMovies();
+        }
     }
 
     private void setupFilterPanelHandlers() {
@@ -104,19 +120,10 @@ public class LoggedInView extends JPanel {
         });
     }
 
-    public void setScreenSwitchListener(ScreenSwitchListener listener) {
-        this.listener = listener;
-    }
+    private void setupSearchFilmListeners() {
+        if (searchFilmViewModel == null) return;
 
-    public void setLogoutDependencies(LogoutController controller) {
-        this.logoutController = controller;
-    }
-
-    public void setSearchDependencies(SearchFilmController controller, SearchFilmViewModel viewModel) {
-        this.searchFilmController = controller;
-        this.searchFilmViewModel = viewModel;
-
-        viewModel.addPropertyChangeListener(evt -> {
+        searchFilmViewModel.addPropertyChangeListener(evt -> {
             if (!"state".equals(evt.getPropertyName())) return;
             SearchFilmState state = (SearchFilmState) evt.getNewValue();
 
@@ -142,11 +149,10 @@ public class LoggedInView extends JPanel {
         });
     }
 
-    public void setPopularMoviesDependencies(PopularMoviesController controller, PopularMoviesViewModel viewModel) {
-        this.popularMoviesController = controller;
-        this.popularMoviesViewModel = viewModel;
+    private void setupPopularMoviesListeners() {
+        if (popularMoviesViewModel == null) return;
 
-        viewModel.addPropertyChangeListener(evt -> {
+        popularMoviesViewModel.addPropertyChangeListener(evt -> {
             String property = evt.getPropertyName();
 
             if ("posterUrls".equals(property)) {
@@ -165,20 +171,14 @@ public class LoggedInView extends JPanel {
                 }
             }
         });
-
-        if (popularMoviesController != null) {
-            popularMoviesController.loadPopularMovies();
-        }
     }
 
-    public void setMovieDetailsDependencies(WatchlistController watchlistController) {
-        MovieDetailsViewModel movieDetailsViewModel = new MovieDetailsViewModel();
-        MovieDetailsOutputBoundary movieDetailsPresenter = new MovieDetailsPresenter(movieDetailsViewModel);
-        MovieDetailsDataAccessInterface api = new MovieDetailsDataAccessObject();
-        MovieDetailsInputBoundary movieDetailsInteractor = new MovieDetailsInteractor(api, movieDetailsPresenter);
+    public void setScreenSwitchListener(ScreenSwitchListener listener) {
+        this.listener = listener;
+    }
 
-        movieDetailsController = new MovieDetailsController(movieDetailsInteractor);
-        movieDetailsView = new MovieDetailsView(movieDetailsViewModel, watchlistController);
+    public void setLogoutDependencies(LogoutController controller) {
+        this.logoutController = controller;
     }
 
     public void setGenres(java.util.List<String> genres) {
@@ -206,7 +206,7 @@ public class LoggedInView extends JPanel {
     }
 
     private void refreshPopularMovies() {
-        if (moviePanel == null) return;
+        if (moviePanel == null || popularMoviesViewModel == null) return;
 
         moviePanel.removeAll();
 
