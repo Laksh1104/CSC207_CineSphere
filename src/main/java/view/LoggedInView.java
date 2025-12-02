@@ -1,6 +1,8 @@
 package view;
 
-import interface_adapter.SearchFilm.*;
+import interface_adapter.SearchFilm.SearchFilmController;
+import interface_adapter.SearchFilm.SearchFilmState;
+import interface_adapter.SearchFilm.SearchFilmViewModel;
 import interface_adapter.logout.LogoutController;
 import interface_adapter.movie_details.MovieDetailsController;
 import interface_adapter.movie_details.MovieDetailsViewModel;
@@ -26,9 +28,7 @@ public class LoggedInView extends JPanel {
     private final MovieDetailsView movieDetailsView;
     private final MovieDetailsViewModel movieDetailsViewModel;
 
-    // Logout is still injected via setter
     private LogoutController logoutController;
-
     private ScreenSwitchListener listener;
 
     private JPanel moviePanel;
@@ -94,15 +94,17 @@ public class LoggedInView extends JPanel {
         add(scrollPane);
 
         setupFilterPanelHandlers();
-        setupSearchFilmListeners();
+        setupSearchListeners();
         setupPopularMoviesListeners();
 
+        // Trigger initial popular movies load
         if (popularMoviesController != null) {
             popularMoviesController.loadPopularMovies();
         }
     }
 
     private void setupFilterPanelHandlers() {
+        // Search bar at the top of LoggedInView
         filterPanel.setOnSearch(query -> {
             if (query == null || query.trim().isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Please enter a film name.");
@@ -115,12 +117,14 @@ public class LoggedInView extends JPanel {
             searchFilmController.execute(query.trim());
         });
 
+        // "Filter" button – just tells the ScreenSwitchListener to show FilteredView.
+        // ScreenSwitchListener will pull values from this view and call FilteredView.applyFilterFromHome.
         filterPanel.setOnFilter(() -> {
             if (listener != null) listener.onSwitchScreen("Filtered");
         });
     }
 
-    private void setupSearchFilmListeners() {
+    private void setupSearchListeners() {
         if (searchFilmViewModel == null) return;
 
         searchFilmViewModel.addPropertyChangeListener(evt -> {
@@ -181,6 +185,9 @@ public class LoggedInView extends JPanel {
         this.logoutController = controller;
     }
 
+    /**
+     * Allow AppBuilder to push the genre list into this view's FilterPanel.
+     */
     public void setGenres(java.util.List<String> genres) {
         if (filterPanel != null) {
             filterPanel.setGenres(genres);
@@ -212,6 +219,12 @@ public class LoggedInView extends JPanel {
 
         java.util.List<String> posterUrls = popularMoviesViewModel.getPosterUrls();
         java.util.List<Integer> filmIds = popularMoviesViewModel.getFilmIds();
+
+        if (posterUrls == null || filmIds == null) {
+            moviePanel.revalidate();
+            moviePanel.repaint();
+            return;
+        }
 
         int count = Math.min(posterUrls.size(), filmIds.size());
 
@@ -261,5 +274,37 @@ public class LoggedInView extends JPanel {
 
         button.setBorder(BorderFactory.createDashedBorder(Color.GRAY));
         return button;
+    }
+
+    // =========================
+    //  Filter state accessors
+    // =========================
+
+    public Integer getValidatedYearOrShowError() {
+        if (filterPanel == null) {
+            return null;
+        }
+        return filterPanel.getValidatedYearOrShowError();
+    }
+
+    public String getRatingString() {
+        if (filterPanel == null) {
+            return "All Ratings";
+        }
+        return filterPanel.getRatingString();
+    }
+
+    public String getSelectedGenre() {
+        if (filterPanel == null) {
+            return "All Genres";
+        }
+        return filterPanel.getSelectedGenre();
+    }
+
+    public String getSearchQuery() {
+        if (filterPanel == null) {
+            return "";
+        }
+        return filterPanel.getSearchQuery();
     }
 }
