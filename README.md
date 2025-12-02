@@ -14,11 +14,13 @@ You can get an API key and the API Read Access Token from https://www.themoviedb
 ## MOVIEGLU API Key
 Add you MOVIEGLU Evaluation credentials as shown below which you caan request at https://api-registration.movieglu.com/.
 
+```env
 MOVIEGLU_API_VERSION=[API_VERSION]
 MOVIEGLU_AUTHORIZATION=[AUTHORIZATION]
 MOVIEGLU_CLIENT=[CLIENT]
 MOVIEGLU_X_API_KEY=[API_KEY]
 MOVIEGLU_TERRITORY=[TERRITORY]
+```
 
 If you are using the sandbox data, set territory to XX and in file CinemaDataAccessObject, change **.add("geolocation", get_geolocation())** to **.add("geolocation", TEST_GEOLOCATION)** in buildHeaders().
   
