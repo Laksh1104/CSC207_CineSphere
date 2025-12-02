@@ -38,6 +38,8 @@ import interface_adapter.signup.SignupPresenter;
 import interface_adapter.signup.SignupViewModel;
 import interface_adapter.watchlist.WatchlistController;
 
+import interface_adapter.watchlist.WatchlistPresenter;
+import interface_adapter.watchlist.WatchlistViewModel;
 import io.github.cdimascio.dotenv.Dotenv;
 import use_case.book_movie.BookMovieInputBoundary;
 import use_case.book_movie.BookMovieInteractor;
@@ -68,6 +70,9 @@ import use_case.signup.SignupInteractor;
 import use_case.signup.SignupOutputBoundary;
 import use_case.watchlist.WatchlistDataAccessInterface;
 
+import use_case.watchlist.WatchlistInputBoundary;
+import use_case.watchlist.WatchlistInteractor;
+import use_case.watchlist.WatchlistOutputBoundary;
 import view.BookingView;
 import view.FilteredView;
 import view.LoggedInView;
@@ -127,6 +132,7 @@ public class AppBuilder {
     private SearchFilmViewModel searchFilmViewModel;
     private FilterMoviesViewModel filterMoviesViewModel;
     private BookMovieViewModel bookMovieViewModel;
+    private WatchlistViewModel watchlistViewModel;
 
     // ===== VIEWS =====
     private LoginView loginView;
@@ -355,7 +361,15 @@ public class AppBuilder {
      * @return this builder
      */
     public AppBuilder addWatchlistUseCase() {
-        watchlistController = new WatchlistController(userProfileDataAccessObject, userDataAccessObject);
+        watchlistViewModel = new WatchlistViewModel();
+
+        final WatchlistOutputBoundary watchlistPresenter =
+                new WatchlistPresenter(watchlistViewModel);
+
+        final WatchlistInputBoundary watchlistInteractor =
+                new WatchlistInteractor(userProfileDataAccessObject, userDataAccessObject, watchlistPresenter);
+
+        watchlistController = new WatchlistController(watchlistInteractor, watchlistViewModel);
 
         if (loggedInView != null) {
             loggedInView.setMovieDetailsDependencies(watchlistController);
@@ -380,7 +394,7 @@ public class AppBuilder {
     public JFrame build() {
         final JFrame application = new JFrame("CineSphere Application");
         application.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        application.setSize(1000, 700);
+        application.setExtendedState(JFrame.MAXIMIZED_BOTH);
         application.setLocationRelativeTo(null);
 
         // Create LoginView now that controllers are ready
@@ -397,7 +411,7 @@ public class AppBuilder {
         cardPanel.add(filteredView, FILTERED_VIEW);
 
         // Create WatchlistView now that controller is ready
-        watchlistView = new WatchlistView(watchlistController);
+        watchlistView = new WatchlistView(watchlistController, watchlistViewModel);
         cardPanel.add(watchlistView, WATCHLIST_VIEW);
 
         // Create MyBookingsView now that controller is ready
