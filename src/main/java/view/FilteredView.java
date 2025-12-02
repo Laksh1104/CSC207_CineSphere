@@ -59,6 +59,7 @@ public class FilteredView extends JPanel {
         setLayout(new BorderLayout());
         buildUI();
 
+        // Default call so the grid isn't empty if the user lands here directly
         callFilter();
     }
 
@@ -185,6 +186,32 @@ public class FilteredView extends JPanel {
         add(backgroundPanel, BorderLayout.CENTER);
     }
 
+    /**
+     * Called when navigating from Home -> Filtered.
+     * Uses the filter state taken from LoggedInView.
+     */
+    public void applyFilterFromHome(String year,
+                                    String rating,
+                                    String genreText,
+                                    String search) {
+        if (year == null || year.isBlank()) {
+            return;
+        }
+
+        currentPage = 1;
+
+        updateFilteredByLabel(year, rating, genreText, search);
+
+        String genreId = null;
+        if (genreText != null && !"All Genres".equalsIgnoreCase(genreText)) {
+            syncGenresFromViewModel();
+            genreId = genreNameToId.get(genreText);
+        }
+
+        filterMoviesController.execute(year, rating, genreId, search, currentPage);
+        updateGrid();
+    }
+
     private void callFilter() {
         Integer y = filterPanel.getValidatedYearOrShowError();
         if (y == null) {
@@ -210,9 +237,9 @@ public class FilteredView extends JPanel {
 
     private void updateFilteredByLabel(String year, String rating, String genre, String search) {
         String text = "Filtered by: Year = " + year +
-                "   Rating = " + (rating.equals("All Ratings") ? "Any" : rating) +
+                "   Rating = " + (rating != null && rating.equals("All Ratings") ? "Any" : rating) +
                 "   Genre = " + genre +
-                (search.isEmpty() ? "" : "   Search = \"" + search + "\"");
+                (search == null || search.isEmpty() ? "" : "   Search = \"" + search + "\"");
         filteredByLabel.setText(text);
     }
 
@@ -234,17 +261,14 @@ public class FilteredView extends JPanel {
         noMoviesLabel.setVisible(false);
 
         if (gridPanel != null) gridPanel.setVisible(true);
-        if (pagingPanel != null) {
-            pagingPanel.setVisible(true);
-            gridPanel.removeAll();
-        } else {
-            assert gridPanel != null;
-            gridPanel.removeAll();
-        }
+        if (pagingPanel != null) pagingPanel.setVisible(true);
+
+        gridPanel.removeAll();
 
         for (int i = 0; i < PAGE_SIZE; i++) {
             JPanel empty = new JPanel();
             empty.setBackground(COLOR);
+            empty.setBorder(BorderFactory.createDashedBorder(Color.GRAY));
             gridPanel.add(empty);
         }
 
@@ -298,6 +322,7 @@ public class FilteredView extends JPanel {
         for (int i = count; i < PAGE_SIZE; i++) {
             JPanel empty = new JPanel();
             empty.setBackground(COLOR);
+            empty.setBorder(BorderFactory.createDashedBorder(Color.GRAY));
             gridPanel.add(empty);
         }
 
