@@ -327,6 +327,11 @@ public class AppBuilder {
         // MovieDetailsView needs watchlistController for "add to watchlist"
         movieDetailsView = new MovieDetailsView(movieDetailsViewModel, watchlistController);
 
+        // Wire to LoggedInView
+        if (loggedInView != null) {
+            loggedInView.setMovieDetailsController(movieDetailsController, movieDetailsView);
+        }
+
         return this;
     }
 
