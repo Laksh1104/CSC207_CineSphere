@@ -5,7 +5,9 @@ CSC207 Team Project
 
 Create a file named `.env` in the project root directory containing an API key for TMDB and your API Read Access Token:
 ```env
-TMDB_API_KEY=abcd1234
+TMDB_API_KEY=[YOUR API KEY HERE]
+TMDB_BEARER_TOKEN=Bearer [YOUR TOKEN HERE]
 ```
 
 You can get an API key and the API Read Access Token from https://www.themoviedb.org/settings/api
+  
