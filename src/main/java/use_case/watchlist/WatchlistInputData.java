@@ -1,9 +1,17 @@
 package use_case.watchlist;
-import java.util.List;
 
+/**
+ * Simple input DTO for watchlist operations that target a single poster URL.
+ */
 public class WatchlistInputData {
-    public String movieUrl;
-    public WatchlistInputData(String movieUrl) {
-        this.movieUrl = movieUrl;
+
+    private final String posterUrl;
+
+    public WatchlistInputData(String posterUrl) {
+        this.posterUrl = posterUrl;
+    }
+
+    public String getPosterUrl() {
+        return posterUrl;
     }
 }
