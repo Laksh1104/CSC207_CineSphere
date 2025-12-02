@@ -203,42 +203,23 @@ public class AppBuilder {
 
     // ===== VIEW ADDITION METHODS =====
 
-    /**
-     * Adds the Login View to the application.
-     * @return this builder
-     */
     public AppBuilder addLoginView() {
         loginViewModel = new LoginViewModel();
         signupViewModel = new SignupViewModel();
-        // LoginView will be fully constructed after use cases are wired
         return this;
     }
 
-    /**
-     * Adds the Home (LoggedIn) View to the application.
-     * @return this builder
-     */
     public AppBuilder addLoggedInView() {
         popularMoviesViewModel = new PopularMoviesViewModel();
         searchFilmViewModel = new SearchFilmViewModel();
-        // LoggedInView will be constructed in build() once controllers are ready
         return this;
     }
 
-    /**
-     * Adds the Filtered Movies View to the application.
-     * @return this builder
-     */
     public AppBuilder addFilteredView() {
         filterMoviesViewModel = new FilterMoviesViewModel();
-        // FilteredView will be fully constructed after use cases are wired
         return this;
     }
 
-    /**
-     * Adds the Booking View to the application.
-     * @return this builder
-     */
     public AppBuilder addBookingView() {
         bookMovieViewModel = new BookMovieViewModel();
         bookingView = new BookingView(bookMovieViewModel, bookingQuery);
@@ -246,106 +227,68 @@ public class AppBuilder {
         return this;
     }
 
-    /**
-     * Adds the Watchlist View to the application.
-     * @return this builder
-     */
     public AppBuilder addWatchlistView() {
-        // WatchlistView will be fully constructed after watchlist controller is wired
         return this;
     }
 
-    /**
-     * Adds the My Bookings View to the application.
-     * @return this builder
-     */
     public AppBuilder addMyBookingsView() {
-        // MyBookingsView will be fully constructed after bookings controller is wired
         return this;
     }
 
-    // ===== WIRING USE CASES =====
+    // ===== USE CASE WIRING =====
 
-    /**
-     * Adds the Login Use Case to the application.
-     * @return this builder
-     */
     public AppBuilder addLoginUseCase() {
         loginPresenter = new LoginPresenter(loginViewModel);
-        final LoginInputBoundary loginInteractor = new LoginInteractor(
+        LoginInputBoundary loginInteractor = new LoginInteractor(
                 userDataAccessObject, loginPresenter);
         loginController = new LoginController(loginInteractor);
         return this;
     }
 
-    /**
-     * Adds the Signup Use Case to the application.
-     * @return this builder
-     */
     public AppBuilder addSignupUseCase() {
-        final SignupOutputBoundary signupPresenter = new SignupPresenter(signupViewModel);
-        final SignupInputBoundary signupInteractor = new SignupInteractor(
+        SignupOutputBoundary signupPresenter = new SignupPresenter(signupViewModel);
+        SignupInputBoundary signupInteractor = new SignupInteractor(
                 userDataAccessObject, signupPresenter, userFactory);
         signupController = new SignupController(signupInteractor);
         return this;
     }
 
-    /**
-     * Adds the Logout Use Case to the application.
-     * @return this builder
-     */
     public AppBuilder addLogoutUseCase() {
-        // LogoutPresenter will be set with screen switch listener during build
+        // wired after ScreenSwitchListener exists in build()
         return this;
     }
 
-    /**
-     * Adds the Popular Movies Use Case to the application.
-     * @return this builder
-     */
     public AppBuilder addPopularMoviesUseCase() {
-        final PopularMoviesOutputBoundary popularPresenter =
+        PopularMoviesOutputBoundary popularPresenter =
                 new PopularMoviesPresenter(popularMoviesViewModel);
-        final PopularMoviesInputBoundary popularInteractor =
+        PopularMoviesInputBoundary popularInteractor =
                 new PopularMoviesInteractor(popularMoviesDataAccessObject, popularPresenter);
         popularMoviesController = new PopularMoviesController(popularInteractor);
         return this;
     }
 
-    /**
-     * Adds the Search Film Use Case to the application.
-     * @return this builder
-     */
     public AppBuilder addSearchFilmUseCase() {
-        final SearchFilmOutputBoundary searchPresenter =
+        SearchFilmOutputBoundary searchPresenter =
                 new SearchFilmPresenter(searchFilmViewModel);
-        final SearchFilmInputBoundary searchInteractor =
+        SearchFilmInputBoundary searchInteractor =
                 new SearchFilmInteractor(searchFilmDataAccessObject, searchPresenter);
         searchFilmController = new SearchFilmController(searchInteractor);
         return this;
     }
 
-    /**
-     * Adds the Filter Movies Use Case to the application.
-     * @return this builder
-     */
     public AppBuilder addFilterMoviesUseCase() {
-        final FilterMoviesOutputBoundary filterPresenter =
+        FilterMoviesOutputBoundary filterPresenter =
                 new FilterMoviesPresenter(filterMoviesViewModel);
-        final FilterMoviesInputBoundary filterInteractor =
+        FilterMoviesInputBoundary filterInteractor =
                 new FilterMoviesInteractor(filterMoviesDataAccessObject, filterPresenter);
         filterMoviesController = new FilterMoviesController(filterInteractor);
         return this;
     }
 
-    /**
-     * Adds the Book Movie Use Case to the application.
-     * @return this builder
-     */
     public AppBuilder addBookMovieUseCase() {
-        final BookMovieOutputBoundary bookMoviePresenter =
+        BookMovieOutputBoundary bookMoviePresenter =
                 new BookMoviePresenter(bookMovieViewModel);
-        final BookMovieInputBoundary bookMovieInteractor =
+        BookMovieInputBoundary bookMovieInteractor =
                 new BookMovieInteractor(ticketDataAccessObject, bookMoviePresenter);
         bookMovieController = new BookMovieController(bookMovieInteractor);
 
@@ -355,37 +298,28 @@ public class AppBuilder {
         return this;
     }
 
-    /**
-     * Adds the Watchlist Use Case to the application.
-     * @return this builder
-     */
     public AppBuilder addWatchlistUseCase() {
         watchlistViewModel = new WatchlistViewModel();
 
-        final WatchlistOutputBoundary watchlistPresenter =
+        WatchlistOutputBoundary watchlistPresenter =
                 new WatchlistPresenter(watchlistViewModel);
 
-        final WatchlistInputBoundary watchlistInteractor =
+        WatchlistInputBoundary watchlistInteractor =
                 new WatchlistInteractor(userProfileDataAccessObject, userDataAccessObject, watchlistPresenter);
 
         watchlistController = new WatchlistController(watchlistInteractor, watchlistViewModel);
         return this;
     }
 
-    /**
-     * Adds the Movie Details Use Case to the application.
-     * This centralizes movie-details wiring away from any view.
-     * @return this builder
-     */
     public AppBuilder addMovieDetailsUseCase() {
         movieDetailsViewModel = new MovieDetailsViewModel();
 
-        final MovieDetailsOutputBoundary movieDetailsPresenter =
+        MovieDetailsOutputBoundary movieDetailsPresenter =
                 new MovieDetailsPresenter(movieDetailsViewModel);
 
-        final MovieDetailsDataAccessInterface movieDetailsDao = movieDetailsDataAccessObject;
+        MovieDetailsDataAccessInterface movieDetailsDao = movieDetailsDataAccessObject;
 
-        final MovieDetailsInputBoundary movieDetailsInteractor =
+        MovieDetailsInputBoundary movieDetailsInteractor =
                 new MovieDetailsInteractor(movieDetailsDao, movieDetailsPresenter);
 
         movieDetailsController = new MovieDetailsController(movieDetailsInteractor);
@@ -396,27 +330,20 @@ public class AppBuilder {
         return this;
     }
 
-    /**
-     * Adds the Bookings Use Case to the application.
-     * @return this builder
-     */
     public AppBuilder addBookingsUseCase() {
         bookingsController = new BookingsController(userProfileDataAccessObject, userDataAccessObject);
         return this;
     }
 
-    /**
-     * Builds and returns the complete CineSphere application JFrame.
-     * This method finalizes all view construction and wiring.
-     * @return the configured JFrame
-     */
+    // ===== BUILD =====
+
     public JFrame build() {
-        final JFrame application = new JFrame("CineSphere Application");
+        JFrame application = new JFrame("CineSphere Application");
         application.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         application.setExtendedState(JFrame.MAXIMIZED_BOTH);
         application.setLocationRelativeTo(null);
 
-        // Create LoginView now that controllers are ready
+        // Login
         loginView = new LoginView(
                 loginController,
                 loginViewModel,
@@ -425,7 +352,7 @@ public class AppBuilder {
         );
         cardPanel.add(loginView, LOGIN_VIEW);
 
-        // Create LoggedInView now that its controllers & view models are ready
+        // Logged-in (Home)
         loggedInView = new LoggedInView(
                 searchFilmController,
                 searchFilmViewModel,
@@ -437,11 +364,11 @@ public class AppBuilder {
         );
         cardPanel.add(loggedInView, HOME_VIEW);
 
-        // Preload genres into the home screen using the filter DAO
+        // Preload genres into the Home screen filter panel
         Map<String, Integer> initialGenres = filterMoviesDataAccessObject.getMovieGenres();
         loggedInView.setGenres(new ArrayList<>(initialGenres.keySet()));
 
-        // Create FilteredView now that controllers are ready
+        // Filtered view
         filteredView = new FilteredView(
                 filterMoviesController,
                 filterMoviesViewModel,
@@ -451,48 +378,48 @@ public class AppBuilder {
         );
         cardPanel.add(filteredView, FILTERED_VIEW);
 
-        // Create WatchlistView now that controller is ready
+        // Watchlist
         watchlistView = new WatchlistView(watchlistController, watchlistViewModel);
         cardPanel.add(watchlistView, WATCHLIST_VIEW);
 
-        // Create MyBookingsView now that controller is ready
+        // My bookings
         myBookingsView = new MyBookingsView(bookingsController);
         cardPanel.add(myBookingsView, MY_BOOKINGS_VIEW);
 
-        // Create screen switch listener for navigation
+        // Screen switch listener with auto-filter behaviour
         ScreenSwitchListenerImpl screenSwitchListener = new ScreenSwitchListenerImpl(
-                cardLayout, cardPanel, loginView, watchlistView, myBookingsView);
+                cardLayout,
+                cardPanel,
+                loginView,
+                loggedInView,
+                filteredView,
+                watchlistView,
+                myBookingsView
+        );
 
-        // Wire screen switch listeners to all views
+        // Wire screen switch listeners
         loggedInView.setScreenSwitchListener(screenSwitchListener);
         filteredView.setScreenSwitchListener(screenSwitchListener);
         bookingView.setScreenSwitchListener(screenSwitchListener);
         watchlistView.setScreenSwitchListener(screenSwitchListener);
         myBookingsView.setScreenSwitchListener(screenSwitchListener);
 
-        // Wire login presenter to switch screens after successful login
+        // Login presenter -> navigate after successful login
         loginPresenter.setScreenSwitchListener(screenSwitchListener);
 
-        // Create and wire logout use case
+        // Logout use case and wiring
         logoutPresenter = new LogoutPresenter(screenSwitchListener);
-        final LogoutInputBoundary logoutInteractor =
+        LogoutInputBoundary logoutInteractor =
                 new LogoutInteractor(userDataAccessObject, logoutPresenter);
         logoutController = new LogoutController(logoutInteractor);
-
-        // Wire logout controller to all views that need it
         wireLogoutToViews();
 
         application.add(cardPanel);
-
-        // Show login view initially
         cardLayout.show(cardPanel, LOGIN_VIEW);
 
         return application;
     }
 
-    /**
-     * Wires the logout controller to all views that support it.
-     */
     private void wireLogoutToViews() {
         wireLogoutToViewIfMethodExists(loggedInView);
         wireLogoutToViewIfMethodExists(filteredView);
@@ -501,11 +428,6 @@ public class AppBuilder {
         wireLogoutToViewIfMethodExists(myBookingsView);
     }
 
-    /**
-     * Attempts to wire logout controller to a view using reflection.
-     * Tries both setLogoutDependencies and setLogoutController methods.
-     * @param view the view to wire
-     */
     private void wireLogoutToViewIfMethodExists(Object view) {
         if (view == null || logoutController == null) return;
 
@@ -527,20 +449,29 @@ public class AppBuilder {
 
     /**
      * Inner class implementing ScreenSwitchListener for navigation between views.
+     * Now also auto-applies filters when switching from Home -> Filtered.
      */
     private static class ScreenSwitchListenerImpl implements view.ScreenSwitchListener {
         private final CardLayout cardLayout;
         private final JPanel cardPanel;
         private final LoginView loginView;
+        private final LoggedInView loggedInView;
+        private final FilteredView filteredView;
         private final WatchlistView watchlistView;
         private final MyBookingsView myBookingsView;
 
-        public ScreenSwitchListenerImpl(CardLayout cardLayout, JPanel cardPanel,
-                                        LoginView loginView, WatchlistView watchlistView,
+        public ScreenSwitchListenerImpl(CardLayout cardLayout,
+                                        JPanel cardPanel,
+                                        LoginView loginView,
+                                        LoggedInView loggedInView,
+                                        FilteredView filteredView,
+                                        WatchlistView watchlistView,
                                         MyBookingsView myBookingsView) {
             this.cardLayout = cardLayout;
             this.cardPanel = cardPanel;
             this.loginView = loginView;
+            this.loggedInView = loggedInView;
+            this.filteredView = filteredView;
             this.watchlistView = watchlistView;
             this.myBookingsView = myBookingsView;
         }
@@ -562,6 +493,21 @@ public class AppBuilder {
 
             if (MY_BOOKINGS_VIEW.equals(screenName)) {
                 myBookingsView.refresh();
+            }
+
+            // NEW: when going to Filtered, pull filter values from LoggedInView and apply them
+            if (FILTERED_VIEW.equals(screenName)) {
+                Integer yearValue = loggedInView.getValidatedYearOrShowError();
+                if (yearValue == null) {
+                    // validation failed – stay on current screen
+                    return;
+                }
+                String year = String.valueOf(yearValue);
+                String rating = loggedInView.getRatingString();
+                String genre = loggedInView.getSelectedGenre();
+                String search = loggedInView.getSearchQuery();
+
+                filteredView.applyFilterFromHome(year, rating, genre, search);
             }
 
             cardLayout.show(cardPanel, screenName);
