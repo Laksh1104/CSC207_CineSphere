@@ -1,4 +1,5 @@
 package app;
+
 import interface_adapter.bookings.BookingsController;
 import use_case.bookings.BookingsDataAccessInterface;
 import view.MyBookingsView;
@@ -28,10 +29,13 @@ import interface_adapter.popular_movies.PopularMoviesController;
 import interface_adapter.popular_movies.PopularMoviesPresenter;
 import interface_adapter.popular_movies.PopularMoviesViewModel;
 import interface_adapter.watchlist.WatchlistController;
+import interface_adapter.watchlist.WatchlistPresenter;
+import interface_adapter.watchlist.WatchlistViewModel;
 import use_case.book_movie.BookMovieInputBoundary;
 import use_case.book_movie.BookMovieInteractor;
 import use_case.book_movie.BookMovieOutputBoundary;
 import use_case.book_movie.BookTicketDataAccessInterface;
+import use_case.login.LoginUserDataAccessInterface;
 import use_case.movie_filter.FilterMoviesDataAccessInterface;
 import use_case.movie_filter.FilterMoviesInputBoundary;
 import use_case.movie_filter.FilterMoviesInteractor;
@@ -44,8 +48,10 @@ import use_case.search_film.SearchFilmDataAccessInterface;
 import use_case.search_film.SearchFilmInputBoundary;
 import use_case.search_film.SearchFilmInteractor;
 import use_case.search_film.SearchFilmOutputBoundary;
-import use_case.login.LoginUserDataAccessInterface;
 import use_case.watchlist.WatchlistDataAccessInterface;
+import use_case.watchlist.WatchlistInputBoundary;
+import use_case.watchlist.WatchlistInteractor;
+import use_case.watchlist.WatchlistOutputBoundary;
 import view.BookingView;
 import view.FilteredView;
 import view.LoggedInView;
@@ -70,7 +76,6 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
     public static final String WATCHLIST_VIEW = "Watchlist";
     public static final String MY_BOOKINGS_VIEW = "MyBookings";
 
-
     private final CardLayout cardLayout;
     private final JPanel cards;
 
@@ -81,8 +86,6 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
     private final BookingView bookingView;
     private final WatchlistView watchlistView;
     private final MyBookingsView myBookingsView;
-
-
 
     // set later by AppBuilder
     private LogoutController logoutController;
@@ -103,13 +106,19 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
         // Shared JSON profile DAO for watchlist + bookings
         UserProfileJsonDataAccessObject userProfileDAO =
                 new UserProfileJsonDataAccessObject("user_profiles.json");
-        WatchlistDataAccessInterface watchlistDAO = userProfileDAO;
+
+        // ===== WATCHLIST USE CASE (Clean Architecture slice) =====
+        WatchlistDataAccessInterface watchlistGateway = userProfileDAO;
+        WatchlistViewModel watchlistVM = new WatchlistViewModel();
+        WatchlistOutputBoundary watchlistPresenter = new WatchlistPresenter(watchlistVM);
+        WatchlistInputBoundary watchlistInteractor =
+                new WatchlistInteractor(watchlistGateway, userDAO, watchlistPresenter);
         WatchlistController watchlistController =
-                new WatchlistController(watchlistDAO, userDAO);
-        // Bookings controller (reads per-user bookings from the same JSON)
+                new WatchlistController(watchlistInteractor, watchlistVM);
+
+        // ===== Bookings controller (reads per-user bookings from the same JSON) =====
         BookingsDataAccessInterface bookingsDAO = userProfileDAO;
         BookingsController bookingsController = new BookingsController(bookingsDAO, userDAO);
-
 
         // ===== ViewModels =====
         BookMovieViewModel bookingVM = new BookMovieViewModel();
@@ -175,7 +184,7 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
         FilterMoviesDataAccessInterface filterDAO =
                 new TmdbMovieDataAccessObject(TMDB_V3_API_KEY);
 
-        // >>> NEW: preload genres into the Home screen's FilterPanel <<<
+        // Preload genres into the Home screen's FilterPanel
         Map<String, Integer> initialGenres = filterDAO.getMovieGenres();
         loggedInView.setGenres(new ArrayList<>(initialGenres.keySet()));
 
@@ -188,7 +197,7 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
         filteredView.setScreenSwitchListener(this);
 
         // ===== WATCHLIST VIEW =====
-        watchlistView = new WatchlistView(watchlistController);
+        watchlistView = new WatchlistView(watchlistController, watchlistVM);
         watchlistView.setScreenSwitchListener(this);
 
         // ===== Cards =====
@@ -265,7 +274,6 @@ public class MainAppFrame extends JFrame implements ScreenSwitchListener {
             // refresh bookings each time it is opened
             myBookingsView.refresh();
         }
-
 
         cardLayout.show(cards, screenName);
         revalidate();
