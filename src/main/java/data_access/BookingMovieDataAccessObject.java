@@ -1,5 +1,6 @@
 package data_access;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import okhttp3.*;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -19,12 +20,18 @@ public class    BookingMovieDataAccessObject implements MovieDataAccessInterface
     public static final String NUMBER_OF_FILMS = "20";
     private static final String CONTENT_TYPE_JSON = "application/json";
 
-    // MovieGlu API headers
-    private static final String API_VERSION = "v201";
-    private static final String AUTHORIZATION = "Basic VU5JVl84M19YWDpIbGtDWHRCeDAwZjk=";
-    private static final String CLIENT = "UNIV_83";
-    private static final String X_API_KEY = "3k2LXALJ12aNVHv5o0QOL4v63Q25zG7rasLjUTKb";
-    private static final String TERRITORY = "XX";
+    // Load environment variables
+    private static final Dotenv dotenv = Dotenv.configure()
+            .directory("./")
+            .ignoreIfMissing()
+            .load();
+
+    // MovieGlu API headers from .env
+    private static final String API_VERSION = dotenv.get("MOVIEGLU_API_VERSION");
+    private static final String AUTHORIZATION = dotenv.get("MOVIEGLU_AUTHORIZATION");
+    private static final String CLIENT = dotenv.get("MOVIEGLU_CLIENT");
+    private static final String X_API_KEY = dotenv.get("MOVIEGLU_X_API_KEY");
+    private static final String TERRITORY = dotenv.get("MOVIEGLU_TERRITORY");
 
     private final OkHttpClient client;
     private final MovieFactory movieFactory;
