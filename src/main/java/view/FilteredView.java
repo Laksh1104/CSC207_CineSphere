@@ -1,19 +1,14 @@
 package view;
 
-import data_access.MovieDetailsDataAccessObject;
 import interface_adapter.filter_movies.FilterMoviesController;
 import interface_adapter.filter_movies.FilterMoviesViewModel;
 import interface_adapter.logout.LogoutController;
 import interface_adapter.movie_details.MovieDetailsController;
-import interface_adapter.movie_details.MovieDetailsPresenter;
 import interface_adapter.movie_details.MovieDetailsViewModel;
-import interface_adapter.watchlist.WatchlistController;
-import use_case.movie_details.MovieDetailsDataAccessInterface;
-import use_case.movie_details.MovieDetailsInputBoundary;
-import use_case.movie_details.MovieDetailsInteractor;
 import view.components.FilterPanel;
 import view.components.Flyweight.PosterFlyweightFactory;
 import view.components.HeaderPanel;
+import view.components.ClickableButton;
 
 import javax.swing.*;
 import java.awt.*;
@@ -27,9 +22,9 @@ public class FilteredView extends JPanel {
     private final FilterMoviesController filterMoviesController;
     private final FilterMoviesViewModel filterMoviesViewModel;
 
-    private MovieDetailsController movieDetailsController;
-    private MovieDetailsView movieDetailsView;
-    private MovieDetailsViewModel movieDetailsViewModel;
+    private final MovieDetailsController movieDetailsController;
+    private final MovieDetailsView movieDetailsView;
+    private final MovieDetailsViewModel movieDetailsViewModel;
 
     private ScreenSwitchListener listener;
     private LogoutController logoutController;
@@ -51,13 +46,18 @@ public class FilteredView extends JPanel {
 
     public FilteredView(FilterMoviesController filterMoviesController,
                         FilterMoviesViewModel filterMoviesViewModel,
-                        WatchlistController watchlistController) {
+                        MovieDetailsController movieDetailsController,
+                        MovieDetailsView movieDetailsView,
+                        MovieDetailsViewModel movieDetailsViewModel) {
+
         this.filterMoviesController = filterMoviesController;
         this.filterMoviesViewModel = filterMoviesViewModel;
+        this.movieDetailsController = movieDetailsController;
+        this.movieDetailsView = movieDetailsView;
+        this.movieDetailsViewModel = movieDetailsViewModel;
 
         setLayout(new BorderLayout());
         buildUI();
-        setMovieDetailsDependencies(watchlistController);
 
         callFilter();
     }
@@ -95,7 +95,6 @@ public class FilteredView extends JPanel {
             if (logoutController != null) logoutController.execute();
             else JOptionPane.showMessageDialog(this, "Logout is not wired yet.");
         });
-
 
         headerPanel.setMaximumSize(new Dimension(900, 50));
         headerPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -159,8 +158,8 @@ public class FilteredView extends JPanel {
         pagingPanel.setMaximumSize(new Dimension(900, 40));
         pagingPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JButton prevButton = new JButton("<<");
-        JButton nextButton = new JButton(">>");
+        JButton prevButton = new ClickableButton("<<");
+        JButton nextButton = new ClickableButton(">>");
         pageLabel = new JLabel("", SwingConstants.CENTER);
 
         prevButton.addActionListener(e -> {
@@ -246,7 +245,6 @@ public class FilteredView extends JPanel {
         for (int i = 0; i < PAGE_SIZE; i++) {
             JPanel empty = new JPanel();
             empty.setBackground(COLOR);
-            empty.setBorder(BorderFactory.createDashedBorder(Color.GRAY));
             gridPanel.add(empty);
         }
 
@@ -300,7 +298,6 @@ public class FilteredView extends JPanel {
         for (int i = count; i < PAGE_SIZE; i++) {
             JPanel empty = new JPanel();
             empty.setBackground(COLOR);
-            empty.setBorder(BorderFactory.createDashedBorder(Color.GRAY));
             gridPanel.add(empty);
         }
 
@@ -311,7 +308,7 @@ public class FilteredView extends JPanel {
     }
 
     private JButton createPosterButton(String urlString, int filmId) {
-        JButton button = new JButton();
+        JButton button = new ClickableButton();
         button.setHorizontalAlignment(SwingConstants.CENTER);
         button.setBorder(BorderFactory.createEmptyBorder());
         button.setContentAreaFilled(false);
@@ -345,14 +342,5 @@ public class FilteredView extends JPanel {
 
         button.setBorder(BorderFactory.createDashedBorder(Color.GRAY));
         return button;
-    }
-
-    public void setMovieDetailsDependencies(WatchlistController watchlistController) {
-        movieDetailsViewModel = new MovieDetailsViewModel();
-        MovieDetailsPresenter presenter = new MovieDetailsPresenter(movieDetailsViewModel);
-        MovieDetailsDataAccessInterface api = new MovieDetailsDataAccessObject();
-        MovieDetailsInputBoundary interactor = new MovieDetailsInteractor(api, presenter);
-        movieDetailsController = new MovieDetailsController(interactor);
-        movieDetailsView = new MovieDetailsView(movieDetailsViewModel, watchlistController);
     }
 }

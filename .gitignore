@@ -1,2 +1,5 @@
 .env
 target
+*.iml
+users.txt
+user_profiles.json

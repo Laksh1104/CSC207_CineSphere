@@ -2,6 +2,7 @@ package data_access;
 
 import entity.Cinema;
 import entity.CinemaFactory;
+import io.github.cdimascio.dotenv.Dotenv;
 import okhttp3.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -21,11 +22,18 @@ public class CinemaDataAccessObject implements CinemaDataAccessInterface {
     private static final String NUMBER_OF_CINEMAS = "25";
     private static final String CONTENT_TYPE_JSON = "application/json";
 
-    private static final String API_VERSION = "v201";
-    private static final String AUTHORIZATION = "Basic VU5JVl84M19YWDpIbGtDWHRCeDAwZjk=";
-    private static final String CLIENT = "UNIV_83";
-    private static final String X_API_KEY = "3k2LXALJ12aNVHv5o0QOL4v63Q25zG7rasLjUTKb";
-    private static final String TERRITORY = "XX";
+    // Load environment variables
+    private static final Dotenv dotenv = Dotenv.configure()
+            .directory("./")
+            .ignoreIfMissing()
+            .load();
+
+    // MovieGlu API headers from .env
+    private static final String API_VERSION = dotenv.get("MOVIEGLU_API_VERSION");
+    private static final String AUTHORIZATION = dotenv.get("MOVIEGLU_AUTHORIZATION");
+    private static final String CLIENT = dotenv.get("MOVIEGLU_CLIENT");
+    private static final String X_API_KEY = dotenv.get("MOVIEGLU_X_API_KEY");
+    private static final String TERRITORY = dotenv.get("MOVIEGLU_TERRITORY");
 
     private static final String DEVICE_DATETIME = ZonedDateTime.now(java.time.ZoneOffset.UTC)
             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"));
@@ -73,7 +81,7 @@ public class CinemaDataAccessObject implements CinemaDataAccessInterface {
                 .add("x-api-key", X_API_KEY)
                 .add("device-datetime", DEVICE_DATETIME)
                 .add("territory", TERRITORY)
-                .add("geolocation", TEST_GEOLOCATION)
+                .add("geolocation", get_geolocation())
                 .add(CONTENT_TYPE_JSON, CONTENT_TYPE_JSON)
                 .build();
     }

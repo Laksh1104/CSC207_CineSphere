@@ -19,11 +19,11 @@ public class HeaderPanel extends JPanel {
         JLabel title = new JLabel("CineSphere");
         title.setFont(new Font("Arial", Font.BOLD, 20));
 
-        JButton homeButton = new JButton("Home");
-        JButton watchlistButton = new JButton("Watchlist");
-        JButton bookButton = new JButton("Booking");
-        JButton myBookingsButton = new JButton("My Bookings");
-        JButton logoutButton = new JButton("Logout");
+        JButton homeButton = new ClickableButton("Home");
+        JButton watchlistButton = new ClickableButton("Watchlist");
+        JButton bookButton = new ClickableButton("Booking");
+        JButton myBookingsButton = new ClickableButton("My Bookings");
+        JButton logoutButton = new ClickableButton("Logout");
 
         homeButton.addActionListener(e -> onHome.run());
         watchlistButton.addActionListener(e -> onWatchlist.run());

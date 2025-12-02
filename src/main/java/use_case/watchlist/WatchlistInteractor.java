@@ -1,53 +1,88 @@
 package use_case.watchlist;
 
-import entity.Watchlist;
+import use_case.login.LoginUserDataAccessInterface;
 
 import java.util.List;
 
-public class WatchlistInteractor implements WatchlistInputBoundary{
+/**
+ * Interactor for the Watchlist use case.
+ *
+ * Application/business rules:
+ * - Requires a logged-in user
+ * - Delegates persistence to WatchlistDataAccessInterface
+ * - Sends results through WatchlistOutputBoundary
+ */
+public class WatchlistInteractor implements WatchlistInputBoundary {
 
-    private final Watchlist watchlist = new Watchlist();
+    private final WatchlistDataAccessInterface watchlistGateway;
+    private final LoginUserDataAccessInterface loginGateway;
+    private final WatchlistOutputBoundary presenter;
 
-    private static int currentPage = 0;
-    private static final int moviesPerPage = 12;
+    public WatchlistInteractor(WatchlistDataAccessInterface watchlistGateway,
+                               LoginUserDataAccessInterface loginGateway,
+                               WatchlistOutputBoundary presenter) {
+        this.watchlistGateway = watchlistGateway;
+        this.loginGateway = loginGateway;
+        this.presenter = presenter;
+    }
 
     @Override
     public void addMovie(WatchlistInputData data) {
-        watchlist.add(data.movieUrl);
-        loadPage();
+        String username = currentUserOrFail();
+        if (username == null) return;
+
+        String posterUrl = data.getPosterUrl();
+        if (isNullOrBlank(posterUrl)) {
+            presenter.presentError("Poster URL is required.");
+            return;
+        }
+
+        if (!watchlistGateway.isInWatchlist(username, posterUrl)) {
+            watchlistGateway.addToWatchlist(username, posterUrl);
+        }
+
+        List<String> urls = watchlistGateway.getWatchlist(username);
+        presenter.present(new WatchlistOutputData(urls));
     }
 
     @Override
     public void removeMovie(WatchlistInputData data) {
-        watchlist.remove(data.movieUrl);
-        loadPage();
+        String username = currentUserOrFail();
+        if (username == null) return;
+
+        String posterUrl = data.getPosterUrl();
+        if (isNullOrBlank(posterUrl)) {
+            presenter.presentError("Poster URL is required.");
+            return;
+        }
+
+        if (watchlistGateway.isInWatchlist(username, posterUrl)) {
+            watchlistGateway.removeFromWatchlist(username, posterUrl);
+        }
+
+        List<String> urls = watchlistGateway.getWatchlist(username);
+        presenter.present(new WatchlistOutputData(urls));
     }
 
     @Override
-    public List<String> loadPage() {
-        List<String> all = watchlist.getMovies();
+    public void loadWatchlist() {
+        String username = currentUserOrFail();
+        if (username == null) return;
 
-        int start = currentPage * moviesPerPage;
-        int end = Math.min(start + moviesPerPage, all.size());
-
-        return all.subList(start, end);
+        List<String> urls = watchlistGateway.getWatchlist(username);
+        presenter.present(new WatchlistOutputData(urls));
     }
 
-    public void forward() {
-        if (currentPage * moviesPerPage < watchlist.getMovies().size()) {
-            currentPage++;
-            loadPage();
+    private String currentUserOrFail() {
+        String username = loginGateway.getCurrentUsername();
+        if (isNullOrBlank(username)) {
+            presenter.presentError("No user is currently logged in.");
+            return null;
         }
+        return username;
     }
 
-    public void back() {
-        if (currentPage > 0) currentPage--;
-        loadPage();
+    private boolean isNullOrBlank(String s) {
+        return s == null || s.isBlank();
     }
-
-    public boolean isInWatchlist(String posterUrl) {
-        return watchlist.getMovies().contains(posterUrl);
-    }
-
-
 }
