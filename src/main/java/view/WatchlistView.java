@@ -6,6 +6,7 @@ import interface_adapter.movie_details.MovieDetailsViewModel;
 import interface_adapter.watchlist.WatchlistController;
 import view.components.Flyweight.PosterFlyweightFactory;
 import view.components.HeaderPanel;
+import view.components.ClickableButton;
 
 import javax.swing.*;
 import java.awt.*;
@@ -111,7 +112,7 @@ public class WatchlistView extends JPanel {
      * Creates a clickable poster button for a watchlist item.
      */
     private JButton createPosterButton(String url) {
-        JButton button = new JButton();
+        JButton button = new ClickableButton();
         button.setPreferredSize(new Dimension(200, 300));
         button.setHorizontalAlignment(SwingConstants.CENTER);
         button.setBorder(BorderFactory.createDashedBorder(Color.GRAY));

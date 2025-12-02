@@ -17,6 +17,7 @@ import interface_adapter.logout.LogoutController;
 import org.jetbrains.annotations.NotNull;
 import view.components.HeaderPanel;
 import view.components.SeatSelectionPanel;
+import view.components.ClickableButton;
 
 public class BookingView extends JPanel implements PropertyChangeListener {
 
@@ -166,7 +167,7 @@ public class BookingView extends JPanel implements PropertyChangeListener {
         selectionPanel.add(labeled("Time:", timeDropdown));
 
         // Select Button
-        JButton select = new JButton("Select");
+        JButton select = new ClickableButton("Select");
         select.addActionListener(e -> handleSelect());
         selectionPanel.add(select);
 
@@ -236,7 +237,7 @@ public class BookingView extends JPanel implements PropertyChangeListener {
     }
 
     private void setupBookButton() {
-        JButton bookBtn = new JButton("Book Movie");
+        JButton bookBtn = new ClickableButton("Book Movie");
         bookBtn.setFont(new Font("Arial", Font.BOLD, 18));
         bookBtn.setBackground(Color.WHITE);
 
