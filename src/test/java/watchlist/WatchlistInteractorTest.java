@@ -1,6 +1,10 @@
 package watchlist;
 
 import org.junit.jupiter.api.Test;
+import use_case.watchlist.WatchlistInputData;
+import use_case.watchlist.WatchlistInteractor;
+import use_case.watchlist.WatchlistOutputBoundary;
+import use_case.watchlist.WatchlistOutputData;
 
 import java.util.List;
 

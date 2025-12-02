@@ -1,5 +1,7 @@
 package watchlist;
 
+import use_case.watchlist.WatchlistDataAccessInterface;
+
 import java.util.*;
 
 class InMemoryWatchlistTestDAO implements WatchlistDataAccessInterface {
