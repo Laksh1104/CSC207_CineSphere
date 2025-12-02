@@ -73,7 +73,7 @@ public class LoginView extends JPanel {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         loginButton = new ClickableButton("log in");
         signupButton = new ClickableButton("sign up");
-        cancelButton = new ClickableButton("cancel");
+        cancelButton = new ClickableButton("Close");
 
         buttonPanel.add(loginButton);
         buttonPanel.add(signupButton);
