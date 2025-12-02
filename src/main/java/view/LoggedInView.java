@@ -16,6 +16,7 @@ import use_case.movie_details.MovieDetailsOutputBoundary;
 import view.components.FilterPanel;
 import view.components.Flyweight.PosterFlyweightFactory;
 import view.components.HeaderPanel;
+import view.components.ClickableButton;
 
 import javax.swing.*;
 import java.awt.*;
@@ -225,7 +226,7 @@ public class LoggedInView extends JPanel {
     }
 
     private JButton createPosterButton(String url, int filmId) {
-        JButton button = new JButton();
+        JButton button = new ClickableButton();
         button.setHorizontalAlignment(SwingConstants.CENTER);
         button.setBorder(BorderFactory.createEmptyBorder());
         button.setContentAreaFilled(false);

@@ -4,6 +4,7 @@ import interface_adapter.movie_details.MovieDetailsState;
 import interface_adapter.movie_details.MovieDetailsViewModel;
 import interface_adapter.watchlist.WatchlistController;
 import use_case.movie_details.MovieDetailsOutputData.MovieReviewData;
+import view.components.ClickableButton;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -117,7 +118,7 @@ public class MovieDetailsView extends JPanel {
     private JButton createWatchlistButton(MovieDetailsState state) {
         final String posterUrl = state.posterUrl();
         final boolean[] inWatchlist = {watchlistController.isInWatchlist(posterUrl)};
-        JButton btn = new JButton();
+        JButton btn = new ClickableButton();
         updateWatchlistText(btn, inWatchlist[0]);
         btn.addActionListener(e -> {
             if (inWatchlist[0]) watchlistController.removeFromWatchlist(posterUrl);

@@ -7,6 +7,7 @@ import interface_adapter.login.LoginViewModel;
 import interface_adapter.signup.SignupController;
 import interface_adapter.signup.SignupState;
 import interface_adapter.signup.SignupViewModel;
+import view.components.ClickableButton;
 
 import javax.swing.*;
 import java.awt.*;
@@ -70,9 +71,9 @@ public class LoginView extends JPanel {
         formPanel.add(passwordField, gbc);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
-        loginButton = new JButton("log in");
-        signupButton = new JButton("sign up");
-        cancelButton = new JButton("cancel");
+        loginButton = new ClickableButton("log in");
+        signupButton = new ClickableButton("sign up");
+        cancelButton = new ClickableButton("cancel");
 
         buttonPanel.add(loginButton);
         buttonPanel.add(signupButton);
