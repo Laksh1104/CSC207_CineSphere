@@ -2,7 +2,6 @@ package view;
 
 import data_access.MovieDetailsDataAccessObject;
 import interface_adapter.SearchFilm.*;
-import interface_adapter.filter_movies.FilterCriteria;
 import interface_adapter.logout.LogoutController;
 import interface_adapter.movie_details.MovieDetailsController;
 import interface_adapter.movie_details.MovieDetailsPresenter;
@@ -103,8 +102,6 @@ public class LoggedInView extends JPanel {
             searchFilmController.execute(query.trim());
         });
 
-        // "Filter" button – just tells the ScreenSwitchListener to show FilteredView.
-        // The actual filter criteria are pulled by MainAppFrame from this view.
         filterPanel.setOnFilter(() -> {
             if (listener != null) listener.onSwitchScreen("Filtered");
         });
@@ -272,29 +269,31 @@ public class LoggedInView extends JPanel {
         return button;
     }
 
-    /**
-     * Build a FilterCriteria object from the current controls of this view.
-     * Used by MainAppFrame when switching to the FilteredView.
-     *
-     * If the year is invalid, this shows the same error dialog as the
-     * normal filter flow and returns null.
-     */
-    public FilterCriteria buildFilterCriteriaOrNull() {
+    public Integer getValidatedYearOrShowError() {
         if (filterPanel == null) {
             return null;
         }
+        return filterPanel.getValidatedYearOrShowError();
+    }
 
-        Integer yearValue = filterPanel.getValidatedYearOrShowError();
-        if (yearValue == null) {
-            // Error shown by FilterPanel; stay on this screen.
-            return null;
+    public String getRatingString() {
+        if (filterPanel == null) {
+            return "All Ratings";
         }
+        return filterPanel.getRatingString();
+    }
 
-        String year = String.valueOf(yearValue);
-        String rating = filterPanel.getRatingString();
-        String genre = filterPanel.getSelectedGenre();
-        String search = filterPanel.getSearchQuery();
+    public String getSelectedGenre() {
+        if (filterPanel == null) {
+            return "All Genres";
+        }
+        return filterPanel.getSelectedGenre();
+    }
 
-        return new FilterCriteria(year, rating, genre, search);
+    public String getSearchQuery() {
+        if (filterPanel == null) {
+            return "";
+        }
+        return filterPanel.getSearchQuery();
     }
 }

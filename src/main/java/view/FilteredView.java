@@ -1,7 +1,6 @@
 package view;
 
 import data_access.MovieDetailsDataAccessObject;
-import interface_adapter.filter_movies.FilterCriteria;
 import interface_adapter.filter_movies.FilterMoviesController;
 import interface_adapter.filter_movies.FilterMoviesPresenter;
 import interface_adapter.filter_movies.FilterMoviesViewModel;
@@ -191,22 +190,15 @@ public class FilteredView extends JPanel {
         add(backgroundPanel, BorderLayout.CENTER);
     }
 
-    /**
-     * Used when the user clicks "Filter" on LoggedInView.
-     * MainAppFrame builds a FilterCriteria from the home screen and passes it here,
-     * so we immediately run the filter when this view is shown.
-     */
-    public void applyFilterCriteria(FilterCriteria criteria) {
-        if (criteria == null) {
+    public void applyFilterFromHome(String year,
+                                    String rating,
+                                    String genreText,
+                                    String search) {
+        if (year == null || year.isBlank()) {
             return;
         }
 
         currentPage = 1;
-
-        String year = criteria.getYear();
-        String rating = criteria.getRating();
-        String genreText = criteria.getGenreName();
-        String search = criteria.getSearch();
 
         updateFilteredByLabel(year, rating, genreText, search);
 
@@ -245,7 +237,7 @@ public class FilteredView extends JPanel {
 
     private void updateFilteredByLabel(String year, String rating, String genre, String search) {
         String text = "Filtered by: Year = " + year +
-                "   Rating = " + (rating.equals("All Ratings") ? "Any" : rating) +
+                "   Rating = " + (rating != null && rating.equals("All Ratings") ? "Any" : rating) +
                 "   Genre = " + genre +
                 (search == null || search.isEmpty() ? "" : "   Search = \"" + search + "\"");
         filteredByLabel.setText(text);
