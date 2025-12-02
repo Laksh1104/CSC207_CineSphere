@@ -2,6 +2,7 @@ package view;
 
 import data_access.MovieDetailsDataAccessObject;
 import interface_adapter.filter_movies.FilterMoviesController;
+import interface_adapter.filter_movies.FilterMoviesPresenter;
 import interface_adapter.filter_movies.FilterMoviesViewModel;
 import interface_adapter.logout.LogoutController;
 import interface_adapter.movie_details.MovieDetailsController;
@@ -14,7 +15,6 @@ import use_case.movie_details.MovieDetailsInteractor;
 import view.components.FilterPanel;
 import view.components.Flyweight.PosterFlyweightFactory;
 import view.components.HeaderPanel;
-import view.components.ClickableButton;
 
 import javax.swing.*;
 import java.awt.*;
@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 
 public class FilteredView extends JPanel {
 
@@ -60,6 +61,7 @@ public class FilteredView extends JPanel {
         buildUI();
         setMovieDetailsDependencies(watchlistController);
 
+        // Default call so the grid isn't empty if the user lands here directly
         callFilter();
     }
 
@@ -96,7 +98,6 @@ public class FilteredView extends JPanel {
             if (logoutController != null) logoutController.execute();
             else JOptionPane.showMessageDialog(this, "Logout is not wired yet.");
         });
-
 
         headerPanel.setMaximumSize(new Dimension(900, 50));
         headerPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -160,8 +161,8 @@ public class FilteredView extends JPanel {
         pagingPanel.setMaximumSize(new Dimension(900, 40));
         pagingPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JButton prevButton = new ClickableButton("<<");
-        JButton nextButton = new ClickableButton(">>");
+        JButton prevButton = new JButton("<<");
+        JButton nextButton = new JButton(">>");
         pageLabel = new JLabel("", SwingConstants.CENTER);
 
         prevButton.addActionListener(e -> {
@@ -185,6 +186,28 @@ public class FilteredView extends JPanel {
         backgroundPanel.add(pagingPanel);
 
         add(backgroundPanel, BorderLayout.CENTER);
+    }
+
+    public void applyFilterFromHome(String year,
+                                    String rating,
+                                    String genreText,
+                                    String search) {
+        if (year == null || year.isBlank()) {
+            return;
+        }
+
+        currentPage = 1;
+
+        updateFilteredByLabel(year, rating, genreText, search);
+
+        String genreId = null;
+        if (genreText != null && !"All Genres".equalsIgnoreCase(genreText)) {
+            syncGenresFromViewModel();
+            genreId = genreNameToId.get(genreText);
+        }
+
+        filterMoviesController.execute(year, rating, genreId, search, currentPage);
+        updateGrid();
     }
 
     private void callFilter() {
@@ -212,9 +235,9 @@ public class FilteredView extends JPanel {
 
     private void updateFilteredByLabel(String year, String rating, String genre, String search) {
         String text = "Filtered by: Year = " + year +
-                "   Rating = " + (rating.equals("All Ratings") ? "Any" : rating) +
+                "   Rating = " + (rating != null && rating.equals("All Ratings") ? "Any" : rating) +
                 "   Genre = " + genre +
-                (search.isEmpty() ? "" : "   Search = \"" + search + "\"");
+                (search == null || search.isEmpty() ? "" : "   Search = \"" + search + "\"");
         filteredByLabel.setText(text);
     }
 
@@ -236,17 +259,14 @@ public class FilteredView extends JPanel {
         noMoviesLabel.setVisible(false);
 
         if (gridPanel != null) gridPanel.setVisible(true);
-        if (pagingPanel != null) {
-            pagingPanel.setVisible(true);
-            gridPanel.removeAll();
-        } else {
-            assert gridPanel != null;
-            gridPanel.removeAll();
-        }
+        if (pagingPanel != null) pagingPanel.setVisible(true);
+
+        gridPanel.removeAll();
 
         for (int i = 0; i < PAGE_SIZE; i++) {
             JPanel empty = new JPanel();
             empty.setBackground(COLOR);
+            empty.setBorder(BorderFactory.createDashedBorder(Color.GRAY));
             gridPanel.add(empty);
         }
 
@@ -300,6 +320,7 @@ public class FilteredView extends JPanel {
         for (int i = count; i < PAGE_SIZE; i++) {
             JPanel empty = new JPanel();
             empty.setBackground(COLOR);
+            empty.setBorder(BorderFactory.createDashedBorder(Color.GRAY));
             gridPanel.add(empty);
         }
 
@@ -310,7 +331,7 @@ public class FilteredView extends JPanel {
     }
 
     private JButton createPosterButton(String urlString, int filmId) {
-        JButton button = new ClickableButton();
+        JButton button = new JButton();
         button.setHorizontalAlignment(SwingConstants.CENTER);
         button.setBorder(BorderFactory.createEmptyBorder());
         button.setContentAreaFilled(false);

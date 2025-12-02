@@ -16,7 +16,6 @@ import use_case.movie_details.MovieDetailsOutputBoundary;
 import view.components.FilterPanel;
 import view.components.Flyweight.PosterFlyweightFactory;
 import view.components.HeaderPanel;
-import view.components.ClickableButton;
 
 import javax.swing.*;
 import java.awt.*;
@@ -87,6 +86,7 @@ public class LoggedInView extends JPanel {
     }
 
     private void setupFilterPanelHandlers() {
+        // Search bar at the top of LoggedInView
         filterPanel.setOnSearch(query -> {
             if (query == null || query.trim().isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Please enter a film name.");
@@ -99,6 +99,8 @@ public class LoggedInView extends JPanel {
             searchFilmController.execute(query.trim());
         });
 
+        // "Filter" button – just tells the ScreenSwitchListener to show FilteredView.
+        // MainAppFrame will pull the current values from this view and pass them into FilteredView.
         filterPanel.setOnFilter(() -> {
             if (listener != null) listener.onSwitchScreen("Filtered");
         });
@@ -182,7 +184,7 @@ public class LoggedInView extends JPanel {
     }
 
     /**
-     * NEW: allow MainAppFrame to push the genre list into this view's FilterPanel.
+     * Allow MainAppFrame to push the genre list into this view's FilterPanel.
      */
     public void setGenres(java.util.List<String> genres) {
         if (filterPanel != null) {
@@ -229,7 +231,7 @@ public class LoggedInView extends JPanel {
     }
 
     private JButton createPosterButton(String url, int filmId) {
-        JButton button = new ClickableButton();
+        JButton button = new JButton();
         button.setHorizontalAlignment(SwingConstants.CENTER);
         button.setBorder(BorderFactory.createEmptyBorder());
         button.setContentAreaFilled(false);
@@ -264,5 +266,33 @@ public class LoggedInView extends JPanel {
 
         button.setBorder(BorderFactory.createDashedBorder(Color.GRAY));
         return button;
+    }
+
+    public Integer getValidatedYearOrShowError() {
+        if (filterPanel == null) {
+            return null;
+        }
+        return filterPanel.getValidatedYearOrShowError();
+    }
+
+    public String getRatingString() {
+        if (filterPanel == null) {
+            return "All Ratings";
+        }
+        return filterPanel.getRatingString();
+    }
+
+    public String getSelectedGenre() {
+        if (filterPanel == null) {
+            return "All Genres";
+        }
+        return filterPanel.getSelectedGenre();
+    }
+
+    public String getSearchQuery() {
+        if (filterPanel == null) {
+            return "";
+        }
+        return filterPanel.getSearchQuery();
     }
 }
