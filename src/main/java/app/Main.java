@@ -27,6 +27,7 @@ public class Main {
                     .addFilterMoviesUseCase()
                     .addBookMovieUseCase()
                     .addWatchlistUseCase()
+                    .addMovieDetailsUseCase()
                     .addBookingsUseCase()
                     // Build and show
                     .build()

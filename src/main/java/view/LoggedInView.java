@@ -24,7 +24,7 @@ public class LoggedInView extends JPanel {
     private final PopularMoviesController popularMoviesController;
     private final PopularMoviesViewModel popularMoviesViewModel;
 
-    private final MovieDetailsController movieDetailsController;
+    private MovieDetailsController movieDetailsController;
     private final MovieDetailsView movieDetailsView;
     private final MovieDetailsViewModel movieDetailsViewModel;
 
@@ -306,5 +306,9 @@ public class LoggedInView extends JPanel {
             return "";
         }
         return filterPanel.getSearchQuery();
+    }
+
+    public void setMovieDetailsController(MovieDetailsController movieDetailsController, MovieDetailsView movieDetailsView){
+        this.movieDetailsController = movieDetailsController;
     }
 }
