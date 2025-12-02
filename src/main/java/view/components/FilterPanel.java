@@ -80,7 +80,7 @@ public class FilterPanel extends JPanel {
         genreDropdown.setPreferredSize(new Dimension(130, 28));
         addAt(genreDropdown, gbc, x++);
 
-        JButton filterButton = new JButton("Filter");
+        JButton filterButton = new ClickableButton("Filter");
         filterButton.setPreferredSize(new Dimension(72, 28));
         filterButton.addActionListener(e -> onFilter.run());
         addAt(filterButton, gbc, x++);
@@ -94,7 +94,7 @@ public class FilterPanel extends JPanel {
         searchField.addActionListener(e -> triggerSearch());
         addAt(searchField, gbc, x++);
 
-        JButton searchButton = new JButton("Search");
+        JButton searchButton = new ClickableButton("Search");
         searchButton.setPreferredSize(new Dimension(82, 28));
         searchButton.addActionListener(e -> triggerSearch());
         addAt(searchButton, gbc, x++);
