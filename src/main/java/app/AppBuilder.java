@@ -45,30 +45,22 @@ import use_case.book_movie.BookMovieInputBoundary;
 import use_case.book_movie.BookMovieInteractor;
 import use_case.book_movie.BookMovieOutputBoundary;
 import use_case.book_movie.BookTicketDataAccessInterface;
-import use_case.bookings.BookingsDataAccessInterface;
 import use_case.login.LoginInputBoundary;
 import use_case.login.LoginInteractor;
-import use_case.login.LoginUserDataAccessInterface;
 import use_case.logout.LogoutInputBoundary;
 import use_case.logout.LogoutInteractor;
-import use_case.logout.LogoutOutputBoundary;
-import use_case.logout.LogoutUserDataAccessInterface;
-import use_case.movie_filter.FilterMoviesDataAccessInterface;
 import use_case.movie_filter.FilterMoviesInputBoundary;
 import use_case.movie_filter.FilterMoviesInteractor;
 import use_case.movie_filter.FilterMoviesOutputBoundary;
-import use_case.popular_movies.PopularMoviesDataAccessInterface;
 import use_case.popular_movies.PopularMoviesInputBoundary;
 import use_case.popular_movies.PopularMoviesInteractor;
 import use_case.popular_movies.PopularMoviesOutputBoundary;
-import use_case.search_film.SearchFilmDataAccessInterface;
 import use_case.search_film.SearchFilmInputBoundary;
 import use_case.search_film.SearchFilmInteractor;
 import use_case.search_film.SearchFilmOutputBoundary;
 import use_case.signup.SignupInputBoundary;
 import use_case.signup.SignupInteractor;
 import use_case.signup.SignupOutputBoundary;
-import use_case.watchlist.WatchlistDataAccessInterface;
 
 import use_case.watchlist.WatchlistInputBoundary;
 import use_case.watchlist.WatchlistInteractor;
@@ -95,7 +87,7 @@ public class AppBuilder {
             .ignoreIfMissing()
             .load();
 
-    // ===== CONSTANTS =====
+    // Constants
     private static final String TMDB_V3_API_KEY = dotenv.get("TMDB_API_KEY");
     private static final String TMDB_BEARER_TOKEN = dotenv.get("TMDB_BEARER_TOKEN");
 
@@ -106,16 +98,16 @@ public class AppBuilder {
     public static final String WATCHLIST_VIEW = "Watchlist";
     public static final String MY_BOOKINGS_VIEW = "MyBookings";
 
-    // ===== CARD LAYOUT COMPONENTS =====
+    // Card Layout Components
     private final JPanel cardPanel = new JPanel();
     private final CardLayout cardLayout = new CardLayout();
 
-    // ===== FACTORIES =====
+    // Factories
     private final UserFactory userFactory = new UserFactory();
     private final MovieFactory movieFactory = new MovieFactory();
     private final CinemaFactory cinemaFactory = new CinemaFactory();
 
-    // ===== DATA ACCESS OBJECTS =====
+    // DAO
     private final FileUserDataAccessObject userDataAccessObject;
     private final UserProfileJsonDataAccessObject userProfileDataAccessObject;
     private final PopularMoviesDataAccessObject popularMoviesDataAccessObject;
@@ -125,7 +117,7 @@ public class AppBuilder {
     private final CinemaDataAccessObject cinemaDataAccessObject;
     private BookTicketDataAccessInterface ticketDataAccessObject;
 
-    // ===== VIEW MODELS =====
+    // View Models
     private LoginViewModel loginViewModel;
     private SignupViewModel signupViewModel;
     private PopularMoviesViewModel popularMoviesViewModel;
@@ -134,7 +126,7 @@ public class AppBuilder {
     private BookMovieViewModel bookMovieViewModel;
     private WatchlistViewModel watchlistViewModel;
 
-    // ===== VIEWS =====
+    // Views
     private LoginView loginView;
     private LoggedInView loggedInView;
     private FilteredView filteredView;
@@ -142,7 +134,7 @@ public class AppBuilder {
     private WatchlistView watchlistView;
     private MyBookingsView myBookingsView;
 
-    // ===== CONTROLLERS =====
+    // Controllers
     private LoginController loginController;
     private SignupController signupController;
     private LogoutController logoutController;
@@ -153,11 +145,11 @@ public class AppBuilder {
     private WatchlistController watchlistController;
     private BookingsController bookingsController;
 
-    // ===== PRESENTERS (for wiring screen switches) =====
+    // Presenters
     private LoginPresenter loginPresenter;
     private LogoutPresenter logoutPresenter;
 
-    // ===== HELPER OBJECTS =====
+    // Helper
     private final BookingQuery bookingQuery;
 
     /**
@@ -250,7 +242,7 @@ public class AppBuilder {
         return this;
     }
 
-    // ===== USE CASE WIRING METHODS =====
+    // Wiring use cases
 
     /**
      * Adds the Login Use Case to the application.
