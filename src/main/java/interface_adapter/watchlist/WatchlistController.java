@@ -1,56 +1,45 @@
 package interface_adapter.watchlist;
 
-import use_case.login.LoginUserDataAccessInterface;
-import use_case.watchlist.WatchlistDataAccessInterface;
-
-import java.util.List;
+import use_case.watchlist.WatchlistInputBoundary;
+import use_case.watchlist.WatchlistInputData;
 
 /**
- * Coordinates watchlist operations for the current logged-in user.
+ * Controller for the Watchlist use case.
+ *
+ * Adapts UI events into WatchlistInputBoundary calls.
  */
 public class WatchlistController {
 
-    private final WatchlistDataAccessInterface watchlistDAO;
-    private final LoginUserDataAccessInterface userDAO;
+    private final WatchlistInputBoundary interactor;
+    private final WatchlistViewModel viewModel;
 
-    public WatchlistController(WatchlistDataAccessInterface watchlistDAO,
-                               LoginUserDataAccessInterface userDAO) {
-        this.watchlistDAO = watchlistDAO;
-        this.userDAO = userDAO;
-    }
-
-    public boolean isInWatchlist(String posterUrl) {
-        String username = userDAO.getCurrentUsername();
-        if (username == null || username.isBlank()
-                || posterUrl == null || posterUrl.isBlank()) {
-            return false;
-        }
-        return watchlistDAO.isInWatchlist(username, posterUrl);
+    public WatchlistController(WatchlistInputBoundary interactor,
+                               WatchlistViewModel viewModel) {
+        this.interactor = interactor;
+        this.viewModel = viewModel;
     }
 
     public void addToWatchlist(String posterUrl) {
-        String username = userDAO.getCurrentUsername();
-        if (username == null || username.isBlank()
-                || posterUrl == null || posterUrl.isBlank()) {
-            return;
-        }
-        watchlistDAO.addToWatchlist(username, posterUrl);
+        interactor.addMovie(new WatchlistInputData(posterUrl));
     }
 
     public void removeFromWatchlist(String posterUrl) {
-        String username = userDAO.getCurrentUsername();
-        if (username == null || username.isBlank()
-                || posterUrl == null || posterUrl.isBlank()) {
-            return;
-        }
-        watchlistDAO.removeFromWatchlist(username, posterUrl);
+        interactor.removeMovie(new WatchlistInputData(posterUrl));
     }
 
-    public List<String> getWatchlistForCurrentUser() {
-        String username = userDAO.getCurrentUsername();
-        if (username == null || username.isBlank()) {
-            return List.of();
-        }
-        return watchlistDAO.getWatchlist(username);
+    /**
+     * Triggers a reload of the current user's watchlist.
+     * UI should react to the ViewModel's state change.
+     */
+    public void loadWatchlist() {
+        interactor.loadWatchlist();
+    }
+
+    /**
+     * Synchronous helper used by MovieDetailsView to set the initial
+     * button text based on the current ViewModel state.
+     */
+    public boolean isInWatchlist(String posterUrl) {
+        return viewModel.isInWatchlist(posterUrl);
     }
 }
