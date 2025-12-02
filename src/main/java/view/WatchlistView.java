@@ -4,6 +4,7 @@ import interface_adapter.logout.LogoutController;
 import interface_adapter.movie_details.MovieDetailsState;
 import interface_adapter.movie_details.MovieDetailsViewModel;
 import interface_adapter.watchlist.WatchlistController;
+import interface_adapter.watchlist.WatchlistViewModel;
 import view.components.Flyweight.PosterFlyweightFactory;
 import view.components.HeaderPanel;
 
@@ -12,9 +13,16 @@ import java.awt.*;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * View that displays the current user's watchlist.
+ *
+ * It observes WatchlistViewModel and triggers the Watchlist use case
+ * via WatchlistController.
+ */
 public class WatchlistView extends JPanel {
 
     private final WatchlistController watchlistController;
+    private final WatchlistViewModel watchlistViewModel;
 
     private ScreenSwitchListener listener;
     private LogoutController logoutController;
@@ -24,8 +32,10 @@ public class WatchlistView extends JPanel {
     private JPanel gridPanel;
     private JLabel emptyLabel;
 
-    public WatchlistView(WatchlistController watchlistController) {
+    public WatchlistView(WatchlistController watchlistController,
+                         WatchlistViewModel watchlistViewModel) {
         this.watchlistController = watchlistController;
+        this.watchlistViewModel = watchlistViewModel;
 
         setBackground(COLOR);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -77,6 +87,12 @@ public class WatchlistView extends JPanel {
         scrollPane.setMaximumSize(new Dimension(900, 500));
 
         add(scrollPane);
+
+        // Listen to ViewModel changes
+        watchlistViewModel.addPropertyChangeListener(evt -> {
+            if (!"state".equals(evt.getPropertyName())) return;
+            SwingUtilities.invokeLater(this::renderFromState);
+        });
     }
 
     public void setScreenSwitchListener(ScreenSwitchListener listener) {
@@ -88,13 +104,28 @@ public class WatchlistView extends JPanel {
     }
 
     /**
-     * Reloads the current user's watchlist posters from storage.
+     * Called by MainAppFrame whenever the Watchlist screen is opened.
+     * Triggers the use case to load the current watchlist.
      */
     public void refresh() {
+        watchlistController.loadWatchlist();
+    }
+
+    /**
+     * Rebuild the gridPanel using the latest WatchlistState.
+     */
+    private void renderFromState() {
         gridPanel.removeAll();
 
-        List<String> urls = watchlistController.getWatchlistForCurrentUser();
-        if (urls == null || urls.isEmpty()) {
+        List<String> urls = watchlistViewModel.getPosterUrls();
+        String error = watchlistViewModel.getErrorMessage();
+
+        if (error != null && !error.isBlank()) {
+            JLabel errorLabel = new JLabel(error);
+            errorLabel.setForeground(Color.RED);
+            errorLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            gridPanel.add(errorLabel);
+        } else if (urls == null || urls.isEmpty()) {
             gridPanel.add(emptyLabel);
         } else {
             for (String url : urls) {
@@ -172,8 +203,6 @@ public class WatchlistView extends JPanel {
             );
         }
 
-        // Push the state into the view model – the MovieDetailsView is already
-        // listening for "state" changes and will render it.
         viewModel.setState(stateToShow);
 
         JFrame frame = new JFrame("Movie Details");
