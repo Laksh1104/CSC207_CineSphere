@@ -62,11 +62,11 @@ public class BookMovieInteractor implements BookMovieInputBoundary {
                                   String start, String end, Set<String> seats) {
 
         if (isBlank(movie) || isBlank(cinema) || isBlank(date)
-                || isBlank(start) || isBlank(end)) {
+                || isBlank(start)) {
             return "Some booking details are missing.";
         }
 
-        if (seats == null || seats.isEmpty()) {
+        if (seats.isEmpty()) {
             return "No seats were selected.";
         }
 
@@ -91,7 +91,7 @@ public class BookMovieInteractor implements BookMovieInputBoundary {
         return s == null || s.isBlank();
     }
 
-    // ------------------ Passthrough Methods ------------------
+    // Passthrough methods
 
     @Override
     public Set<String> getBookedSeats(String movie, String cinema, String date,

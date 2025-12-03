@@ -97,6 +97,34 @@ class BookMovieInteractorTest {
     }
 
     @Test
+    void missingDate() {
+        InMemoryTicketTestDAO dao = new InMemoryTicketTestDAO();
+
+        BookMovieInputData input = new BookMovieInputData(
+                "Stargate", "Cinema 2", null, "21:30 - 23:00", Set.of("A1")
+        );
+
+        BookMovieInteractor interactor =
+                new BookMovieInteractor(dao, failPresenter("Some booking details are missing."));
+        interactor.execute(input);
+    }
+
+    @Test
+    void missingEndTime() {
+        InMemoryTicketTestDAO dao = new InMemoryTicketTestDAO();
+
+        BookMovieInputData input = new BookMovieInputData(
+                "Stargate", "Cinema 2", "2025-11-28", "21:30 - 23:00", Set.of("A1")
+        );
+        // modify input to only provide startTime and no endTime
+        input = new BookMovieInputData("Stargate", "Cinema 2", "2025-11-28", null, Set.of("A1"));
+
+        BookMovieInteractor interactor =
+                new BookMovieInteractor(dao, failPresenter("Some booking details are missing."));
+        interactor.execute(input);
+    }
+
+    @Test
     void missingStartTime() {
         InMemoryTicketTestDAO dao = new InMemoryTicketTestDAO();
 
@@ -157,5 +185,34 @@ class BookMovieInteractorTest {
         interactor2.execute(new BookMovieInputData("Movie","Cinema","2025-01-01","10:00 - 12:00", Set.of("A2")));
 
         assertEquals(Set.of("A1","A2"), dao.bookedSeats);
+    }
+
+    @Test
+    void loadSeatLayoutPassthroughTest() {
+        InMemoryTicketTestDAO dao = new InMemoryTicketTestDAO();
+
+        // DAO already has default seats: A1, A2, A3, B1
+        BookMovieInteractor interactor = new BookMovieInteractor(dao, failPresenter(""));
+
+        var result = interactor.loadSeatLayout(
+                "Movie", "Cinema", "2025-01-01", "10:00", "12:00"
+        );
+
+        assertEquals(4, result.size());
+        assertEquals("A1", result.get(0).getSeatName());
+    }
+
+    @Test
+    void getBookedSeatsPassthroughTest() {
+        InMemoryTicketTestDAO dao = new InMemoryTicketTestDAO();
+        dao.bookedSeats.add("A1");
+
+        BookMovieInteractor interactor = new BookMovieInteractor(dao, failPresenter(""));
+
+        Set<String> result = interactor.getBookedSeats(
+                "Movie", "Cinema", "2025-01-01", "10:00", "12:00"
+        );
+
+        assertEquals(Set.of("A1"), result);
     }
 }
